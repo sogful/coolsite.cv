@@ -29,9 +29,7 @@
             width: 100vw; height: 100vh;
             overflow: hidden; margin: 0; letter-spacing: 0; 
         }
-        span {
-            font: 16px/.55 monospace;
-        }
+        span {font: 16px/.55 monospace}
 
         .bottom {
             display: flex; position: fixed; flex-direction: column;
@@ -43,10 +41,9 @@
             display: flex; flex-direction: row;
             justify-content: center; flex-wrap: wrap;
         }
-        .more {display:none;}
-        .button {
-            padding: 2px;
-        }
+        .more {display:none}
+        .button {padding: 2px; image-rendering: pixelated}
+        .button iframe {padding: 2px}
         .section {
             display: flex;
             flex-direction: column;
@@ -55,10 +52,8 @@
 
         .status {
             display: flex; position: fixed;
-            flex-direction: column;
-            top: 20px; right: 20px;
-            font-size: 16px; row-gap: 10px;
-            text-align: right;
+            flex-direction: column; top: 20px; right: 20px;
+            font-size: 16px; row-gap: 10px; text-align: right;
             background: rgba(0,0,0,0.3); 
             padding: 15px; border-radius: 15px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.3);
@@ -68,11 +63,9 @@
         .s3:any-link, .morebutton {text-decoration: underline wavy #ffffff31 0.5px}
 
         .bg {
-            position: fixed;
-            z-index: -1; inset: 0;
+            position: fixed; z-index: -1; inset: 0;
             background: linear-gradient(170deg, #9e9fb1, #a598a8 41%, #988ea0 48%, #ab94a2 52%, #988597 66%, #978495 76%, #757182)
         }
-
         .copied {
             position: absolute;
             left: 50%; top: 50%; transform: translate(-50%, -50%);
@@ -89,9 +82,7 @@
         }
     </style>
     <noscript>
-        <style>
-            .morebutton, .status {display:none}
-        </style>
+        <style>.morebutton, .status {display:none}</style>
     </noscript>
 </head>
 <body>
@@ -127,8 +118,7 @@
                     <a href="//s1nez.neocities.org"><img class="button" data-src="/assets/images/88x31/s1nez.gif"></a>
                     <a href="//theawesomeblue.nekoweb.org"><img class="button" data-src="/assets/images/88x31/blue.gif"></a>
                     <a href="//shabble.fun"><img class="button" data-src="/assets/images/88x31/shabble.gif"></a>
-                    <a href="//xpvm.net"><img class="button" data-src="/assets/images/88x31/neptune.webp"></a>
-                    <a href="//240109.xyz/buttons"><img class="button" data-src="/assets/images/88x31/simon.webp"></a>
+                    <a href="//240109.xyz/buttons"><img class="button" data-src="/assets/images/88x31/hq/simon.gif"></a>
                     <a href="//rooot.gay"><img class="button" data-src="/assets/images/88x31/rooot.webp"></a>
                 </div>
             </div>
@@ -136,17 +126,20 @@
                 <span class="s3">other stuff</span>
                 <div class="buttons">
                     <a href="//ne0nbandit.art/cable"><img class="button" data-src="/assets/images/88x31/swatch.gif"></a>
-                    <a href="//spacehey.com/holidaygirl1224"><img class="button" data-src="/assets/images/88x31/holidaygirl.gif"></a>
+                    <a href="//spacehey.com/holidaygirl1224"><img class="button" data-src="/assets/images/88x31/hq/holidaygirl.gif"></a>
+                    <a href="//lyra.horse"><img class="button" data-src="/assets/images/88x31/rebane.webp"></a>
                     <a href="//soap.systems"><img class="button" data-src="/assets/images/88x31/soap.webp"></a>
+                    <a href="//xpvm.net"><img class="button" data-src="/assets/images/88x31/neptune.webp"></a>
                     <a href="//yugoslavia.best"><img class="button" data-src="/assets/images/88x31/penis.webp"></a>
-                    <a href="//wavesmiley.com"><img class="button" data-src="/assets/images/88x31/wavesmiley.gif"></a>
+                    <a href="//wavesmiley.com"><img class="button" data-src="/assets/images/88x31/hq/wavesmiley.gif"></a>
                     <a href="//tracker.archiveteam.org"><img class="button" data-src="/assets/images/88x31/archiveteam.gif"></a>
                     <a href="//ezgif.com"><img class="button" data-src="/assets/images/88x31/ezgif.gif"></a>
                     <a><img alt="from germanpit.de" class="button" data-src="/assets/images/88x31/w3c.webp"></a>
-                    <iframe data-src="//incr.easrng.net/badge?key=sog" class="button" width="88" height="31" frameborder="0"></iframe>
+                    
+                    <iframe data-src="//incr.easrng.net/badge?key=sog" width="88" height="31" frameborder="0" style="background:url('//incr.easrng.net/bg.gif')"></iframe>
                     <div class="button utbutton">
                         <style>.utbutton{width:88px;height:31px;overflow:hidden;position:relative}.ut{width:733px;height:258px;transform:scale(0.12);transform-origin:top left;position:absolute;top:0;left:0}</style>
-                        <iframe data-src="/undertale" width="733" height="258" frameborder="0" class="ut" scrolling="no" sandbox="allow-scripts allow-same-origin"></iframe>
+                        <iframe data-src="/undertale" width="733" height="258" frameborder="0" class="ut" scrolling="no"></iframe>
                     </div>
                 </div>
             </div>
@@ -203,7 +196,11 @@
         });
 
         document.addEventListener("mousedown", (e) => {
-            if (e.button !== 2) return; let el = e.target.closest(".button"); if (!el) return;
+            if (e.button !== 2) return; let el = e.target.closest(".button");
+            if (!el && e.target.tagName === "IFRAME") {
+                let more = e.target.closest(".more");
+                if (more) el = e.target;
+            }; if (!el) return;
             navigator.clipboard.writeText(el.outerHTML);
             document.querySelector(".copied").style.opacity = "1";
             setTimeout(function () {
