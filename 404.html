@@ -3,13 +3,23 @@
 <head>
 
     <title>...</title>
-    <link rel="icon" type="image/png" href="404.png">
+    <link rel="icon" type="image/png" href="../../assets/images/404.png">
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <meta name="googlebot" content="index,follow">
     <meta name="google" content="notranslate">
+
+    <!--script>
+        // redirect
+        var path = location.pathname.replace(/^\/+|\/+$/g, '');
+        if (path === "c" || path.startsWith("c/")) {
+            location.replace('https://twitter.com');
+        } else if (path === "v" || path.startsWith("/v")) {
+            location.replace('https://discord.com');
+        }
+    </script-->
 
     <style>
         body {
@@ -47,13 +57,13 @@
 <body>
 
     <div class="waiting">
-        <img class="paw" width="50px" draggable="false" src="../assets/images/paw.png">
+        <img class="paw" width="50px" draggable="false" src="../../assets/images/paw.png">
         <a class="atext">click to play</a>
     </div>
 
     <div class="page">
         <video class="NOTHING" width="400" height="400">
-            <source src="../assets/videos/THERESNOTHING.mp4" type="video/mp4">
+            <source src="../../assets/videos/THERESNOTHING.mp4" type="video/mp4">
         </video>
     </div>
 
