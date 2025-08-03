@@ -181,15 +181,21 @@
                     });
                     const iframes = moreBUTT.querySelectorAll('iframe[data-src]');
                     iframes.forEach(iframe => {
+                        console.log('Loading iframe:', iframe.dataset.src);
                         iframe.src = iframe.dataset.src;
                         iframe.removeAttribute('data-src');
+                        iframe.onload = () => console.log('Iframe loaded successfully');
+                        iframe.onerror = (e) => console.error('Iframe failed to load:', e);
                     });
                     moreBUTTs = true;
                 } else {
                     const iframes = moreBUTT.querySelectorAll('iframe[data-src]');
                     iframes.forEach(iframe => {
+                        console.log('Loading iframe (else):', iframe.dataset.src);
                         iframe.src = iframe.dataset.src;
                         iframe.removeAttribute('data-src');
+                        iframe.onload = () => console.log('Iframe loaded successfully (else)');
+                        iframe.onerror = (e) => console.error('Iframe failed to load (else):', e);
                     });
                 }
             }
