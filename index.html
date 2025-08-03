@@ -145,7 +145,7 @@
                     <iframe data-src="//incr.easrng.net/badge?key=sog" width="88" height="31" frameborder="0" style="background:url('//incr.easrng.net/bg.gif')"></iframe>
                     <div class="button utbutton">
                         <style>.utbutton{width:88px;height:31px;overflow:hidden;position:relative}.ut{width:733px;height:258px;transform:scale(0.12);transform-origin:top left;position:absolute;top:0;left:0}</style>
-                        <iframe data-src="https://pawing.cv/undertale" width="733" height="258" frameborder="0" class="ut" scrolling="no"></iframe>
+                        <iframe data-src="//pawing.cv/undertale" width="733" height="258" frameborder="0" class="ut" scrolling="no"></iframe>
                     </div>
                 </div>
             </div>
@@ -187,8 +187,11 @@
                     });
                     const iframes = moreBUTT.querySelectorAll('iframe[data-src]');
                     iframes.forEach(iframe => {
+                        console.log('Loading iframe with URL:', iframe.dataset.src);
                         iframe.src = iframe.dataset.src;
                         iframe.removeAttribute('data-src');
+                        iframe.onload = () => console.log('Iframe loaded successfully:', iframe.src);
+                        iframe.onerror = (e) => console.error('Iframe failed to load:', e);
                     });
                     moreBUTTs = true;
                 } else {
