@@ -23,18 +23,19 @@
         }
 
         body {
-            background: #a6a4b1; font: 8px/.55 monospace;
+            background: #a6a4b1; font: 8px/.55 "Consolas";
             display: flex; white-space: pre; 
             align-items: center; justify-content: center;
             width: 100vw; height: 100vh;
             overflow: hidden; margin: 0; letter-spacing: 0; 
         }
-        span {font: 16px/.55 monospace}
+        span {font: 16px/.55 "Consolas"}
 
         .bottom {
             display: flex; position: fixed; flex-direction: column;
             justify-content: center; align-items: center; flex-wrap: wrap;
             bottom: 20px; width: 750px; max-width: 90%; height: auto;
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         }
         .bottom span {line-height: 1.5}
         .buttons, .more {
@@ -204,13 +205,16 @@
 
         // copy buttons
         document.addEventListener("mousedown", (e) => {
-            if (e.button !== 2) return; let el = e.target.closest(".button"); if (!el) return;
-            let buttonElement = el.tagName === 'IMG' ? el.parentElement : el;
-            navigator.clipboard.writeText(buttonElement.outerHTML);
+            if (e.button !== 2) return; 
+            let el = e.target.closest(".button") || e.target.closest("iframe"); if (!el) return;
+            
+            let copiablebutton;
+            if (el.tagName === 'IMG') {copiablebutton = el.parentElement}
+            else {copiablebutton = el}
+            
+            navigator.clipboard.writeText(copiablebutton.outerHTML);
             document.querySelector(".copied").style.opacity = "1";
-            setTimeout(function () {
-                document.querySelector(".copied").style.opacity = "0";
-            }, 1000);
+            setTimeout(function() {document.querySelector(".copied").style.opacity = "0"}, 1000);
         });
     </script>
 </body>
