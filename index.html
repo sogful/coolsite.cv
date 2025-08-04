@@ -44,7 +44,7 @@
         }
         .more {display:none}
 
-        .button {padding: 2px; image-rendering: pixelated}
+        .button {padding: 2px; image-rendering: pixelated; background-repeat: no-repeat}
         .button iframe {padding: 2px}
         .smooth {
             image-rendering: smooth !important;
@@ -143,12 +143,13 @@
                     <a href="//ezgif.com"><img class="button" data-src="/assets/images/88x31/hq/ezgif.gif"></a>
                     <a><img alt="from germanpit.de" class="button" data-src="/assets/images/88x31/w3c.webp"></a>
                     
-                    <iframe data-src="//incr.easrng.net/badge?key=sog" width="88" height="31" frameborder="0" style="background:url('//incr.easrng.net/bg.gif')"></iframe>
-                    <div class="button utbutton">
+                    <!-- FML -->
+                    <a><iframe style="padding-right:4.001px;padding-left:2px" data-src="//incr.easrng.net/badge?key=sog" width="88" height="31" frameborder="0" style="background:url('//incr.easrng.net/bg.gif')"></iframe></a>
+                    <a class="button utbutton">
                         <style>.utbutton{width:88px;height:31px;overflow:hidden;position:relative}.ut{width:733px;height:258px;transform:scale(0.12);transform-origin:top left;position:absolute;top:0;left:0}</style>
                         <iframe data-src="//pawing.cv/undertale/index.html" width="733" height="258" frameborder="0" class="ut" scrolling="no"></iframe>
                         <script>const undertale = document.querySelector('.ut'); if (undertale && undertale.dataset.src && undertale.dataset.src.includes("pawing.cv/undertale")) {undertale.src = "https://pawing.cv/undertale/index.html"; undertale.removeAttribute('data-src')};</script>
-                    </div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -211,8 +212,17 @@
             let copiablebutton;
             if (el.tagName === 'IMG') {copiablebutton = el.parentElement}
             else {copiablebutton = el}
-            
-            navigator.clipboard.writeText(copiablebutton.outerHTML);
+
+            let clone = copiablebutton.cloneNode(true);
+            function removegarbage(node) {
+                if (node.removeAttribute) {
+                    node.removeAttribute('style');
+                    node.removeAttribute('class');
+                }
+                for (let child of node.childNodes) {removegarbage(child)}
+            }; removegarbage(clone);
+
+            navigator.clipboard.writeText(clone.outerHTML);
             document.querySelector(".copied").style.opacity = "1";
             setTimeout(function() {document.querySelector(".copied").style.opacity = "0"}, 1000);
         });
