@@ -241,20 +241,18 @@
                     .then(blob => {
                         const url = window.URL.createObjectURL(blob); const link = document.createElement('a');
                         link.href = url; link.download = buttonimage.src.split('/').pop() || 'button.png';
-                        document.body.appendChild(link); link.click();
-                        document.body.removeChild(link); window.URL.revokeObjectURL(url);
-                        
-                        document.querySelector(".copied a").textContent = "saving.."; document.querySelector(".copied").style.opacity = "1";
+                        setTimeout(() => {
+                            document.body.appendChild(link); link.click();
+                            document.body.removeChild(link); window.URL.revokeObjectURL(url);
+                        }, 10);
+                        document.querySelector(".copied a").textContent = "saving..";
+                        document.querySelector(".copied").style.opacity = "1";
                         setTimeout(function() {document.querySelector(".copied").style.opacity = "0"}, 1000);
                     })
                     .catch(() => { // fallback
-                        const link = document.createElement('a'); link.href = buttonimage.src;
-                        link.download = buttonimage.src.split('/').pop() || 'button.png';
-                        link.target = '_blank';
-                        document.body.appendChild(link); link.click();
-                        document.body.removeChild(link);
-                        
-                        document.querySelector(".copied a").textContent = "saving.."; document.querySelector(".copied").style.opacity = "1";
+                        window.open(buttonimage.src, '_blank');
+                        document.querySelector(".copied a").textContent = "opened in new tab";
+                        document.querySelector(".copied").style.opacity = "1";
                         setTimeout(function() {document.querySelector(".copied").style.opacity = "0"}, 1000);
                     });
             }
