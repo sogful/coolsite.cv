@@ -110,7 +110,7 @@
     </center>
 
     <div class="bottom">
-        <span class="s3">right click to copy / middle click to save</span>
+        <span class="s3">middle click to copy</span>
         <div class="buttons">
             <a href="//s.soggy.cat"><img class="button smooth" src="//pawing.cv/assets/images/88x31/ssoggycat.webp"></a>
             <a href="//pawing.cv/swatchlings"><img class="button smooth" src="//pawing.cv/assets/images/88x31/swatchlings.gif"></a>
@@ -158,7 +158,7 @@
 
     <div class="status"><span>loading..</span><span class="s2">(if nothing appears, try refreshing)</span></div>
     <script>
-        document.addEventListener("contextmenu", (event) => {event.preventDefault()});
+
         
         fetch("https://status.cafe/users/meow/status.json").then(r=>r.json()).then(r=>{
             document.querySelector(".status").innerHTML = `
@@ -205,15 +205,20 @@
             }
         });
 
-        // copy and save buttons
+        // copy buttons on middle click
         document.addEventListener("mousedown", (e) => {
             let el = e.target.closest(".button") || e.target.closest("iframe"); if (!el) return;
-
-            if (e.button === 2) {
+            if (e.button === 1) {
+                e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+                let buttonlink = el.tagName === 'A' ? el : el.closest('a');
+                let buttonlhref = null;
+                if (buttonlink && buttonlink.href) {
+                    buttonlhref = buttonlink.href;
+                    buttonlink.removeAttribute('href');
+                }
                 let copiablebutton;
                 if (el.tagName === 'IMG') {copiablebutton = el.parentElement}
                 else {copiablebutton = el}
-
                 let clone = copiablebutton.cloneNode(true);
                 function removegarbage(node) {
                     if (node.removeAttribute) {
@@ -222,39 +227,15 @@
                     }
                     for (let child of node.childNodes) {removegarbage(child)}
                 }; removegarbage(clone);
-
                 navigator.clipboard.writeText(clone.outerHTML);
                 document.querySelector(".copied a").textContent = "copied!";
                 document.querySelector(".copied").style.opacity = "1";
                 setTimeout(function() {document.querySelector(".copied").style.opacity = "0"}, 1000);
-            }
-            
-            // (middle click)
-            if (e.button === 1) {
-                e.preventDefault();
-                e.stopPropagation();
-                let buttonimage = el.tagName === 'IMG' ? el : el.querySelector('img');
-                if (!buttonimage || !buttonimage.src) return;
-                
-                fetch(buttonimage.src)
-                    .then(response => response.blob())
-                    .then(blob => {
-                        const url = window.URL.createObjectURL(blob); const link = document.createElement('a');
-                        link.href = url; link.download = buttonimage.src.split('/').pop() || 'button.png';
-                        setTimeout(() => {
-                            document.body.appendChild(link); link.click();
-                            document.body.removeChild(link); window.URL.revokeObjectURL(url);
-                        }, 10);
-                        document.querySelector(".copied a").textContent = "saving..";
-                        document.querySelector(".copied").style.opacity = "1";
-                        setTimeout(function() {document.querySelector(".copied").style.opacity = "0"}, 1000);
-                    })
-                    .catch(() => { // fallback
-                        window.open(buttonimage.src, '_blank');
-                        document.querySelector(".copied a").textContent = "opened in new tab";
-                        document.querySelector(".copied").style.opacity = "1";
-                        setTimeout(function() {document.querySelector(".copied").style.opacity = "0"}, 1000);
-                    });
+                setTimeout(() => {
+                    if (buttonlink && buttonlhref) {
+                        buttonlink.href = buttonlhref;
+                    }
+                }, 100); return false;
             }
         });
     </script>
