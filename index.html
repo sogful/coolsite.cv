@@ -50,21 +50,17 @@
             image-rendering: smooth !important;
             image-rendering: auto !important;
         }
-        
-        .section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .section {display: flex; flex-direction: column; align-items: center}
 
         .status {
-            display: flex; position: fixed;
+            display: flex; position: fixed; white-space: pre-line !important;
             flex-direction: column; top: 20px; right: 20px;
             font-size: 16px; row-gap: 10px; text-align: right;
-            background: rgba(0,0,0,0.3); 
+            background: rgba(0,0,0,0.3); box-shadow: 0 4px 16px rgba(0,0,0,0.3);
             padding: 15px; border-radius: 15px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            max-width: 400px; max-width: 50%; height: auto;
         }
+        .s1 {line-height: 1}
         .s2 {font-size: 10px; color: #ccc}
         .s3 {font-size: 8px; color: #bbb}
         .s3:any-link, .morebutton {text-decoration: underline wavy #ffffff31 0.5px}
@@ -161,7 +157,7 @@
         
         fetch("https://status.cafe/users/meow/status.json").then(r=>r.json()).then(r=>{
             document.querySelector(".status").innerHTML = `
-            <span>${r.content}</span>
+            <span class="s1">${r.content}</span>
             <span class="s2">${r.face} · ${r.timeAgo}</span>
             <a class="s3" href="https://status.cafe/users/meow" target="_blank">status.cafe</a>`
         });
