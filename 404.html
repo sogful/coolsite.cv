@@ -11,15 +11,13 @@
     <meta name="googlebot" content="index,follow">
     <meta name="google" content="notranslate">
 
-    <!--script>
+    <script>
         // redirect
-        var path = location.pathname.replace(/^\/+|\/+$/g, '');
-        if (path === "c" || path.startsWith("c/")) {
-            location.replace('https://twitter.com');
-        } else if (path === "v" || path.startsWith("/v")) {
-            location.replace('https://discord.com');
+        var path = location.pathname.replace(/^\/+|\/+$/g, "");
+        if (path === "downloads" || path.startsWith("bookmark")) {
+            location.replace("https://pawing.cv/dl");
         }
-    </script-->
+    </script>
 
     <style>
         body {
