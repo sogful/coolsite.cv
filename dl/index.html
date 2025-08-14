@@ -37,17 +37,17 @@
             color: #eee;
             text-decoration: underline wavy #444;
         }
-        .text, .manager {
+        .text {
             display: flex; flex-direction: column;
             max-width: 400px; line-height: 1.5; color: #eeeeee;
         }
-        .butt, .manager {
+        .butt {
             background-color: #202124; 
             font-size: 0.9em; padding: 0 0.5em;
             display: inline-block; width: fit-content;
         }
         sup {font-size: 9px; opacity: 0.5}
-        ol,  .manager {color: #bbb}
+        ol {color: #bbb}
     </style>
 
 </head>
@@ -60,14 +60,7 @@
         <a>to use:</a>
         <ol>
             <li>download <a href="bookmarks.html" download>bookmarks.html</a></li>
-            <li>
-                visit your 
-                <a class="manager" href="chrome://bookmarks">Bookmarks Manager</a>
-                <script>
-                  if (navigator.userAgent.includes("Edg/")) document.querySelector(".manager").href = "edge://favorites";
-                  else if (navigator.userAgent.includes("Brave")) document.querySelector(".manager").href = "brave://bookmarks";
-                </script>
-            </li>
+            <li>visit your <a class="butt">Bookmarks Manager</a></li>
             <sup>(at least that"s the most common place where you can import bookmarks)</sup>
             <li>click <div class="butt">⋮</div> → <div class="butt">Import Bookmarks</div> and select the downloaded file</li>
         </ol>
