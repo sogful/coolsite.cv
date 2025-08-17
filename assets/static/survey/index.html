@@ -318,7 +318,7 @@
 
     <script>
         window.addEventListener("DOMContentLoaded", function() {
-            var discord = /^https:\/\/discord[^.]*\.com/.test(window.location.href);
+            var discord = /discords/.test(window.location.hostname);
             if (typeof debug === "undefined" || (debug < 1)) {
                 if (!discord) {
                     var nope = document.querySelector(".nope");
