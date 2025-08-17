@@ -33,9 +33,6 @@
             user-select: none;
         }
         audio {display: none}
-        .hidecursor, .hidecursor * {
-            cursor: none !important;
-        }
         *:focus {outline: none !important}
 
         .heroes {
@@ -424,7 +421,7 @@
                 document.querySelector(".white").style.opacity = "1";
                 setTimeout(function() {
                     document.querySelector(".white").style.opacity = "0";
-                    setTimeout(function() {launch()}, 4000 * speed);
+                    setTimeout(function() {launch(); document.querySelector(".white").style.display = "none"}, 4000 * speed);
                 }, 2000 * speed);
             }, 600 * speed);
         }
@@ -540,8 +537,6 @@
             pianostopped = false;
             document.querySelector(".intro").style.display = "none"; // just in case
             const menu = document.querySelector(".menu"); menu.style.opacity = "1";
-            document.documentElement.classList.add("hidecursor");
-            document.body.classList.add("hidecursor");
             menu.focus();
             shuffled = shuffle(piano.slice()); currentindex = 0; playnext();
             if (nobottom) {
@@ -889,8 +884,8 @@
             function showinputlost() {
                 if (inputlost) return;
                 inputlost = true;
-                document.documentElement.classList.remove('hidecursor');
-                document.body.classList.remove('hidecursor');
+                // document.documentElement.classList.remove('hidecursor');
+                // document.body.classList.remove('hidecursor');
             }
             iframe.addEventListener('blur', () => {
                 setTimeout(() => {
