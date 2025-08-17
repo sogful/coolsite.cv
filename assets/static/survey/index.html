@@ -38,6 +38,14 @@
         }
         *:focus {outline: none !important}
 
+        .heroes {
+            position: fixed; opacity: 0; z-index: -9999;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: url("assets/images/spr_heroes.gif");
+            background-repeat: no-repeat; background-position: center center;
+            background-size: cover; pointer-events: none;
+            transition: opacity 3s;
+        }
 
         .site {
             position: fixed; display: flex; flex-direction: column;
@@ -236,6 +244,8 @@
     <audio class="menuch2" src="assets/audio/select/ch2_select.wav" preload="auto"></audio>
     <audio class="menuch3" src="assets/audio/select/ch3_select.wav" preload="auto"></audio>
     <audio class="menuch4" src="assets/audio/select/ch4_select.wav" preload="auto"></audio>
+
+    <div class="heroes"></div>
 
     <div class="site">
         <div class="white"></div>
@@ -860,20 +870,45 @@
 
             const iframe = document.createElement("iframe");
             iframe.className = "gameframe";
-            iframe.src = `data/ch${chapternum}/index.html`;
-            iframe.tabIndex = 0; 
-            iframe.onload = function() {iframe.focus()};
+            iframe.src = `data/ch${chapternum}/index.html`; iframe.tabIndex = 0; 
+            iframe.onload = function() {iframe.focus()}; iframe.style.position = "fixed";
+            iframe.style.top = rect.top + "px"; iframe.style.left = rect.left + "px";
+            iframe.style.width = rect.width + "px"; iframe.style.height = rect.height + "px";
+            iframe.style.border = "none"; iframe.allow = "autoplay; fullscreen";
+            iframe.style.zIndex = "-1"; iframe.style.pointerEvents = "auto";
 
-            iframe.style.position = "fixed";
-            iframe.style.top = rect.top + "px"; 
-            iframe.style.left = rect.left + "px";
-            iframe.style.width = rect.width + "px"; 
-            iframe.style.height = rect.height + "px";
-            iframe.style.border = "none"; 
-            iframe.allow = "autoplay; fullscreen";
-            iframe.style.zIndex = "-1";
+            document.querySelectorAll('.white, .intro, .menu, .nope').forEach(el => {
+                el.style.display = 'none';
+            });
 
             document.body.appendChild(iframe);
+            document.querySelector(".heroes").style.opacity = "0.075";
+
+            // ignore this
+            let inputlost = false;
+            function showinputlost() {
+                if (inputlost) return;
+                inputlost = true;
+                document.documentElement.classList.remove('hidecursor');
+                document.body.classList.remove('hidecursor');
+            }
+            iframe.addEventListener('blur', () => {
+                setTimeout(() => {
+                    iframe.focus();
+                    setTimeout(() => {
+                        if (document.activeElement !== iframe) {
+                            showinputlost();
+                        }
+                    }, 100);
+                }, 100);
+            });
+            window.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (document.activeElement !== iframe) {
+                        showinputlost();
+                    }
+                }, 100);
+            });
 
             setTimeout(function() {
                 iframe.style.zIndex = "9999";
