@@ -378,6 +378,7 @@
 
         // 0 = normal, 1 = validfile(), 2 = launch(), 3 = launch instantly, 4 = skip url check
         let debug = 0;
+        let nobottom = 1;
         function validfile(content, fileName) {
             document.querySelector(".intro").classList.remove("fade");
             document.querySelector(".revival").play()
@@ -484,6 +485,13 @@
             document.body.classList.add("hidecursor");
             menu.focus();
             shuffled = shuffle(piano.slice()); currentindex = 0; playnext();
+            if (nobottom) {
+                var buttons = document.querySelector('.bottom .buttons');
+                if (buttons) buttons.style.display = 'none';
+            } else {
+                var buttons = document.querySelector('.bottom .buttons');
+                if (buttons) buttons.style.display = '';
+            }
         }
 
         //////////////////////////////////////////////////////////////////
@@ -515,12 +523,13 @@
                     });
                 }
             });
-
-            const buttons = document.querySelectorAll(".buttons a");
-            buttons.forEach((btn, idx) => {
-                if (inbottom && idx === currentbottom) btn.classList.add("selected");
-                else btn.classList.remove("selected");
-            });
+            if (!nobottom) {
+                const buttons = document.querySelectorAll(".buttons a");
+                buttons.forEach((btn, idx) => {
+                    if (inbottom && idx === currentbottom) btn.classList.add("selected");
+                    else btn.classList.remove("selected");
+                });
+            }
             const heart = document.querySelector(".menu > .heart");
             if (heart) {
                 if (inbottom) {
@@ -568,15 +577,31 @@
                     }; idx += dir;
                 }
                 if (!found) {
-                    inbottom = true; currentbottom = 0;
-                    updatechapter(); document.querySelector(".menumove").play();
-                    return;
+                    if (!nobottom) {
+                        inbottom = true; currentbottom = 0;
+                        updatechapter(); document.querySelector(".menumove").play();
+                        return;
+                    } else {
+                        // Loop to the other end
+                        if (dir > 0) {
+                            let idx = 0;
+                            while (chapters[idx].classList.contains("unavailable") && idx < len - 1) idx++;
+                            currentchapter = idx;
+                        } else {
+                            let idx = len - 1;
+                            while (chapters[idx].classList.contains("unavailable") && idx > 0) idx--;
+                            currentchapter = idx;
+                        }
+                        updatechapter(); document.querySelector(".menumove").play();
+                        return;
+                    }
                 } else {
                     currentchapter = idx;
                     updatechapter(); document.querySelector(".menumove").play();
                     return;
                 }
             } else {
+                if (nobottom) return
                 if (dir < 0) {
                     let idx = len - 1;
                     while (chapters[idx].classList.contains("unavailable") && idx > 0) idx--;
@@ -612,7 +637,7 @@
 
         document.addEventListener("keydown", function(e) {
             if (document.querySelector(".menu").style.opacity !== "1") return;
-            if (inbottom) {
+            if (inbottom && !nobottom) {
                 if (["ArrowLeft", "a", "A"].includes(e.key)) {
                     highlightbottom(-1); e.preventDefault();
                 } else if (["ArrowRight", "d", "D"].includes(e.key)) {
