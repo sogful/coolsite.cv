@@ -52,6 +52,13 @@
             text-align: center;
         }
         .loading {
+            position: fixed;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            overflow: hidden; opacity: 0; z-index: 2147483647;
+            transform: translateZ(0); will-change: opacity;
+        }
+        .welcomeback {
             position: fixed; display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             overflow: hidden; opacity: 0; z-index: 99999;
@@ -233,11 +240,6 @@
     <div class="site">
         <div class="white"></div>
 
-        <div class="loading">
-            <a>Loading<span class="loadingdots"></span></a>
-            <a class="small">This process might take a while on low-end devices.</a>
-        </div>
-
         <div class="nope">
             <a>
                 <span r t="WARNING" style="text-decoration:underline;text-decoration-color:#4C0000"></span> <br><br>
@@ -246,18 +248,17 @@
                 PLEASE REFER TO YOUR NINTENDO GAME INSTRUCTION BOOKLET FOR FURTHER INFORMATION. <br>
             </a>
         </div>
-
         <div class="intro">
             <a>please paste or drag <span b t="igor.output.manifest"></span> from your DELTARUNE installation.</a>
             <a class="small">C:\Program Files (x86)\Steam\steamapps\common\DELTARUNE</a>
         </div>
-
+        <div class="welcomeback">
+            <a>(click anywhere to activate audio)</a>
+        </div>
         <div class="menu" tabindex="0">
-
             <div class="heart">
                 <img src="assets/images/spr_heart.png">
             </div>
-
             <div class="chapters">
                 <div class="chapter">
                     <div class="number"><a>Chapter 1</a></div>
@@ -299,21 +300,24 @@
                     <div class="icon"><img src="assets/images/chapters/spr_chapterIcon_0.png"></div>
                 </div>
             </div>
-
             <div class="piano">
                 <img src="assets/images/spr_noellehouse_kitchen_piano.png">
                 <img class="note" src="assets/images/spr_noteo_small.png" style="display:none">
             </div>
             <div class="bottom">
                 <div class="info small">
-                    <a>Underanalyzer by Underminers Team</a>
-                    <a>Port by genizy & bog <span b t="(Temporary)"></span></a>
-                    <a>Activity by cv</a>
+                    <a>underanalyzer by underminers team</a>
+                    <a>port by genizy & bog <span b t="(temporary)"></span></a>
+                    <a>activity by cv</a>
                 </div>
                 <div class="buttons"><a>Quit</a><a>Buy</a></div>
             </div>
         </div>
-
+        <div class="loading">
+            <a>loading<span class="loadingdots"></span></a>
+            <a class="small">this process might take a while on low-end devices.</a>
+            <a class="small">if the iframe doesn't appear, try refocusing the page a couple of times.</a>
+        </div>
     </div>
 
     <script>
@@ -335,12 +339,12 @@
                 }, 750);
             }
 
-            const loadingdots = document.querySelector('.loadingdots');
+            const loadingdots = document.querySelector(".loadingdots");
             if (loadingdots) {
                 let dotcount = 0;
                 setInterval(() => {
                     dotcount = (dotcount + 1) % 4;
-                    loadingdots.textContent = '.'.repeat(dotcount);
+                    loadingdots.textContent = ".".repeat(dotcount);
                 }, 400);
             }
         });
@@ -377,10 +381,33 @@
         });
 
         // 0 = normal, 1 = validfile(), 2 = launch(), 3 = launch instantly, 4 = skip url check
-        let debug = 0;
+        let debug = 4;
         let nobottom = 1;
+
+        let verified = false;
+        if (window.localStorage && localStorage.getItem("cool") === "1") {
+            verified = true;
+        }
+        function fadeouthide(element, duration = 1000) {
+            if (!element) return;
+            element.style.opacity = "0";
+            setTimeout(() => { element.style.display = "none"; }, duration);
+        }
+        
+        let alreadyvalidated = false;
         function validfile(content, fileName) {
-            document.querySelector(".intro").classList.remove("fade");
+            if (alreadyvalidated) return;
+            alreadyvalidated = true;
+            // the user validated the file, awesome sauce! if you bring up that stupid menu again you"re never seeing the light of day
+            if (window.localStorage) localStorage.setItem("cool", "1");
+            verified = true;
+            const intro = document.querySelector(".intro");
+            if (intro) {
+                intro.classList.remove("fade"); 
+                fadeouthide(intro, 1000);
+            }
+            const welcomeback = document.querySelector(".welcomeback");
+            if (welcomeback) fadeouthide(welcomeback, 1000);
             document.querySelector(".revival").play()
             const speed = (debug === 1) ? 0.5 : 1;
             setTimeout(function() {
@@ -391,6 +418,28 @@
                 }, 2000 * speed);
             }, 600 * speed);
         }
+        window.addEventListener("DOMContentLoaded", function() {
+            if (verified) {
+                var welcomeback = document.querySelector(".welcomeback");
+                if (welcomeback) {
+                    welcomeback.style.transition = "opacity 1s cubic-bezier(0.4,0,0.2,1)";
+                    welcomeback.style.opacity = "0.5";
+                }
+                var intro = document.querySelector(".intro");
+                if (intro) {
+                    intro.classList.remove("fade");
+                    intro.style.display = "none";
+                }
+                document.addEventListener("click", function runValidFileOnClick() {
+                    if (verified) {
+                        validfile("GameMakerStudio2-LTS", "welcomeback");
+                        document.removeEventListener("click", runValidFileOnClick);
+                    }
+                });
+            }
+        });
+
+
         if (debug === 1) {
             let debugvalid = false;
             window.addEventListener("click", function debugValidfileHandler() {
@@ -416,7 +465,7 @@
         // notes are based on the ones used on the rejected tracks page:
         // https://toby.fangamer.com/interviews/chapter2_music/
 
-        // i just happened to remember them because deltarune.com's 
+        // i just happened to remember them because deltarune.com"s 
         // 2nd sweepstakes arg code had them reimplemented for some reason
 
         function shuffle(array) {
@@ -486,11 +535,11 @@
             menu.focus();
             shuffled = shuffle(piano.slice()); currentindex = 0; playnext();
             if (nobottom) {
-                var buttons = document.querySelector('.bottom .buttons');
-                if (buttons) buttons.style.display = 'none';
+                var buttons = document.querySelector(".bottom .buttons");
+                if (buttons) buttons.style.display = "none";
             } else {
-                var buttons = document.querySelector('.bottom .buttons');
-                if (buttons) buttons.style.display = '';
+                var buttons = document.querySelector(".bottom .buttons");
+                if (buttons) buttons.style.display = "";
             }
         }
 
@@ -499,17 +548,31 @@
         let currentchapter = 0; let currentchoice = 0; let currentbottom = 0;
         let inchoice = false; let inbottom = false;
         
+        let schedulechangeicon = false;
+        function scheduleupdatechapter() {
+            if (!schedulechangeicon) {
+                schedulechangeicon = true;
+                requestAnimationFrame(() => {
+                    updatechapter();
+                    schedulechangeicon = false;
+                });
+            }
+        }
         function updatechapter() {
             const chapters = Array.from(document.querySelectorAll(".menu .chapter"));
+            chapters.forEach((ch) => {
+                const img = ch.querySelector(".icon img");
+                if (img) {
+                    if (!img.dataset.originalSrc) img.dataset.originalSrc = img.src;
+                    img.src = img.dataset.originalSrc;
+                }
+            });
             chapters.forEach((ch, i) => {
                 ch.classList.toggle("selected", i === currentchapter && !inbottom);
                 const img = ch.querySelector(".icon img");
                 if (!img) return;
                 if (i === currentchapter && !inbottom) {
-                    if (!img.dataset.originalSrc) img.dataset.originalSrc = img.src;
                     recolor(img);
-                } else if (img.dataset.originalSrc) {
-                    img.src = img.dataset.originalSrc;
                 }
                 const choice = ch.querySelector(".choice");
                 if (choice) choice.style.display = (i === currentchapter && inchoice && !inbottom) ? "flex" : "none";
@@ -579,10 +642,9 @@
                 if (!found) {
                     if (!nobottom) {
                         inbottom = true; currentbottom = 0;
-                        updatechapter(); document.querySelector(".menumove").play();
+                        scheduleupdatechapter(); document.querySelector(".menumove").play();
                         return;
                     } else {
-                        // Loop to the other end
                         if (dir > 0) {
                             let idx = 0;
                             while (chapters[idx].classList.contains("unavailable") && idx < len - 1) idx++;
@@ -592,12 +654,12 @@
                             while (chapters[idx].classList.contains("unavailable") && idx > 0) idx--;
                             currentchapter = idx;
                         }
-                        updatechapter(); document.querySelector(".menumove").play();
+                        scheduleupdatechapter(); document.querySelector(".menumove").play();
                         return;
                     }
                 } else {
                     currentchapter = idx;
-                    updatechapter(); document.querySelector(".menumove").play();
+                    scheduleupdatechapter(); document.querySelector(".menumove").play();
                     return;
                 }
             } else {
@@ -612,7 +674,7 @@
                     currentchapter = idx;
                 }
                 inbottom = false;
-                updatechapter();
+                scheduleupdatechapter();
                 document.querySelector(".menumove").play();
             }
         }
@@ -621,7 +683,7 @@
             const chapter = document.querySelectorAll(".menu .chapter")[currentchapter];
             const choices = chapter.querySelectorAll(".choice a");
             currentchoice = (currentchoice + dir + choices.length) % choices.length;
-            updatechapter();
+            scheduleupdatechapter();
             document.querySelector(".menumove").play();
         }
         function highlightbottom(dir) {
@@ -629,7 +691,7 @@
             const buttons = document.querySelectorAll(".buttons a");
             const len = buttons.length;
             currentbottom = (currentbottom + dir + len) % len;
-            updatechapter();
+            scheduleupdatechapter();
             document.querySelector(".menumove").play();
         }
 
@@ -694,13 +756,13 @@
                         }
                         document.querySelector(".menuselect").play();
                     } else {
-                        inchoice = false; updatechapter();
+                        inchoice = false; scheduleupdatechapter();
                         document.querySelector(".menuselect").play();
                     }
                     e.preventDefault();
                 } else if (["x", "X", "Shift"].includes(e.key)) {
                     inchoice = false;
-                    updatechapter();
+                    scheduleupdatechapter();
                     document.querySelector(".menuswing").play();
                     e.preventDefault();
                 }
@@ -715,7 +777,7 @@
                 const chapter = document.querySelectorAll(".menu .chapter")[currentchapter];
                 if (chapter.classList.contains("unavailable")) return;
                 inchoice = true; currentchoice = 0;
-                updatechapter(); document.querySelector(".menuselect").play();
+                scheduleupdatechapter(); document.querySelector(".menuselect").play();
                 e.preventDefault();
             }
         });
@@ -731,7 +793,7 @@
         const oglaunch = launch;
         launch = function() {
             oglaunch();
-            setTimeout(updatechapter, 100);
+            setTimeout(scheduleupdatechapter, 100);
         }
 
         // recolor with js because css is ASS at this
@@ -774,18 +836,22 @@
         }
 
         function loading() {
-            const loading = document.querySelector('.loading');
+            const loading = document.querySelector(".loading");
             if (loading) {
-                loading.style.transition = 'opacity 0.5s';
-                loading.style.opacity = '0.5';
+                loading.style.transition = "opacity 0.5s";
+                loading.style.opacity = "0.5";
             }
             setTimeout(() => {
-                if (loading) loading.style.opacity = '0';
+                if (loading) {
+                    loading.style.opacity = "0";
+                    setTimeout(() => {
+                        loading.style.display = "none";
+                    }, 1000);
+                }
             }, 4000);
         }
 
         function runchapter(chapternum) {
-
             const gameframe = document.querySelector(".gameframe");
             if (gameframe) gameframe.remove();
 
@@ -795,15 +861,29 @@
             const iframe = document.createElement("iframe");
             iframe.className = "gameframe";
             iframe.src = `data/ch${chapternum}/index.html`;
-            iframe.tabIndex = 0; iframe.onload = function() {iframe.focus()};
+            iframe.tabIndex = 0; 
+            iframe.onload = function() {iframe.focus()};
 
             iframe.style.position = "fixed";
-            iframe.style.top = rect.top + "px"; iframe.style.left = rect.left + "px";
-            iframe.style.width = rect.width + "px"; iframe.style.height = rect.height + "px";
-            iframe.style.border = "none"; iframe.allow = "autoplay; fullscreen";
-            iframe.style.zIndex = "-1"
+            iframe.style.top = rect.top + "px"; 
+            iframe.style.left = rect.left + "px";
+            iframe.style.width = rect.width + "px"; 
+            iframe.style.height = rect.height + "px";
+            iframe.style.border = "none"; 
+            iframe.allow = "autoplay; fullscreen";
+            iframe.style.zIndex = "-1";
 
             document.body.appendChild(iframe);
+
+            setTimeout(function() {
+                iframe.style.zIndex = "9999";
+            }, 7000);
+
+            const loading = document.querySelector(".loading");
+            if (loading) {
+                loading.style.zIndex = "2147483647";
+                loading.style.position = "fixed";
+            }
 
             aligngameframe();
             if (!window._gameframeResizeListener) {
@@ -811,7 +891,6 @@
                 window.addEventListener("scroll", aligngameframe);
                 window._gameframeResizeListener = true;
             }
-            
         }
         function aligngameframe() {
             const site = document.querySelector(".site");
