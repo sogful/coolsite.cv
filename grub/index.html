@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>...Home...</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="googlebot" content="index,follow">
+    <meta name="google" content="notranslate">
+
+    <style>
+        body {
+            background-color: black; height: 100%;
+            padding: 0; margin: 0; overflow: hidden;
+        }
+        .page {
+            position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            overflow: visible;
+        }
+        .bg {
+            position: fixed; pointer-events: none;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            overflow: hidden;
+            background-image: url("assets/images/bg.webp");
+            background-repeat: no-repeat; background-position: center center;
+            background-size: cover; opacity: 0.15; filter: blur(10px);
+        }
+        
+        .waiting {
+            position: fixed; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            width: 100%; height: 100vh;
+            background-color: rgba(0,0,0,0.8); color: white;
+            backdrop-filter: blur(10px);
+            opacity: 1; z-index: 2000; cursor: pointer;
+            font-family: "Segoe UI", "Open Sans", "Helvetica Neue", sans-serif;
+        }
+        .atext {
+            color: #d7d7d7;
+            font-size: 12.5px;
+            user-select: none;
+            z-index: 2500;
+        }
+
+        .poorguy {
+            position: relative;
+            width: 100px; height: 100px;
+            overflow: visible;
+        }
+        .grub {
+            position: absolute;
+            bottom: -65%; right: 0;
+            left: auto; top: auto;
+            transform: none;
+            height: auto;
+            width: auto;
+            max-width: none;
+            display: block;
+            z-index: 1;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        .jar {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            height: 225%;
+            width: auto;
+            max-width: none;
+            display: block;
+            z-index: 2;
+        }
+    </style>
+
+</head>
+<body>
+
+    <div class="waiting" style="display:none">
+        <img class="paw" width="50px" draggable="false" src="../assets/images/paw.png">
+        <a class="atext">click to play</a>
+    </div>
+
+    <div class="bg"></div>
+    <div class="page">
+        <div class="poorguy">
+            <img class="jar" src="assets/images/jar.webp">
+            <img class="grub" src="assets/images/sad/frame1.png">
+        </div>
+    </div>
+
+    <script>
+        document.querySelector(".waiting").onclick = () =>
+            document.querySelector(".waiting").style.display = "none";
+
+        const grub = document.querySelector(".grub");
+
+        let state = "sad", frame = 1, timerid = null;
+        let sadtimer = null;
+        let recentstate = 0;
+        let freedom = false;
+        const statecooldown = 100;
+        const currentvolume = 1; // idk if i should tone this down
+
+        const alertsfx = [
+            "assets/audio/yay.mp3",
+            "assets/audio/yay2.mp3",
+            "assets/audio/alert.mp3"
+        ], exitsfx = [
+            "assets/audio/ragebaited.mp3",
+            "assets/audio/ragebaited2.mp3",
+            "assets/audio/ragebaited3.mp3"
+        ], sadloop = [
+            "assets/audio/sad.mp3",
+            "assets/audio/sad2.mp3",
+            "assets/audio/sad3.mp3",
+            "assets/audio/sad4.mp3"
+        ];
+
+        const animations = {
+            sad: {totalframes: 15, framedelay: 120, looppause: 1000, path: n => `assets/images/sad/frame${n}.png`},
+            alert: {totalframes: 7, framedelay: 100, looppause: 0, path: n => `assets/images/alert/frame${n}.png`},
+            free: {totalframes: 20, framedelay: 70, looppause: 0, path: n => `assets/images/free/frame${n}.png`}
+        };
+
+        function playsfx(arr) {
+            if (!arr?.length) return;
+            const audio = new Audio(arr[Math.random() * arr.length | 0]);
+            audio.volume = currentvolume;
+            audio.play().catch(()=>{});
+        }
+        function startsad() {
+            stopsad();
+            sadtimer = setInterval(() => playsfx(sadloop), 3750);
+        }
+        function stopsad() {
+            if (sadtimer) {
+                clearInterval(sadtimer);
+                sadtimer = null;
+            }
+        }
+        function cleartimer() {
+            if (timerid) clearTimeout(timerid), timerid = null;
+        }
+
+        function animategrub(newstate) {
+            if (state === newstate && timerid) return;
+            state = newstate; frame = 1; cleartimer();
+            if (state === "sad") startsad(); else stopsad();
+            const cfg = animations[state];
+            (function tick() {
+                grub.src = cfg.path(frame);
+                const isEnd = frame === cfg.totalframes;
+                if (isEnd && state === "free") {
+                    grub.style.opacity = "0";
+                    return;
+                }
+                frame = isEnd ? 1 : frame + 1;
+                if (!isEnd || state !== "free") {
+                    timerid = setTimeout(tick, isEnd ? (cfg.looppause || cfg.framedelay) : cfg.framedelay);
+                }
+            })();
+        }
+
+        function cursorclose(x, y) {
+            const r = grub.getBoundingClientRect();
+            const cx = Math.max(r.left, Math.min(x, r.right));
+            const cy = Math.max(r.top, Math.min(y, r.bottom));
+            return Math.hypot(x - cx, y - cy) <= 120;
+        }
+
+        let nearbefore = false;
+        function cursorhandler(e) {
+            if (freedom) return;
+            const near = cursorclose(e.clientX, e.clientY);
+            const now = Date.now();
+            if (near !== nearbefore && now - recentstate >= statecooldown) {
+                playsfx(near ? alertsfx : exitsfx);
+                animategrub(near ? "alert" : "sad");
+                recentstate = now;
+            }
+            nearbefore = near;
+        }
+
+        const shards = [];
+        let jarCenterX = 0, jarCenterY = 0;
+        
+        function FUCKINGSHARD() {
+            const shard = document.createElement("img");
+            const shardType = Math.floor(Math.random() * 3) + 1;
+            shard.src = `assets/images/shard${shardType}.png`;
+            shard.style.position = "absolute"; shard.style.width = "30px"; shard.style.height = "30px";
+            shard.style.pointerEvents = "none"; shard.style.zIndex = "10";
+            
+            shard.style.left = jarCenterX + "px";
+            shard.style.top = jarCenterY + "px";
+            
+            const vx = (Math.random() - 0.5) * 8;
+            const vy = -Math.random() * 6 - 2;
+            const rotation = Math.random() * 360;
+            const rotationSpeed = (Math.random() - 0.5) * 10;
+            
+            shards.push({element: shard, vx, vy, rotation, rotationSpeed, gravity: 0.3});
+            document.querySelector(".page").appendChild(shard);
+        }
+        function updateshard() {
+            shards.forEach((shard, i) => {
+                shard.vy += shard.gravity;
+                shard.rotation += shard.rotationSpeed;
+                
+                const rect = shard.element.getBoundingClientRect();
+                const pagediv = document.querySelector(".page").getBoundingClientRect();
+                const newX = parseFloat(shard.element.style.left) + shard.vx;
+                const newY = parseFloat(shard.element.style.top) + shard.vy;
+                
+                shard.element.style.left = newX + "px"; shard.element.style.top = newY + "px";
+                shard.element.style.transform = `rotate(${shard.rotation}deg)`;
+    
+                // if (newY > 5000) {shard.vy = 0; shard.vx *= 0.8}
+            });
+        }
+        function fadeshard() {
+            shards.forEach((shard, i) => {
+                const delay = i * 300 + Math.random() * 600;
+                setTimeout(() => {
+                    shard.element.style.transition = "opacity 1s";
+                    shard.element.style.opacity = "0";
+                    setTimeout(() => shard.element.remove(), 1000);
+                }, delay);
+            });
+        }
+
+        document.querySelector(".jar").addEventListener("click", () => {
+            if (freedom) return; freedom = true;
+            
+            // Store jar position before hiding it
+            const jarRect = document.querySelector(".jar").getBoundingClientRect();
+            const pageRect = document.querySelector(".page").getBoundingClientRect();
+            jarCenterX = jarRect.left - pageRect.left + jarRect.width/2;
+            jarCenterY = jarRect.top - pageRect.top + jarRect.height/2;
+            
+            document.querySelector(".jar").style.display = "none";
+            playsfx(["assets/audio/break.mp3"]);
+            for (let i = 0; i < 10; i++) {FUCKINGSHARD()}
+            const physicsinterval = setInterval(updateshard, 16);
+            cleartimer(); stopsad();
+
+            animategrub("alert");
+            setTimeout(() => {
+                animategrub("free");
+            }, 1000);
+            setTimeout(() => {
+                // this sfx sequence is different for an amazing reason! (vibecoding)
+                playsfx(["assets/audio/free1.mp3", "assets/audio/free2.mp3"]);
+            }, 1000);
+            setTimeout(() => {
+                playsfx(["assets/audio/burrow.mp3"]);
+            }, 1900);
+            
+            setTimeout(() => {
+                clearInterval(physicsinterval);
+                fadeshard();
+            }, 5000);
+        });
+
+        document.addEventListener("mousemove", cursorhandler);
+        document.addEventListener("touchmove", e => {
+            if (e.touches?.length)
+                cursorhandler({clientX: e.touches[0].clientX, clientY: e.touches[0].clientY});
+        }, {passive: true});
+        animategrub("sad");
+
+    </script>
+</body>
+</html>
