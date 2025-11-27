@@ -242,7 +242,7 @@
                 }; request.send();
                 function WEEE() {
                     if (!buffer) return;
-                    if (song) { song.stop(0); song.disconnect() }
+                    if (song) {song.stop(0); song.disconnect()}
                     song = context.createBufferSource(); song.buffer = buffer;
                     song.connect(volume);
                     song.loop = true; song.loopStart = 0;
