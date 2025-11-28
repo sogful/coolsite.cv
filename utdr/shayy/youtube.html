@@ -605,7 +605,7 @@
                 if (retry < 2) {
                     setTimeout(() => loadimage(img, src, retry + 1), 1000 * (retry + 1));
                 } else {
-                    img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180'%3E%3Crect fill='%23181818' width='320' height='180'/%3E%3Ctext fill='%23717171' font-family='Arial' font-size='14' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3EFailed to load%3C/text%3E%3C/svg%3E";
+                    img.src = "assets/images/nothumb.png";
                     img.classList.add("loaded");
                 }
             };
