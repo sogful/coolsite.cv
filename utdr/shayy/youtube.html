@@ -339,9 +339,9 @@
                         <div class="channelmeta">
                             <span>@ShayyTV</span>
                             <span class="channelmetaseparator">•</span>
-                            <span id="subscriber-count">370K subscribers</span>
+                            <span id="subscribercount">471K subscribers</span>
                             <span class="channelmetaseparator">•</span>
-                            <span id="videocount">177 videos</span>
+                            <span id="videocount">(loading)</span>
                         </div>
                         <div class="channeldescription">
                             Speedrunner and enjoyer of Undertale and Deltarune!
@@ -492,7 +492,7 @@
             if (!filteredvideos.length) {
                 const d = document.createElement("div");
                 d.className = "empty-state";
-                d.textContent = "No videos match that search.";
+                d.textContent = "No videos found.";
                 videosroot.appendChild(d);
                 return;
             }
@@ -543,7 +543,7 @@
                     <div class="videoduration">${dlabel}</div>
                 </div>
                 <div class="videoinfo">
-                    <img src="assets/images/pfp.webp" alt="Shayy" class="videochannelavatar" loading="lazy">
+                    <img src="assets/images/pfp.webp" class="videochannelavatar" loading="lazy">
                     <div class="videodetails">
                         <div class="videotitle">${escapehtml(video.title)}</div>
                         <div class="videometa">
