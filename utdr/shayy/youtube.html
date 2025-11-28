@@ -42,7 +42,7 @@
             display: none;
         }
         .page {
-            width: min(90vw, 700px);
+            width: min(90vw);
             padding: 0;
         }
 
@@ -53,12 +53,18 @@
 
         /*//////////////////////////////////////////////////////////////////////*/
 
-        .channelheader {position: relative; background: var(--bg-secondary)}
-
+        /* awkwardly crops if it doesn't fit */
+        .channelheader {
+            position: relative;
+            width: 100%; max-width: 660px;
+            background: var(--bg-secondary);
+            margin-left: auto; margin-right: auto;
+        }
         .channelbanner {
-            width: 100%; height: 200px;
+            width: 100%; max-width: 660px; height: 200px;
             background-size: cover; background-position: center;
             background-color: var(--bg-secondary);
+            display: block; margin-left: auto; margin-right: auto;
         }
 
         .channelinfo {
@@ -133,7 +139,7 @@
 
         /*//////////////////////////////////////////////////////////////////////*/
 
-        .content-area {
+        .contentarea {
             max-width: 1280px;
             margin: 0 auto; padding: 24px
         }
@@ -245,8 +251,9 @@
         /*//////////////////////////////////////////////////////////////////////*/
 
         .videogrid {
-            display: grid; grid-template-columns:
-            repeat(2, minmax(0, 1fr)); gap: 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
         }
 
         .videogrid .empty-state {
@@ -309,7 +316,7 @@
         /*//////////////////////////////////////////////////////////////////////*/
 
         @media (max-width: 768px) {
-            .content-area {padding: 16px}
+            .contentarea {padding: 16px}
             .tabs {padding: 0 16px}
             .watchpanel {padding: 12px}
         }
@@ -377,7 +384,7 @@
             </div>
         </div>
 
-        <div class="content-area">
+        <div class="contentarea">
 
             <div class="search">
                 <svg class="searchicon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
