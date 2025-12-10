@@ -13,15 +13,17 @@
 
     <style>
         body {
-            height: 80vh; min-height: 100vh;
+            height: 100vh; min-height: 100vh;
             margin: 0; padding: 0; overflow: hidden;
-            display: flex; justify-content: center; align-items: flex-end;
+            display: flex; justify-content: center; 
+            align-items: flex-end;
             background: black;
             /* filter: saturate(160%); */
         }
         .lovewon {
-            display: flex; position: fixed;
-            top: 4em; width: min(400px, 90vw);
+            display: flex;  position: fixed;
+            left: 50%; transform: translateX(-50%);
+            top: 4em;  width: min(400px, 90vw);
             image-rendering: pixelated;
             opacity: 0; pointer-events: none;
         }
@@ -29,11 +31,23 @@
             animation: chopacity 1s ease-in-out 2;
             opacity: 0;
         }
+        .main-row {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-end;
+            width: 100vw; max-width: 100vw;
+        }
+        .ellie {
+            display: block;
+            margin: 0;
+        }
         .teevee {
-            width: 50vw; height: 50vh;
+            height: 50vh;
             object-fit: contain; image-rendering: pixelated;
             z-index: 9999; transform-origin: right bottom;
             animation: wiggle 1.3s ease-in-out infinite;
+            margin: 0;
         }
         @keyframes wiggle {
             0%, 100% {transform: scaleY(1) scaleX(1)}
@@ -76,7 +90,7 @@
 <body>
     <img class="lovewon" src="/assets/images/lovewon.png" draggable="false">
 
-    <img src="/assets/images/ellie.png" draggable="false">
+    <img class="ellie" src="/assets/images/ellie.png" draggable="false">
     <img class="teevee" src="/assets/images/tennablossom.png" draggable="false">
     <audio src="/assets/audio/aww.wav"></audio>
 </body>
