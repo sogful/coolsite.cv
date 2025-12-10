@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>:D</title>
+    <link rel="icon" type="image/png" href="../assets/svgs/blank.svg">
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="googlebot" content="index,follow">
+    <meta name="google" content="notranslate">
+
+    <style>
+        body {
+            height: 80vh; min-height: 100vh;
+            margin: 0; padding: 0; overflow: hidden;
+            display: flex; justify-content: center; align-items: flex-end;
+            background: black;
+            /* filter: saturate(160%); */
+        }
+        .lovewon {
+            display: flex; position: fixed;
+            top: 4em; width: min(400px, 90vw);
+            image-rendering: pixelated;
+            opacity: 0; pointer-events: none;
+        }
+        .lovewon.show {
+            animation: chopacity 1s ease-in-out 2;
+            opacity: 0;
+        }
+        .teevee {
+            width: 50vw; height: 50vh;
+            object-fit: contain; image-rendering: pixelated;
+            z-index: 9999; transform-origin: right bottom;
+            animation: wiggle 1.3s ease-in-out infinite;
+        }
+        @keyframes wiggle {
+            0%, 100% {transform: scaleY(1) scaleX(1)}
+            12.5% {transform: scaleY(1.0125) scaleX(1.035)}
+            25% {transform: scaleY(1.025) scaleX(1)}
+            37.5% {transform: scaleY(1.0375) scaleX(1.035)}
+            50% {transform: scaleY(1.05) scaleX(1)}
+            62.5% {transform: scaleY(1.0375) scaleX(1.035)}
+            75% {transform: scaleY(1.025) scaleX(1)}
+            87.5% {transform: scaleY(1.0125) scaleX(1.035)}
+        }
+        @keyframes chopacity {
+            0%, 100% {opacity: 0}
+            50% {opacity: 1}
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const lovewon = document.querySelector('.lovewon');
+            let timeout;
+            let isShowing = false;
+            function showLoveWon() {
+                if (!lovewon || isShowing) return;
+                isShowing = true;
+                lovewon.classList.add('show');
+                document.querySelector('audio').play();
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    lovewon.classList.remove('show');
+                    isShowing = false;
+                }, 2000);
+            }
+            document.querySelectorAll('img').forEach(img => {
+                img.addEventListener('click', showLoveWon);
+            });
+        });
+    </script>
+
+</head>
+<body>
+    <img class="lovewon" src="/assets/images/lovewon.png" draggable="false">
+
+    <img src="/assets/images/ellie.png" draggable="false">
+    <img class="teevee" src="/assets/images/tennablossom.png" draggable="false">
+    <audio src="/assets/audio/aww.wav"></audio>
+</body>
