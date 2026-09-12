@@ -166,11 +166,7 @@ html, body, * {scrollbar-width: none; -ms-overflow-style: none}
 
 .tabs button {
     display: flex; align-items: center; justify-content: center;
-    flex: 1 1 auto; min-width: 0;
-    /* the caps of chuzzle script sit about 0.17em above the middle of their
-       line box, so the padding is split to put them back - the total is the
-       same as the daily-do's, so the switcher still meets the search box */
-    margin: 0;
+    flex: 1 1 auto; min-width: 0; margin: 0;
     padding: calc(var(--u) * 0.0175) calc(var(--u) * 0.0125) calc(var(--u) * 0.0045);
     border: none; color: white;
     font-family: "chuzzle script", "harlow solid", system-ui, sans-serif;

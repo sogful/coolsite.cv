@@ -62,10 +62,6 @@ if (document.fonts && document.fonts.ready) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-/* MLRender's <color> argument, shared by the daily-do rule text and the news.
-   it takes "r,g,b" or "r,g,b,a" as 0..1 floats (a bare ".5" is legal, and the
-   engine tolerates a trailing f), a single number for grey, "#rrggbb", or one
-   of the names below. grey is nudged off pure 50% so it stays readable. */
 const colornames = {
     white: "#ffffff", black: "#000000", red: "#ff0000", green: "#00ff00",
     blue: "#0000ff", cyan: "#00ffff", magenta: "#ff00ff", yellow: "#ffff00",

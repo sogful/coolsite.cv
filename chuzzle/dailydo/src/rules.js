@@ -199,9 +199,9 @@ function computerulesfordate(date, golden) {
 function iconimg(path, alt) {
     return "<img src=\"assets/images/ruleicons/" + path + ".png\" alt=\"" + alt + "\">";
 }
-function colouricon(path, alt, colour) {
+function colouricon(colour) {
     return "<span class=\"ruleicon tinted\" style=\"--rulecolour:" + csscolor(colour) + "\">"
-        + iconimg(path, alt) + "</span>";
+        + "<img src=\"assets/images/ruleicons/rule/20colortemplate.png\" alt=\"\"></span>";
 }
 function escapehtml(s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -228,11 +228,11 @@ function markuptext(raw) {
 }
 
 function itemrow(icon, alt, text) {
-    return "<div class=\"rulesitem\">" + iconimg(icon, alt) + "<span>" + markuptext(text) + "</span></div>";
+    return "<div class=\"rulesitem\">" + iconimg(icon, alt) + "<span class=\"ruletext\">" + markuptext(text) + "</span></div>";
 }
 function ruleitem(entry, extra, text) {
-    const icon = entry.id === 20 ? colouricon(entry.icon, "", extra.colour) : iconimg(entry.icon, "");
-    return "<div class=\"rulesitem\">" + icon + "<span>" + markuptext(text || ruletext(entry, extra)) + "</span></div>";
+    const icon = entry.id === 20 ? colouricon(extra.colour) : iconimg(entry.icon, "");
+    return "<div class=\"rulesitem\">" + icon + "<span class=\"ruletext\">" + markuptext(text || ruletext(entry, extra)) + "</span></div>";
 }
 
 function ruletext(entry, extra) {
@@ -262,7 +262,11 @@ function glossaryhtml() {
     html += rules.gametype.map(function(gt) {return itemrow(gt.icon, gt.name, gt.text)}).join("");
     html += "<div class=\"glossaryhead\">Rules</div>";
     html += rules.rules.map(function(entry) {
-        if (entry.id === 20) return ruleitem(entry, {colour: "Purple", multiplier: "triple"});
+        if (entry.id === 20) {
+            const text = "Matching <color red>Red<_tc> / <color green>Green<_tc> / <color blue>Blue<_tc> / <color orange>Orange<_tc> / <color yellow>Yellow<_tc> / <color purple>Purple<_tc> "
+                + "<blinky>CHUZZLES<_tc> will <blinky>double/triple<_tc> scores for the turn!";
+            return ruleitem(entry, {colour: "Purple", multiplier: "triple"}, text);
+        }
         return ruleitem(entry, {}, entry.text);
     }).join("");
     html += "<div class=\"glossaryhead\">Bonuses</div>";

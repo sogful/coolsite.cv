@@ -1,5 +1,5 @@
-// rules are deterministic per day. game type is selected for a pool for 35 and optional modifiers/bonus are drawn from separate daily seed RNG. 
-// see chuzzle/dailydo/rules.js for the selection algorithm and gating (including rules 30/31 and rule 19's day of month gate thing)
+// rules are deterministic per day, game type and modifiers/bonus are drawn from a daily seed. 
+// see chuzzle/dailydo/rules.js for the selection algorithm and gating stuff
 
 // each day's output can be reproduced from the date seed, which makes tournament scheduling consistent!
 
@@ -25,17 +25,16 @@
         {"id": 2, "icon": "gametype/2speed", "name": "Speed Chuzzle",
             "color": "orange",
             "text": "Plays like <color orange>Speed Chuzzle!<_tc>  Watch out, the lock bar gets faster with each move!",
-            "note": "also silently pushes rule id 15 (no display text of its own, empty string in the decompile) onto the active list - purely a mechanical flag"},
+            "note": "also silently pushes rule id 15 (no display text of its own) onto the active list, purely a mechanical flag"},
         {"id": 3, "icon": "gametype/3ten", "name": "Chuzzle In Ten",
             "color": "cyan",
             "text": "Plays like <color cyan>Chuzzle In Ten!<_tc>  Choose carefully, you only get <blinky>ten moves!<_tc>",
-            "note": "also silently pushes rule id 16 (no display text of its own) onto the active list - purely a mechanical flag"},
+            "note": "also silently pushes rule id 16 (no display text of its own) onto the active list, purely a mechanical flag"},
         {"id": 4, "icon": "gametype/4chains", "name": "Chuzzles in Chains",
             "color": "grey",
             "text": "Plays like <color grey>Chuzzles in Chains,<_tc> but every time you break a lock, <blinky>TWO LOCKS<_tc> will fall in!"}
     ],
 
-    // ids 15 and 16 are unused
     "rules": [
         {"id": 5, "icon": "rule/5fat", "confidence": "confirmed",
             "text": "There will be LOTS of <blinky>Fat Chuzzles<_tc> in play!"},
@@ -57,6 +56,7 @@
             "text": "Any time you <blinky>make a chain reaction<_tc>, a <blinky>lock<_tc> will fall in!"},
         {"id": 14, "icon": "rule/14lastrow", "confidence": "confirmed",
             "text": "<blinky>Locks<_tc> tend to appear on the <blinky>row you last moved!<_tc>"},
+        // ids 15 and 16 are unused
         {"id": 17, "icon": "rule/7fiveplus", "confidence": "confirmed",
             "text": "Matching <blinky>five or more Chuzzles<_tc> in one group will grant you an extra move!"},
         {"id": 18, "icon": "rule/18rainbow", "confidence": "confirmed",
@@ -66,7 +66,7 @@
             "note": "gated to gametype 0/1 and dayOfMonth % 3 == 1. IsRuleOK requires id 10 or id 19 already selected before id 22 (same color) can join"},
         {"id": 20, "icon": "rule/20colortemplate", "confidence": "confirmed",
             "text": "Matching <blinky>%s CHUZZLES<_tc> will <blinky>%s<_tc> scores for the turn!",
-            "note": "%s slots are a color name and a multiplier word (double/triple, quadruple exists but is unreachable). code checks 'if (ruleId == 0x14)' to tint an extra base chuzzle icon with the same random color via <color %s> and layer two accent icons on top before the text"},
+            "note": "%s slots are a color name and a multiplier word (double/triple, quadruple exists but is unreachable)"},
         {"id": 21, "icon": "rule/21comboscore", "confidence": "confirmed",
             "text": "You only <blinky>score points<_tc> if you make a <blinky>COMBO!<_tc>"},
         {"id": 22, "icon": "rule/22colormulti", "confidence": "confirmed",

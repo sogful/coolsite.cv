@@ -175,10 +175,6 @@ async function loadboard() {
         remember(board + "/" + day, text);
         if (back === dayat) mine = text;
     });
-    /* the oldest days in the calendar are wiped a piece at a time rather than
-       all at once - thirteen days back still answers, just with a few hundred
-       rows instead of a few thousand - so the archive wins on row count, not
-       merely when the live answer is empty */
     const today = daykey(dayback(dayat));
     if (await hasarchive(today)) {
         const kept = await archivetext(today, board);
@@ -216,7 +212,7 @@ async function refreshboard() {
     const key = cachekey();
     const text = await fetchtext(key);
     if (key !== cachekey()) return;
-    if (!text && board.length) return; // a wiped day would blank the archive
+    if (!text && board.length) return;
     remember(key, text);
     const keep = fling.at();
     useboard(text);
@@ -240,8 +236,7 @@ function tintswitcher() {
         seat.style.color = cyclerget(Math.max(0, Math.min(last - 0.001, t)));
     });
 }
-// a day the arrows may step onto: the live fortnight, the week ahead, or an
-// older one a release still covers
+
 function dayopen(back) {
     if (back <= calendarreach) return true;
     if (typeof archivedaysnow !== "function") return false;
@@ -536,7 +531,6 @@ let goldweek = null;
 let goldok = false;
 
 function goldendays() {
-    // the tournament is drawn on the sunday, so the week is it and the six before
     const out = [];
     for (let back = dayat; back < dayat + 7; back++) {
         if (back >= 0 && back <= calendarreach) out.push(back);
@@ -725,8 +719,7 @@ function makeprofile() {
             ? "<button class=\"claim\" type=\"button\">"
                 + (mine ? "Forget me" : "This is me") + "</button>"
             : "";
-        // no id means nothing to look the other days up by, and the golden
-        // board is weekly so a fourteen day sweep would find two points
+
         const graph = !noguid && !entry.placeholder && typeof sparkloading === "function"
             ? sparkloading() : "";
         body.innerHTML = '<div class="facts">' + facts.map(function(f) {
@@ -905,6 +898,7 @@ makefinder();
 buildrings();
 buildcalendar();
 makeidtip();
+
 const seeallbtn = document.querySelector(".seeall");
 if (seeallbtn) seeallbtn.addEventListener("click", pickall);
 

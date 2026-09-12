@@ -423,7 +423,7 @@
 .jumplink.show {opacity: 1; pointer-events: auto}
 .jumptop {top: calc(var(--u) * 0.19)}
 .jumpbottom {bottom: calc(var(--u) * 0.24)}
-/* the board tabs are gone in combined mode, so the gap they left goes too */
+
 .allmode .jumpbottom {bottom: calc(var(--u) * 0.15)}
 .jumplink .caret {
     display: inline-block;
@@ -571,9 +571,10 @@
     100%    {transform: translate(-50%, -50%) scale(2.70); opacity: 0}
 }
 
-@media (max-width: 660px) {
+/* larger size for mobile screens is okay, but looks HORRIBLE, better off without it for now */
+/* @media (max-width: 660px) {
     .calwrap {--u: calc(var(--baseu) * 1.22)}
-}
+} */
 .calwrap .popup {
     width: calc(var(--u) * 0.78); margin: 0;
     max-width: calc(100vw - var(--u) * 0.16);
@@ -703,7 +704,7 @@
     padding-top: 0.8em; padding-bottom: 0.8em;
     top: 0;
 }
-.rulesaside .rulesitem > span {font-size: 1em}
+.rulesaside .rulesitem > .ruletext {font-size: 1em}
 .rulesaside .rulesdifficulty {font-size: 0.95em}
 .rulewrap .puglows {opacity: 0.6}
 .rulesbutton {
@@ -749,11 +750,21 @@
     text-align: left;
 }
 .rulesitem img {width: 3.9em; height: 3.9em; flex: none}
-.rulesitem .ruleicon {width: 3.9em; height: 3.9em; flex: none; isolation: isolate}
-.rulesitem .ruleicon img {width: 100%; height: 100%}
+.rulesitem .ruleicon {
+    display: block; flex: none;
+    width: 3.9em; height: 3.9em;
+    isolation: isolate;
+}
 .rulesitem .ruleicon.tinted {background: var(--rulecolour)}
-.rulesitem .ruleicon.tinted img {mix-blend-mode: multiply}
-.rulesitem > span {
+.rulesitem .ruleicon.tinted {
+    -webkit-mask: url("assets/images/ruleicons/rule/20colortemplate.png") center/contain no-repeat;
+    mask: url("assets/images/ruleicons/rule/20colortemplate.png") center/contain no-repeat;
+}
+.rulesitem .ruleicon.tinted img {
+    width: 100%; height: 100%;
+    mix-blend-mode: multiply;
+}
+.rulesitem > .ruletext {
     font-size: 1.2em; line-height: 1.3;
     color: #a9aee6;
 }
@@ -761,7 +772,13 @@
 .rulesaside .rulesitem .ruleicon {width: 2.8em; height: 2.8em}
 .glossarycontent .rulesitem img {width: 2.6em; height: 2.6em}
 .glossarycontent .rulesitem .ruleicon {width: 2.6em; height: 2.6em}
-.glossarycontent .rulesitem > span {font-size: calc(var(--u, 16px) * 0.036)}
+.glossarycontent .ruleicon.tinted {animation: glossarycolourcycle 8s linear infinite}
+@keyframes glossarycolourcycle {
+    0%, 100% {background-color: #8000ff}
+    33.33% {background-color: #00ff00}
+    66.66% {background-color: #ff0000}
+}
+.glossarycontent .rulesitem > .ruletext {font-size: calc(var(--u, 16px) * 0.036)}
 
 /* you could rhyme these two.. just saying.. */
 .blinky, .stinky {animation: rulesblink 1.2s steps(1) infinite}
