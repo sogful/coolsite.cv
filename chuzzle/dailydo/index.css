@@ -749,12 +749,18 @@
     text-align: left;
 }
 .rulesitem img {width: 3.9em; height: 3.9em; flex: none}
+.rulesitem .ruleicon {width: 3.9em; height: 3.9em; flex: none; isolation: isolate}
+.rulesitem .ruleicon img {width: 100%; height: 100%}
+.rulesitem .ruleicon.tinted {background: var(--rulecolour)}
+.rulesitem .ruleicon.tinted img {mix-blend-mode: multiply}
 .rulesitem > span {
     font-size: 1.2em; line-height: 1.3;
     color: #a9aee6;
 }
 .rulesaside .rulesitem img {width: 2.8em; height: 2.8em}
+.rulesaside .rulesitem .ruleicon {width: 2.8em; height: 2.8em}
 .glossarycontent .rulesitem img {width: 2.6em; height: 2.6em}
+.glossarycontent .rulesitem .ruleicon {width: 2.6em; height: 2.6em}
 .glossarycontent .rulesitem > span {font-size: calc(var(--u, 16px) * 0.036)}
 
 /* you could rhyme these two.. just saying.. */

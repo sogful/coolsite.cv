@@ -199,6 +199,10 @@ function computerulesfordate(date, golden) {
 function iconimg(path, alt) {
     return "<img src=\"assets/images/ruleicons/" + path + ".png\" alt=\"" + alt + "\">";
 }
+function colouricon(path, alt, colour) {
+    return "<span class=\"ruleicon tinted\" style=\"--rulecolour:" + csscolor(colour) + "\">"
+        + iconimg(path, alt) + "</span>";
+}
 function escapehtml(s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -225,6 +229,10 @@ function markuptext(raw) {
 
 function itemrow(icon, alt, text) {
     return "<div class=\"rulesitem\">" + iconimg(icon, alt) + "<span>" + markuptext(text) + "</span></div>";
+}
+function ruleitem(entry, extra, text) {
+    const icon = entry.id === 20 ? colouricon(entry.icon, "", extra.colour) : iconimg(entry.icon, "");
+    return "<div class=\"rulesitem\">" + icon + "<span>" + markuptext(text || ruletext(entry, extra)) + "</span></div>";
 }
 
 function ruletext(entry, extra) {
@@ -254,9 +262,8 @@ function glossaryhtml() {
     html += rules.gametype.map(function(gt) {return itemrow(gt.icon, gt.name, gt.text)}).join("");
     html += "<div class=\"glossaryhead\">Rules</div>";
     html += rules.rules.map(function(entry) {
-        const text = entry.id === 20 ? entry.text.replace("%s", "a colour").replace("%s", "double/triple")
-            : entry.text;
-        return itemrow(entry.icon, "", text);
+        if (entry.id === 20) return ruleitem(entry, {colour: "Purple", multiplier: "triple"});
+        return ruleitem(entry, {}, entry.text);
     }).join("");
     html += "<div class=\"glossaryhead\">Bonuses</div>";
     html += rules.bonus.map(function(bonus) {return itemrow(bonus.icon, bonus.name, bonus.text)}).join("");
@@ -306,7 +313,7 @@ function rulescontenthtml(date, golden) {
     if (today.ruleids.length) html += "<div class=\"rulesdivider\"></div>";
     html += today.ruleids.map(function(id) {
         const entry = rules.rules.find(function(r) {return r.id === id});
-        return entry ? itemrow(entry.icon, "", ruletext(entry, today.extra)) : "";
+        return entry ? ruleitem(entry, today.extra) : "";
     }).join("");
     if (today.bonusid !== null) {
         const bonus = rules.bonus[today.bonusid];
