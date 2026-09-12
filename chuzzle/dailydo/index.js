@@ -765,43 +765,57 @@ function daykey(date) {
     return date.getFullYear() + "-" + pad(date.getDate()) + "-" + pad(date.getMonth() + 1);
 }
 
-const gridrows = 6;
-const gridahead = 1;
+let calendaroldestback = 28;
+const calendarahead = 13;
 
 function gridfirst() {
-    const day = 86400000;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const monday = new Date(today.getTime() - ((today.getDay() + 6) % 7) * day);
-    monday.setDate(monday.getDate() - (gridrows - 1 - gridahead) * 7);
-    return monday;
+    const first = dayback(calendaroldest());
+    first.setDate(first.getDate() - ((first.getDay() + 6) % 7));
+    return first;
 }
-
-function calendaroldest() {
-    const day = 86400000;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return Math.round((today.getTime() - gridfirst().getTime()) / day);
+function gridlast() {
+    const last = dayback(calendarnewest());
+    last.setDate(last.getDate() + (6 - ((last.getDay() + 6) % 7)));
+    return last;
 }
-function calendarnewest() {return calendaroldest() - (gridrows * 7 - 1)}
+function calendaroldest() {return calendaroldestback}
+function calendarnewest() {return -calendarahead}
+function expandcalendar(days) {
+    const today = dayback(0);
+    const day = 86400000;
+    let oldest = calendaroldestback;
+    days.forEach(function(key) {
+        const bits = key.split("-").map(Number);
+        if (bits.length !== 3 || bits.some(Number.isNaN)) return;
+        const at = new Date(bits[0], bits[2] - 1, bits[1]);
+        at.setHours(0, 0, 0, 0);
+        oldest = Math.max(oldest, Math.round((today.getTime() - at.getTime()) / day));
+    });
+    if (oldest === calendaroldestback) return false;
+    calendaroldestback = oldest;
+    return true;
+}
 
 // this would "usually" go from sunday, but, like, are you people insane?? sunday as first day of the week?? hell no!!!!!
 function buildcalendar() {
     const grid = document.querySelector(".calgrid");
-    if (!grid) return;
+    const heads = document.querySelector(".calheads");
+    if (!grid || !heads) return;
     const names = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
     const day = 86400000;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const start = gridfirst();
+    const end = gridlast();
+    grid.innerHTML = "";
+    heads.innerHTML = "";
 
     for (const n of names) {
         const head = document.createElement("span");
         head.textContent = n;
-        grid.appendChild(head);
+        heads.appendChild(head);
     }
-    for (let i = 0; i < gridrows * 7; i++) {
-        const at = new Date(start.getTime() + i * day);
+    for (const at = new Date(start); at <= end; at.setDate(at.getDate() + 1)) {
         const cell = document.createElement("button");
         cell.textContent = at.getDate();
         cell.title = daykey(at);
@@ -816,19 +830,24 @@ function buildcalendar() {
         grid.appendChild(cell);
     }
 
-    grid.addEventListener("click", function(e) {
-        const cell = e.target.closest("button.live[data-back]");
-        if (!cell) return;
-        closepopup(document.querySelector("[data-role=calendar]"));
-        pickday(Number(cell.dataset.back));
-    });
+    if (!grid.dataset.ready) {
+        grid.addEventListener("click", function(e) {
+            const cell = e.target.closest("button.live[data-back]");
+            if (!cell) return;
+            closepopup(document.querySelector("[data-role=calendar]"));
+            pickday(Number(cell.dataset.back));
+        });
+        grid.dataset.ready = "true";
+    }
 
     if (typeof archivedays === "function") {
         archivedays().then(function(days) {
+            if (expandcalendar(days)) {buildcalendar(); return}
             grid.querySelectorAll("button[data-day]").forEach(function(cell) {
                 if (days.indexOf(cell.dataset.day) >= 0) cell.classList.add("live", "kept");
             });
             drawsteppers();
+            grid.scrollTop = grid.scrollHeight;
         }).catch(function() {});
     }
 }

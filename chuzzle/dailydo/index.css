@@ -597,18 +597,29 @@
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-.pucontent .calgrid {
+.pucontent .calheads, .pucontent .calgrid {
     display: grid; gap: calc(var(--u) * 0.014);
     grid-template-columns: repeat(7, 1fr);
-    width: auto; padding: 0; top: 0;
-    background: none; box-shadow: none;
-    border-radius: 0;
+    width: 100%; padding: 0;
+    top: 0; background: none;
+    box-shadow: none; border-radius: 0;
+    justify-content: normal;
+    align-self: stretch;
 }
-.pucontent .calgrid span {
+.pucontent .calgrid {
+    height: auto; min-height: 0;
+    aspect-ratio: 7 / 6;
+    overflow-y: auto; overscroll-behavior: contain;
+    scrollbar-width: none; -ms-overflow-style: none;
+    align-content: start;
+}
+.pucontent .calgrid::-webkit-scrollbar {display: none}
+.pucontent .calheads span {
     font-family: "nimbus sans becker", system-ui, sans-serif;
     font-weight: 600; color: white;
     font-size: calc(var(--u) * 0.027);
-    letter-spacing: 0.06em; padding-bottom: calc(var(--u) * 0.008);
+    letter-spacing: 0.06em;
+    padding-bottom: calc(var(--u) * 0.008);
 }
 .pucontent .calgrid button {
     width: 100%; aspect-ratio: 1; height: auto;
