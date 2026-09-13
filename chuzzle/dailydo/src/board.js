@@ -240,7 +240,10 @@ function makefling(host, list) {
     let lastY = 0; let lastTime = 0; let running = false;
 
     function limit() {return Math.max(0, contentheight() - host.clientHeight)}
-    function place() {paintrows(at, host)}
+    function place() {
+        paintrows(at, host);
+        updatejumplinks();
+    }
     function past() {
         if (at < 0) return at;
         if (at > limit()) return at - limit();

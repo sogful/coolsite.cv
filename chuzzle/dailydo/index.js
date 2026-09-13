@@ -992,12 +992,6 @@ if (jumpbottombtn) jumpbottombtn.addEventListener("click", function() {
     smoothjump(contentheight() - host.clientHeight);
 });
 
-function pollscroll() {
-    updatejumplinks();
-    requestAnimationFrame(pollscroll);
-}
-requestAnimationFrame(pollscroll);
-
 const fontsdone = document.fonts && document.fonts.ready
     ? document.fonts.ready : Promise.resolve();
 
