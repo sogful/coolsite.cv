@@ -1,7 +1,7 @@
 const sparkdays = 14; // across the last two weeks
 const sparkwide = 300;
 const sparktall = 100;
-const sparkleft = 42;
+const sparkleft = 6;
 const sparkright = 294;
 
 const daytexts = {};
@@ -62,15 +62,13 @@ async function loadhistory(boardkey, id) {
     });
     const live = missing.length ? await fetchdays(boardkey, missing) : {};
 
-    const out = [];
-    for (const back of backs) {
+    return await Promise.all(backs.map(async function(back) {
         const text = await daytext(boardkey, back, live);
         const seat = seatin(text, id);
-        out.push({back: back, label: daylabel(back), played: !!(seat && seat.rank),
+        return {back: back, label: daylabel(back), played: !!(seat && seat.rank),
             rank: seat ? seat.rank : 0, score: seat ? seat.score : 0,
-            total: seat ? seat.total : 0});
-    }
-    return out;
+            total: seat ? seat.total : 0};
+    }));
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
@@ -142,13 +140,12 @@ function sparksvg(points) {
     }).join("");
 
     const scale = shape.dots.length
-        ? "<text class=\"sparktick\" x=\"36\" y=\"12\">#" + band.best + "</text>"
-            + "<text class=\"sparktick\" x=\"36\" y=\"" + (sparktall - 5) + "\">#"
-            + band.worst + "</text>"
+        ? "<div class=\"sparkrank\"><span>#" + band.best + "</span><span>#" + band.worst + "</span></div>"
         : "";
 
-    return "<svg class=\"spark\" viewBox=\"0 0 " + sparkwide + " " + sparktall + "\""
-        + " role=\"img\">" + lines + misses + dots + scale + "</svg>";
+    return "<div class=\"sparkgraph\">" + scale
+        + "<svg class=\"spark\" viewBox=\"0 0 " + sparkwide + " " + sparktall + "\""
+        + " role=\"img\">" + lines + misses + dots + "</svg></div>";
 }
 
 function sparkcaption(points) {
@@ -156,8 +153,8 @@ function sparkcaption(points) {
     const played = points.filter(function(p) {return p.played});
     if (!played.length) return "No scores in the last " + points.length + unit;
     const best = played.reduce(function(a, b) {return b.rank < a.rank ? b : a});
-    return "Best <b>#" + best.rank + "</b> on <b>" + best.label + "</b>"
-        + ", played <b>" + played.length + "</b> of " + points.length + unit;
+    return "Best #" + best.rank + " on " + best.label
+        + ", played " + played.length + " of " + points.length + unit;
 }
 
 function sparkblock(points) {
