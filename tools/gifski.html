@@ -58,7 +58,7 @@
         <div class="row out" id="output"></div>
     </div>
 
-    <script src="../assets/static/gif.js"></script>
+    <script src="../assets/static/js/gif.js"></script>
     <script>
 
         const vidfile = document.getElementById("vidfile");
@@ -79,7 +79,7 @@
         const ditherinput = document.getElementById("dither");
         const smallpreset = document.getElementById("smallpreset");
 
-        GIF.prototype.workerScript = "../assets/static/gif.worker.js";
+        GIF.prototype.workerScript = "../assets/static/js/gif.worker.js";
 
         let fileURL = null, encoder = null, running = false;
 

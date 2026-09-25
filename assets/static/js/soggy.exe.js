@@ -85,7 +85,7 @@
 		.soggymenuitem:hover {background: #90c8f6}`;
 
     const currentscript = document.currentScript;
-    const scriptsrcurl = (currentscript && currentscript.src) || "/assets/static/soggy.exe.js";
+    const scriptsrcurl = (currentscript && currentscript.src) || "/assets/static/js/soggy.exe.js";
 
     function randomuni(a, b) {return a + (b - a) * Math.random()}
     function currentseconds() {return performance.now() / 1000}
