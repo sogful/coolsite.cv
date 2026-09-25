@@ -2,8 +2,9 @@
 
 const articlelist = document.querySelector(".articlelist");
 const articlecount = document.querySelector(".articlecount");
-const reader = document.querySelector(".reader");
-const readerscroll = document.querySelector(".readerscroll");
+const articleindex = document.querySelector(".articleindex");
+const articleview = document.querySelector(".articleview");
+const backbutton = document.querySelector(".backbutton");
 const readingstate = document.querySelector(".readingstate");
 const article = document.querySelector(".article");
 const articletitle = document.querySelector(".articletitle");
@@ -16,6 +17,7 @@ const descriptionmeta = document.querySelector("meta[name=description]");
 let articles = [];
 let currentrequest = null;
 let currentarticle = null;
+let openedfromlist = false;
 
 const dateformat = new Intl.DateTimeFormat("en-GB", {
 	day: "numeric",
@@ -221,7 +223,6 @@ function validatearticle(entry) {
 		thumbnailalt: typeof entry.thumbnailalt === "string" ? entry.thumbnailalt : "",
 		tags: Array.isArray(entry.tags) ? entry.tags.filter((tag) => typeof tag === "string").slice(0, 5) : [],
 		accent: entry.accent,
-		background: entry.background,
 		foreground: entry.foreground,
 		muted: entry.muted,
 		font: entry.font,
@@ -232,19 +233,20 @@ function validatearticle(entry) {
 
 function applytheme(entry) {
 	const root = document.documentElement;
-	const colors = ["accent", "background", "foreground", "muted"];
+	const colors = ["accent", "foreground", "muted"];
 	colors.forEach((key) => {
 		if (/^#[0-9a-f]{6}$/i.test(entry[key] || "")) root.style.setProperty(`--${key}`, entry[key]);
 		else root.style.removeProperty(`--${key}`);
 	});
 
 	const fonts = {
+		chirp: "default",
 		inter: "inter",
 		gothic: "gothic",
 		mono: "Consolas"
 	};
-	root.style.setProperty("--articlefont", `"${fonts[entry.font] || fonts.inter}"`);
-	root.style.setProperty("--readingwidth", /^(40|46|54|62)rem$/.test(entry.width || "") ? entry.width : "46rem");
+	root.style.setProperty("--articlefont", `"${fonts[entry.font] || fonts.chirp}"`);
+	root.style.setProperty("--readingwidth", /^(40|46|54|60)rem$/.test(entry.width || "") ? entry.width : "60rem");
 }
 
 function renderlist() {
@@ -252,7 +254,7 @@ function renderlist() {
 	articles.forEach((entry) => {
 		const link = document.createElement("a");
 		link.className = "articlelink";
-		link.href = `?article=${encodeURIComponent(entry.slug)}`;
+		link.href = `#${encodeURIComponent(entry.slug)}`;
 		link.dataset.slug = entry.slug;
 
 		const thumbnail = document.createElement("img");
@@ -266,15 +268,17 @@ function renderlist() {
 		info.className = "articleinfo";
 		const title = document.createElement("strong");
 		title.textContent = entry.title;
+		const summary = document.createElement("p");
+		summary.textContent = entry.summary;
+		summary.hidden = !entry.summary;
 		const time = document.createElement("time");
 		time.dateTime = entry.date;
 		time.textContent = formatdate(entry.date);
-		info.append(title, time);
+		info.append(title, summary, time);
 		link.append(thumbnail, info);
 		link.addEventListener("click", (event) => {
 			if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-			event.preventDefault();
-			openarticle(entry.slug);
+			openedfromlist = true;
 		});
 		articlelist.append(link);
 	});
@@ -282,34 +286,50 @@ function renderlist() {
 }
 
 function showerror(title, message) {
-	reader.setAttribute("aria-busy", "false");
+	articleindex.hidden = true;
+	articleview.hidden = false;
+	articleview.setAttribute("aria-busy", "false");
 	article.hidden = true;
 	readingstate.hidden = false;
 	readingstate.className = "readingstate errorstate";
-	readingstate.innerHTML = `<h2>${escapehtml(title)}</h2><p>${escapehtml(message)}</p>`;
+	readingstate.innerHTML = `<h1>${escapehtml(title)}</h1><p>${escapehtml(message)}</p>`;
 }
 
-async function openarticle(slug, historyless = false) {
-	const matched = articles.find((candidate) => candidate.slug === slug);
-	const entry = matched || articles[0];
+function showindex() {
+	if (currentrequest) currentrequest.abort();
+	currentrequest = null;
+	currentarticle = null;
+	articleview.hidden = true;
+	articleindex.hidden = false;
+	document.title = "blog - cv";
+	descriptionmeta.content = "Notes, experiments, and longer posts from cv.";
+	document.documentElement.style.removeProperty("--accent");
+	document.documentElement.style.removeProperty("--foreground");
+	document.documentElement.style.removeProperty("--muted");
+	document.documentElement.style.removeProperty("--articlefont");
+	document.documentElement.style.removeProperty("--readingwidth");
+	window.scrollTo(0, 0);
+}
+
+async function openarticle(slug) {
+	const entry = articles.find((candidate) => candidate.slug === slug);
 	if (!entry) {
-		showerror("No articles yet", "Add an entry to articles/index.json to publish the first post.");
+		history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+		showindex();
 		return;
-	}
-	if (slug && !matched && historyless) {
-		const url = new URL(window.location.href);
-		url.searchParams.set("article", entry.slug);
-		history.replaceState({article: entry.slug}, "", url);
 	}
 	if (currentarticle === entry.slug && !article.hidden) return;
 
 	if (currentrequest) currentrequest.abort();
 	currentrequest = new AbortController();
-	reader.setAttribute("aria-busy", "true");
+	articleindex.hidden = true;
+	articleview.hidden = false;
+	articleview.setAttribute("aria-busy", "true");
 	article.hidden = true;
 	readingstate.hidden = false;
 	readingstate.className = "readingstate";
-	readingstate.innerHTML = "<div class=\"loadingshape\"></div><p>loading article...</p>";
+	readingstate.innerHTML = "<p>loading article...</p>";
+	window.scrollTo(0, 0);
 
 	try {
 		const response = await fetch(`articles/${encodeURIComponent(entry.slug)}.md`, {
@@ -337,27 +357,28 @@ async function openarticle(slug, historyless = false) {
 		document.title = `${entry.title} - cv blog`;
 		descriptionmeta.content = entry.summary || `Read ${entry.title} on cv's blog.`;
 		currentarticle = entry.slug;
-		document.querySelectorAll(".articlelink").forEach((link) => {
-			if (link.dataset.slug === entry.slug) link.setAttribute("aria-current", "page");
-			else link.removeAttribute("aria-current");
-		});
-
-		if (!historyless) {
-			const url = new URL(window.location.href);
-			url.searchParams.set("article", entry.slug);
-			history.pushState({article: entry.slug}, "", url);
-		}
 
 		readingstate.hidden = true;
 		article.hidden = false;
-		reader.setAttribute("aria-busy", "false");
-		readerscroll.scrollTop = 0;
-		if (window.innerWidth <= 800 && !historyless) article.scrollIntoView({behavior: "smooth", block: "start"});
+		articleview.setAttribute("aria-busy", "false");
 	}
 	catch (error) {
 		if (error.name === "AbortError") return;
 		showerror("Article unavailable", error.message);
 	}
+}
+
+function route() {
+	let slug = "";
+	try {
+		slug = decodeURIComponent(window.location.hash.slice(1));
+	}
+	catch {
+		history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+	}
+
+	if (slug) openarticle(slug);
+	else showindex();
 }
 
 async function start() {
@@ -371,8 +392,11 @@ async function start() {
 			return right.date.localeCompare(left.date);
 		});
 		renderlist();
-		const requested = new URLSearchParams(window.location.search).get("article");
-		await openarticle(requested || articles[0]?.slug, true);
+		if (articles.length === 0) {
+			showerror("No articles yet", "Add an entry to articles/index.json to publish the first post.");
+			return;
+		}
+		route();
 	}
 	catch (error) {
 		articlecount.textContent = "unavailable";
@@ -380,9 +404,17 @@ async function start() {
 	}
 }
 
-window.addEventListener("popstate", () => {
-	const requested = new URLSearchParams(window.location.search).get("article");
-	openarticle(requested || articles[0]?.slug, true);
+backbutton.addEventListener("click", () => {
+	if (openedfromlist) {
+		openedfromlist = false;
+		history.back();
+		return;
+	}
+
+	history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+	showindex();
 });
+
+window.addEventListener("hashchange", route);
 
 start();

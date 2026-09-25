@@ -10,7 +10,7 @@ Pages that remember they are documents. Links that look like links. Images chose
 - URLs that can be copied
 - writing that sounds like its author
 
-The article manifest can change the colors, typeface, thumbnail crop, tags, and reading width for every post. This one uses the narrowest measure and the site's gothic font.
+The article manifest can change the colors, typeface, thumbnail crop, tags, and reading width for every post. This one uses the narrowest measure while keeping the blog's Chirp font.
 
 ::: note
 The customization stays deliberately finite. Enough options to give posts a mood, but not enough to make each article a separate website to maintain.

@@ -27,8 +27,8 @@ Callouts use the current article accent color. Start one with `::: tip`, `::: no
 
 | setting | supported values | purpose |
 | --- | --- | --- |
-| font | inter, gothic, mono | changes article typography |
-| width | 40rem, 46rem, 54rem, 62rem | changes the reading measure |
+| font | chirp, inter, gothic, mono | changes article typography |
+| width | 40rem, 46rem, 54rem, 60rem | changes the reading measure |
 | crop | any CSS object-position | adjusts the list thumbnail |
 
 ## code

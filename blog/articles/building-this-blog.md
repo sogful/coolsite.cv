@@ -28,11 +28,11 @@ Create `articles/my-post.md`, then add its metadata to `articles/index.json`:
   "summary": "One sentence shown beneath the title.",
   "thumbnail": "/assets/images/example.webp",
   "accent": "#9fdcff",
-  "font": "inter",
+  "font": "chirp",
   "width": "46rem"
 }
 ```
 
-The list sorts itself by date, newest first. No other file needs to change.
+The list sorts itself by date, newest first. Its link becomes `/blog#my-post`, and no other file needs to change.
 
 > Static should still feel alive. It just should not need babysitting.
