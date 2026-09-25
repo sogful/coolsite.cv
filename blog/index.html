@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Notes, experiments, and longer posts from cv.">
+	<meta name="theme-color" content="#11131a">
+	<title>Hm.. Much to think about..</title>
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text y='52' font-size='52'>%F0%9F%93%9D</text></svg>">
+	<link rel="stylesheet" href="blog.css">
+</head>
+<body>
+	<div class="backdrop" aria-hidden="true">
+		<div class="backdropimage"></div>
+		<div class="backdropshade"></div>
+		<div class="backdropnoise"></div>
+	</div>
+
+	<header class="siteheader">
+		<a class="brand" href="/blog/" aria-label="Blog home">cv<span>/blog</span></a>
+		<a class="homeslink" href="/">back home</a>
+	</header>
+
+	<main class="blogshell">
+		<aside class="articlebrowser" aria-label="Articles">
+			<div class="browserheading">
+				<h1>articles</h1>
+				<p class="articlecount" aria-live="polite">loading...</p>
+			</div>
+			<nav class="articlelist" aria-label="Article list"></nav>
+		</aside>
+
+		<section class="reader" aria-live="polite" aria-busy="true">
+			<div class="readerscroll">
+				<div class="readingstate">
+					<div class="loadingshape"></div>
+					<p>loading article...</p>
+				</div>
+				<article class="article" hidden>
+					<header class="articleheader">
+						<div class="articlelabels"></div>
+						<h2 class="articletitle"></h2>
+						<p class="articlesummary"></p>
+						<time class="articledate"></time>
+					</header>
+					<div class="articlebody"></div>
+				</article>
+			</div>
+		</section>
+	</main>
+
+	<noscript>
+		<div class="noscript">This blog needs JavaScript to load its Markdown articles.</div>
+	</noscript>
+	<script src="blog.js"></script>
+</body>
+</html>

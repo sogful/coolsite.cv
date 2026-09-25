@@ -1,0 +1,50 @@
+[
+	{
+		"slug": "building-this-blog",
+		"title": "building this blog",
+		"date": "2026-09-25",
+		"summary": "A small static Markdown reader, and the decisions that keep it easy to extend.",
+		"thumbnail": "/assets/images/cityscape.png",
+		"thumbnailalt": "A pixel art cityscape",
+		"tags": ["site", "notes"],
+		"accent": "#9fdcff",
+		"background": "#11131a",
+		"foreground": "#f5f7fa",
+		"muted": "#b4bac5",
+		"font": "inter",
+		"width": "46rem",
+		"crop": "center 58%"
+	},
+	{
+		"slug": "markdown-playground",
+		"title": "markdown playground",
+		"date": "2026-09-19",
+		"summary": "Most of the formatting available to an article, collected in one test post.",
+		"thumbnail": "/assets/images/thumb/dystopia.webp",
+		"thumbnailalt": "A dark blue abstract scene",
+		"tags": ["reference", "markdown"],
+		"accent": "#ffb3d9",
+		"background": "#170f19",
+		"foreground": "#fff7fb",
+		"muted": "#ccb7c3",
+		"font": "mono",
+		"width": "54rem",
+		"crop": "center"
+	},
+	{
+		"slug": "small-things",
+		"title": "small things worth keeping",
+		"date": "2026-08-31",
+		"summary": "A deliberately narrow sample post with a different typeface and warmer palette.",
+		"thumbnail": "/assets/images/littleguy.webp",
+		"thumbnailalt": "A small illustrated character",
+		"tags": ["personal"],
+		"accent": "#f5d06f",
+		"background": "#17150f",
+		"foreground": "#fffaf0",
+		"muted": "#c7bfae",
+		"font": "gothic",
+		"width": "40rem",
+		"crop": "center 35%"
+	}
+]
