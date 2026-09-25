@@ -1,12 +1,9 @@
 [
 	{
-		"slug": "building-this-blog",
-		"title": "building this blog",
-		"date": "2026-09-25",
-		"summary": "A small static Markdown reader, and the decisions that keep it easy to extend.",
+		"slug": "zeptoapp",
+		"title": "(recap) where did zeptolab's internal game versions come from?",
+		"date": "2026-09-26",
 		"thumbnail": "/assets/images/cityscape.png",
-		"thumbnailalt": "A pixel art cityscape",
-		"tags": ["site", "notes"],
 		"accent": "#9fdcff",
 		"foreground": "#f5f7fa",
 		"muted": "#b4bac5",
@@ -15,33 +12,16 @@
 		"crop": "center 58%"
 	},
 	{
-		"slug": "markdown-playground",
-		"title": "markdown playground",
-		"date": "2026-09-19",
-		"summary": "Most of the formatting available to an article, collected in one test post.",
-		"thumbnail": "/assets/images/thumb/dystopia.webp",
-		"thumbnailalt": "A dark blue abstract scene",
-		"tags": ["reference", "markdown"],
-		"accent": "#ffb3d9",
-		"foreground": "#fff7fb",
-		"muted": "#ccb7c3",
+		"slug": "markdown",
+		"title": "I AM TOBY FOX!!!!!!!!!!!!!!!!!!!!!!",
+		"summary": "this was an accident i promise",
+		"date": "2026-09-27",
+		"thumbnail": "/assets/images/cityscape.png",
+		"accent": "#9fdcff",
+		"foreground": "#f5f7fa",
+		"muted": "#b4bac5",
 		"font": "chirp",
-		"width": "54rem",
-		"crop": "center"
-	},
-	{
-		"slug": "small-things",
-		"title": "small things worth keeping",
-		"date": "2026-08-31",
-		"summary": "A deliberately narrow sample post with a warmer accent and quieter pace.",
-		"thumbnail": "/assets/images/littleguy.webp",
-		"thumbnailalt": "A small illustrated character",
-		"tags": ["personal"],
-		"accent": "#f5d06f",
-		"foreground": "#fffaf0",
-		"muted": "#c7bfae",
-		"font": "chirp",
-		"width": "40rem",
-		"crop": "center 35%"
+		"width": "46rem",
+		"crop": "center 58%"
 	}
 ]

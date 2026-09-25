@@ -2,16 +2,16 @@
 	font-family: "default"; src: url("/assets/fonts/chirp.woff") format("woff");
 	font-weight: normal; font-style: normal;
 }
-
 @font-face {
 	font-family: "inter"; src: url("/assets/fonts/inter.woff2") format("woff2");
 	font-weight: normal; font-style: normal;
 }
-
 @font-face {
 	font-family: "gothic"; src: url("/assets/fonts/gothic.woff") format("woff");
 	font-weight: normal; font-style: normal;
 }
+
+/*//////////////////////////////////////////////////////////////////////*/
 
 :root {
 	--accent: #aadcff; --foreground: #ffffff;
@@ -21,17 +21,19 @@
 }
 
 * {box-sizing: border-box}
-
-html, body {
-	min-height: 100%; margin: 0;
-}
-
+html, body {min-height: 100%; margin: 0}
 body {
 	background: #000000; color: var(--foreground);
-	font-family: "default",Arial,sans-serif; overflow-y: auto;
+	font-family: "default", Arial, sans-serif; overflow-y: auto;
 }
 
 button, a {font: inherit}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+main {
+        position: relative; z-index: 1;
+}
 
 .articleindex, .article {
 	width: 75vw; max-width: var(--readingwidth);
@@ -49,6 +51,8 @@ button, a {font: inherit}
 	border: 0; font-size: 2em;
 	font-weight: normal; line-height: 1;
 }
+
+/*//////////////////////////////////////////////////////////////////////*/
 
 .articlecount {
 	margin: 0; color: var(--muted);
@@ -101,6 +105,8 @@ button, a {font: inherit}
 
 .articleview {min-height: 100vh}
 
+/*//////////////////////////////////////////////////////////////////////*/
+
 .backbutton {
 	position: fixed; top: 10px;
 	left: 10px; z-index: 1000;
@@ -126,8 +132,11 @@ button, a {font: inherit}
 
 .backbutton span {font-size: 0.75em}
 
+/*//////////////////////////////////////////////////////////////////////*/
+
 .article {
-	padding: 0 0 4rem; font-family: var(--articlefont),sans-serif;
+	padding: 0 0 4rem;
+	font-family: var(--articlefont), sans-serif;
 }
 
 .articleheader {margin-bottom: 20px}
@@ -258,25 +267,17 @@ button, a {font: inherit}
 	margin: 20px auto;
 }
 
+/*//////////////////////////////////////////////////////////////////////*/
+
 @media (max-width: 700px) {
 	.articleindex, .article, .readingstate, .noscript {width: calc(100vw - 32px)}
-
 	.articlelink {grid-template-columns: 6.5rem minmax(0,1fr)}
-
 	.articleinfo p {display: none}
-
-	.backbutton {
-		top: 6px; left: 6px;
-	}
-
+	.backbutton {top: 6px; left: 6px}
 	.article {padding-top: 38px}
 }
 
 @media (max-width: 420px) {
 	.articlelink {grid-template-columns: 5.5rem minmax(0,1fr)}
 	.articleinfo strong {font-size: 1.05em}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.articleinfo strong, .spoiler {transition: none}
 }

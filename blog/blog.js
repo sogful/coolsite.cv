@@ -218,10 +218,12 @@ function validatearticle(entry) {
 		slug: entry.slug,
 		title: entry.title,
 		date: entry.date,
+		
 		summary: typeof entry.summary === "string" ? entry.summary : "",
 		thumbnail: safeurl(entry.thumbnail || "", true),
 		thumbnailalt: typeof entry.thumbnailalt === "string" ? entry.thumbnailalt : "",
 		tags: Array.isArray(entry.tags) ? entry.tags.filter((tag) => typeof tag === "string").slice(0, 5) : [],
+		
 		accent: entry.accent,
 		foreground: entry.foreground,
 		muted: entry.muted,
@@ -301,8 +303,7 @@ function showindex() {
 	currentarticle = null;
 	articleview.hidden = true;
 	articleindex.hidden = false;
-	document.title = "blog - cv";
-	descriptionmeta.content = "Notes, experiments, and longer posts from cv.";
+	document.title = "blog!!";
 	document.documentElement.style.removeProperty("--accent");
 	document.documentElement.style.removeProperty("--foreground");
 	document.documentElement.style.removeProperty("--muted");
@@ -328,7 +329,7 @@ async function openarticle(slug) {
 	article.hidden = true;
 	readingstate.hidden = false;
 	readingstate.className = "readingstate";
-	readingstate.innerHTML = "<p>loading article...</p>";
+	readingstate.innerHTML = "<p>loading article..</p>";
 	window.scrollTo(0, 0);
 
 	try {
@@ -354,7 +355,7 @@ async function openarticle(slug) {
 		articlelabels.hidden = entry.tags.length === 0;
 		articlebody.innerHTML = parsemarkdown(markdown);
 
-		document.title = `${entry.title} - cv blog`;
+		document.title = `${entry.title}`;
 		descriptionmeta.content = entry.summary || `Read ${entry.title} on cv's blog.`;
 		currentarticle = entry.slug;
 
@@ -364,7 +365,7 @@ async function openarticle(slug) {
 	}
 	catch (error) {
 		if (error.name === "AbortError") return;
-		showerror("Article unavailable", error.message);
+		showerror("article unavailable?!", error.message);
 	}
 }
 
@@ -384,23 +385,23 @@ function route() {
 async function start() {
 	try {
 		const response = await fetch("articles/index.json", {cache: "no-cache"});
-		if (!response.ok) throw new Error(`Article index returned ${response.status}.`);
+		if (!response.ok) throw new Error(`article index returned ${response.status}..`);
 		const data = await response.json();
-		if (!Array.isArray(data)) throw new Error("Article index is not a list.");
+		if (!Array.isArray(data)) throw new Error("article index is not a list?!");
 
 		articles = data.map(validatearticle).filter(Boolean).sort((left, right) => {
 			return right.date.localeCompare(left.date);
 		});
 		renderlist();
 		if (articles.length === 0) {
-			showerror("No articles yet", "Add an entry to articles/index.json to publish the first post.");
+			showerror("no articles yet.. wait, this is impossible!", "please report this, unless you're just checking the source code, in which case Don't");
 			return;
 		}
 		route();
 	}
 	catch (error) {
 		articlecount.textContent = "unavailable";
-		showerror("Blog unavailable", error.message);
+		showerror("unavailable?!", error.message);
 	}
 }
 
@@ -410,11 +411,9 @@ backbutton.addEventListener("click", () => {
 		history.back();
 		return;
 	}
-
 	history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
 	showindex();
 });
 
 window.addEventListener("hashchange", route);
-
 start();
