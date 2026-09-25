@@ -303,7 +303,7 @@ function showindex() {
 	currentarticle = null;
 	articleview.hidden = true;
 	articleindex.hidden = false;
-	document.title = "blog!!";
+	document.title = "yap sessions";
 	document.documentElement.style.removeProperty("--accent");
 	document.documentElement.style.removeProperty("--foreground");
 	document.documentElement.style.removeProperty("--muted");

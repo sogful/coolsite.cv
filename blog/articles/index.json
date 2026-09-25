@@ -1,9 +1,10 @@
 [
 	{
 		"slug": "zeptoapp",
-		"title": "(recap) where did zeptolab's internal game versions come from?",
+		"title": "(recap) zeptoapp? what's that?",
+		"summary": "this is where dev versions of zeptolab games came from",
 		"date": "2026-09-26",
-		"thumbnail": "/assets/images/cityscape.png",
+		"thumbnail": "/blog/articles/zeptoapp.webp",
 		"accent": "#9fdcff",
 		"foreground": "#f5f7fa",
 		"muted": "#b4bac5",
@@ -12,11 +13,11 @@
 		"crop": "center 58%"
 	},
 	{
-		"slug": "markdown",
-		"title": "I AM TOBY FOX!!!!!!!!!!!!!!!!!!!!!!",
-		"summary": "this was an accident i promise",
+		"slug": "toby",
+		"title": "SORRY",
+		
 		"date": "2026-09-27",
-		"thumbnail": "/assets/images/cityscape.png",
+		"thumbnail": "/blog/articles/toby.webp",
 		"accent": "#9fdcff",
 		"foreground": "#f5f7fa",
 		"muted": "#b4bac5",
