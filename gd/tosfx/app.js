@@ -27,10 +27,14 @@ for(const name of ['dragleave','drop'])dropzone.addEventListener(name,event=>{ev
 dropzone.addEventListener('drop',event=>{const file=event.dataTransfer.files[0];if(file){const transfer=new DataTransfer();transfer.items.add(file);picker.files=transfer.files;showFile(file);}});
 function status(kind,title,copy){statusPanel.classList.remove('busy','done','error');if(kind)statusPanel.classList.add(kind);statusHeading.textContent=title;statusCopy.textContent=copy;}
 
-fetch('/api/status').then(response=>response.json()).then(data=>{
+fetch('/api/status').then(response=>{if(!response.ok)throw new Error('Local converter is not serving this page.');return response.json();}).then(data=>{
   if(data.ready){catalog.textContent=`Local library ready · ${data.sounds.toLocaleString()} sounds · ${data.index_windows.toLocaleString()} indexed windows`;}
   else catalog.textContent=data.message||'Local SFX library needs setup. See the README.';
-}).catch(()=>{catalog.textContent='Start the local converter with the included setup instructions.';});
+}).catch(()=>{
+  catalog.replaceChildren(document.createTextNode('Static preview only. '));
+  const link=document.createElement('a');link.href='http://127.0.0.1:8765/';link.textContent='Open local converter';link.style.color='var(--lime)';link.style.fontWeight='700';
+  catalog.append(link);
+});
 
 form.addEventListener('submit',async event=>{
   event.preventDefault();
@@ -46,7 +50,9 @@ form.addEventListener('submit',async event=>{
     if(!response.ok){let detail='Conversion failed. Check the audio and local SFX library.';try{detail=(await response.json()).error||detail;}catch{}throw new Error(detail);}
     const blob=await response.blob();
     const disposition=response.headers.get('Content-Disposition')||'';
-    const filename=disposition.match(/filename="?([^";]+)"?/i)?.[1]||'song-to-sfx.gmd';
+    const encodedName=disposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i)?.[1];
+    const plainName=disposition.match(/filename="?([^";]+)"?/i)?.[1];
+    const filename=encodedName?decodeURIComponent(encodedName):(plainName||'song.gmd');
     objectUrl&&URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(blob);
     const link=document.createElement('a');link.className='download-link';link.href=objectUrl;link.download=filename;link.textContent='↓  DOWNLOAD .GMD LEVEL';
     result.replaceChildren(link);

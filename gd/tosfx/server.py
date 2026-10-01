@@ -10,7 +10,7 @@ import sys
 import tempfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import quote, unquote, urlsplit
 
 
 HERE = Path(__file__).resolve().parent
@@ -135,6 +135,9 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("Layers must be 1–12 and volume must be 0.05–2.0.")
             if hop not in {0.0625, 0.125, 0.25} or shortlist not in {32, 64, 128}:
                 raise ValueError("Choose one of the listed matching settings.")
+            indexname = {0.0625: "index-62ms", 0.125: "index-125ms", 0.25: "index"}[hop]
+            if not (SFX_CACHE / f"{indexname}.npz").is_file():
+                raise ValueError(f"The local {hop * 1000:g} ms SFX index is missing.")
             if not status().get("ready"):
                 raise ValueError("The local SFX cache or index is missing. Follow README.md setup steps.")
 
@@ -149,14 +152,17 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError(f"This file only has {max(0, info.duration-start):.2f} seconds after the chosen start.")
                 outdir = workspace / "converted"
                 report = convert(source, outdir, SFX_CACHE, start=start, duration=duration,
-                                 hop=hop, volume=volume, layers=layers, indexname="index-62ms",
+                                 hop=hop, volume=volume, layers=layers, indexname=indexname,
                                  shortlist=shortlist, refine=0.015625, timingscale=1.0152)
                 payload = (outdir / "level.gmd").read_bytes()
-                filename_stem = re.sub(r"[^A-Za-z0-9_-]+", "-", Path(original_name).stem).strip("-_")[:50] or "song"
-                filename = f"{filename_stem}-sfx-level.gmd"
+                filename = (Path(original_name).stem[:180] or "song") + ".gmd"
+                fallback = re.sub(r"[^A-Za-z0-9_.-]+", "-", filename.encode("ascii", "ignore").decode("ascii"))
+                fallback = fallback.strip("-.") or "song.gmd"
+                encoded_filename = quote(filename, safe="")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/octet-stream")
-                self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+                self.send_header("Content-Disposition",
+                                 f'attachment; filename="{fallback}"; filename*=UTF-8\'\'{encoded_filename}')
                 self.send_header("Content-Length", str(len(payload)))
                 self.send_header("Cache-Control", "no-store")
                 self.send_header("X-Conversion-Events", str(report["events"]))
