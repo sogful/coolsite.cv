@@ -3,21 +3,26 @@
 from __future__ import annotations
 
 import cgi
+import io
 import json
 import mimetypes
+import os
 import re
 import sys
 import tempfile
+import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import quote, unquote, urlsplit
 
 
 HERE = Path(__file__).resolve().parent
+SITE_ROOT = HERE.parent
 GDGEN = HERE.parents[2] / "gdgen"
 SFX_CACHE = GDGEN / "data" / "sfx"
 MAX_UPLOAD = 100 * 1024 * 1024
 MAX_DURATION = 30.0
+MAX_SFX_IDS = 4096
 PORT = 8765
 
 sys.path.insert(0, str(GDGEN))
@@ -35,7 +40,9 @@ def status():
         with np.load(index_path) as index:
             windows = len(index["ids"])
         cache = SFX_CACHE / "files"
-        available = sum(1 for path in cache.glob("s*.ogg") if path.stat().st_size)
+        with os.scandir(cache) as entries:
+            available = sum(1 for entry in entries
+                            if entry.name.startswith("s") and entry.name.endswith(".ogg") and entry.is_file())
         return {"ready": available > 0, "sounds": catalog.get("sounds", len(catalog.get("files", []))),
                 "cached": available, "index_windows": windows,
                 "message": None if available else "No cached SFX clips found. Run the GDGen SFX cache command first."}
@@ -64,9 +71,36 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/status":
             self.send_json(200, status())
             return
-        relative = "index.html" if path == "/" else path.lstrip("/")
-        target = (HERE / relative).resolve()
-        if HERE not in target.parents or not target.is_file():
+        sound_match = re.fullmatch(r"/api/sfx/(\d+)\.ogg", path)
+        if sound_match:
+            sound_path = SFX_CACHE / "files" / f"s{int(sound_match.group(1))}.ogg"
+            if not sound_path.is_file():
+                self.send_error(404)
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "audio/ogg")
+            self.send_header("Content-Length", str(sound_path.stat().st_size))
+            self.send_header("Cache-Control", "private, max-age=3600")
+            self.end_headers()
+            with sound_path.open("rb") as sound_file:
+                while chunk := sound_file.read(1024 * 1024):
+                    self.wfile.write(chunk)
+            return
+        relative = path.lstrip("/")
+        if path == "/":
+            target = HERE / "index.html"
+        else:
+            target = (SITE_ROOT / relative).resolve()
+            if SITE_ROOT not in target.parents and target != SITE_ROOT:
+                self.send_error(404)
+                return
+            if not target.exists():
+                local_target = (HERE / relative).resolve()
+                if HERE in local_target.parents:
+                    target = local_target
+        if target.is_dir():
+            target = target / "index.html"
+        if not target.is_file() or (target != SITE_ROOT and SITE_ROOT not in target.parents):
             self.send_error(404)
             return
         body = target.read_bytes()
@@ -79,7 +113,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_POST(self):
-        if urlsplit(self.path).path != "/api/convert":
+        request_path = urlsplit(self.path).path
+        if request_path not in {"/api/convert", "/api/sfx-zip"}:
             self.send_error(404)
             return
         if self.client_address[0] not in {"127.0.0.1", "::1"}:
@@ -88,6 +123,9 @@ class Handler(BaseHTTPRequestHandler):
         origin = self.headers.get("Origin")
         if origin and origin != f"http://127.0.0.1:{PORT}":
             self.send_json(403, {"error": "Open the converter from its local page before uploading audio."})
+            return
+        if request_path == "/api/sfx-zip":
+            self.send_sfx_zip()
             return
         try:
             content_length = int(self.headers.get("Content-Length", "0"))
@@ -167,12 +205,54 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header("Cache-Control", "no-store")
                 self.send_header("X-Conversion-Events", str(report["events"]))
                 self.send_header("X-Conversion-Sounds", str(report["unique_sfx"]))
+                self.send_header("X-Conversion-Sfx-Ids", ",".join(map(str, report["sfxids"])))
                 self.end_headers()
                 self.wfile.write(payload)
         except (ValueError, RuntimeError) as error:
             self.send_json(400, {"error": str(error)})
         except Exception as error:
             self.send_json(500, {"error": f"Conversion failed: {error}"})
+
+    def send_sfx_zip(self):
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+            if content_length <= 0 or content_length > 128 * 1024:
+                raise ValueError("The SFX list is missing or too large.")
+            request = json.loads(self.rfile.read(content_length))
+            identifiers = request.get("ids") if isinstance(request, dict) else None
+            if not isinstance(identifiers, list) or not identifiers or len(identifiers) > MAX_SFX_IDS:
+                raise ValueError("Choose a level with between 1 and 4,096 unique SFX files.")
+            if any(isinstance(identifier, bool) or not isinstance(identifier, int) or identifier < 0
+                   for identifier in identifiers):
+                raise ValueError("The SFX list contains an invalid sound ID.")
+            identifiers = sorted(set(identifiers))
+            catalog = json.loads((SFX_CACHE / "catalog.json").read_text(encoding="utf-8"))
+            valid_ids = {item["id"] for item in catalog.get("files", [])}
+            if any(identifier not in valid_ids for identifier in identifiers):
+                raise ValueError("The SFX list contains an ID outside the local catalog.")
+            sound_paths = [(identifier, SFX_CACHE / "files" / f"s{identifier}.ogg")
+                           for identifier in identifiers]
+            missing = [identifier for identifier, path in sound_paths if not path.is_file()]
+            if missing:
+                raise ValueError(f"{len(missing)} required SFX files are not cached locally.")
+
+            archive = io.BytesIO()
+            with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_STORED, allowZip64=False) as bundle:
+                for identifier, path in sound_paths:
+                    bundle.write(path, f"s{identifier}.ogg")
+            payload = archive.getvalue()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/zip")
+            self.send_header("Content-Disposition", 'attachment; filename="gd-sfx-pack.zip"')
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-SFX-Count", str(len(identifiers)))
+            self.end_headers()
+            self.wfile.write(payload)
+        except (ValueError, json.JSONDecodeError) as error:
+            self.send_json(400, {"error": str(error)})
+        except Exception as error:
+            self.send_json(500, {"error": f"Could not prepare the SFX ZIP: {error}"})
 
 
 def main():

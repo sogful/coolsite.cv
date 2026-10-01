@@ -1,0 +1,165 @@
+@font-face {
+  font-family: oxygene;
+  src: url("cbf/assets/fonts/oxygene.woff2") format("woff2");
+  font-display: swap;
+}
+
+.oxygene {
+  position: relative;
+  display: inline-block;
+  max-width: 90vw;
+  isolation: isolate;
+  font-family: oxygene, sans-serif;
+  font-size: 100px;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: -5px -5px 0 #fff, 0 -5px 0 #fff, 5px -5px 0 #fff,
+    5px 0 0 #fff, 5px 5px 0 #fff, 0 5px 0 #fff, -5px 5px 0 #fff,
+    -5px 0 0 #fff, 10px 10px 0 rgba(0,0,0,0.35);
+  -webkit-text-stroke: 1px #000;
+  stroke-linejoin: round;
+}
+
+.hero h1.oxygene {
+  font-family: oxygene, sans-serif;
+  font-size: clamp(58px, 11vw, 94px);
+  letter-spacing: 0;
+  color: #fff;
+  text-shadow: -5px -5px 0 #fff, 0 -5px 0 #fff, 5px -5px 0 #fff,
+    5px 0 0 #fff, 5px 5px 0 #fff, 0 5px 0 #fff, -5px 5px 0 #fff,
+    -5px 0 0 #fff, 10px 10px 0 rgba(0,0,0,0.35);
+  filter: none;
+  -webkit-text-stroke: 1px #000;
+}
+
+.oxygene::before,
+.oxygene::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+}
+
+.oxygene::before {
+  z-index: 0;
+  content: attr(oxygene);
+  color: #000;
+  -webkit-text-stroke: 4px #000;
+  text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000,
+    3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000,
+    -3px 0 0 #000;
+}
+
+.oxygene::after {
+  content: none;
+}
+
+.oxygeneedge,
+.oxygeneface {
+  font-family: oxygene, sans-serif;
+  text-transform: uppercase;
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+}
+
+.oxygeneedge {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  transform: translateY(4px);
+  background: linear-gradient(to bottom, #88cc33 0 50%, #66aa22 50% 100%);
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px #000;
+}
+
+.oxygeneface {
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(to bottom, #ccff55 0 50%, #88ff33 50% 100%);
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.5px #000;
+}
+
+.gold {
+  position: relative;
+  display: inline-block;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold::before,
+.gold::after {
+  content: attr(gold);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.gold::before {
+  color: #000;
+  text-shadow: -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000,
+    2px 0 0 #000, 2px 2px 0 #000, 0 2px 0 #000, -2px 2px 0 #000,
+    -2px 0 0 #000, 5.4px 5.4px 0 rgba(0,0,0,0.35);
+}
+
+.gold::after {
+  background: linear-gradient(to bottom, #fda40e 0%, #fee348 100%);
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gdcornerart {
+  position: fixed;
+  z-index: 3;
+  width: min(17vw, 260px);
+  max-height: 24vh;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.gdcornerarttopleft {
+  top: 0;
+  left: 0;
+  transform: scaleY(-1);
+}
+
+.gdcornerarttopright {
+  top: 0;
+  right: 0;
+  transform: scale(-1);
+}
+
+.gdcornerartbottomright {
+  right: 0;
+  bottom: 0;
+  transform: scaleY(-1);
+}
+
+.gdcornerartbottomleft {
+  bottom: 0;
+  left: 0;
+}
+
+@media (max-width: 720px) {
+  .oxygene {
+    font-size: clamp(58px, 14vw, 82px);
+  }
+
+  .gdcornerart {
+    width: min(14vw, 96px);
+    max-height: 13vh;
+  }
+}
