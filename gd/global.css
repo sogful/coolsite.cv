@@ -92,6 +92,8 @@
 .gold {
   position: relative;
   display: inline-block;
+  font-family: pusab, sans-serif;
+  font-size: 50px;
   color: transparent;
   -webkit-text-fill-color: transparent;
 }
@@ -123,8 +125,8 @@
 .gdcornerart {
   position: fixed;
   z-index: 3;
-  width: min(17vw, 260px);
-  max-height: 24vh;
+  width: 100px;
+  height: auto;
   object-fit: contain;
   pointer-events: none;
   user-select: none;
@@ -145,7 +147,7 @@
 .gdcornerartbottomright {
   right: 0;
   bottom: 0;
-  transform: scaleY(-1);
+  transform: scaleX(-1);
 }
 
 .gdcornerartbottomleft {
@@ -158,8 +160,60 @@
     font-size: clamp(58px, 14vw, 82px);
   }
 
-  .gdcornerart {
-    width: min(14vw, 96px);
-    max-height: 13vh;
-  }
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: min(50%, 600px);
+  min-width: min(300px, 90vw);
+  height: 50px;
+  padding: 5px;
+  border-radius: 15px;
+  background: rgba(0,0,0,0.2);
+  box-sizing: border-box;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 45px;
+  margin-right: 5px;
+  padding-left: 10px;
+  border: 0;
+  border-radius: 15px;
+  outline: none;
+  background: rgba(0,0,0,0.2);
+  box-sizing: border-box;
+  color: #fff;
+  font-family: pusab, sans-serif;
+  font-size: 30px;
+  text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 3px #000;
+}
+
+.search::placeholder {
+  font-style: italic;
+}
+
+.search:focus-visible {
+  outline: 2px solid #c9ff55;
+  outline-offset: 2px;
+}
+
+.search-button {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border: 0;
+  border-radius: 10px;
+  background: #b8ffcd;
+  color: #102854;
+  font: 24px pusab, sans-serif;
+  cursor: pointer;
+}
+
+.search-button::before {
+  content: "→";
 }

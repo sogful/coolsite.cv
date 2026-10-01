@@ -20,7 +20,7 @@ for (const label of goldLabels) {
 }
 
 const scriptUrl = document.currentScript.src;
-const artworkUrl = new URL("assets/images/GJ_sideArt_001.png", scriptUrl);
+const artworkUrl = new URL("assets/images/corner.png", scriptUrl);
 const corners = ["topleft", "topright", "bottomright", "bottomleft"];
 for (const corner of corners) {
   const artwork = document.createElement("img");
