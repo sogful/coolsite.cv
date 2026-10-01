@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0753c6">
+  <title>To SFX — Geometry Dash song converter</title>
+  <link rel="icon" href="../icon.png">
+  <link rel="preload" as="font" href="../cbf/assets/fonts/pusab.woff2" type="font/woff2" crossorigin>
+  <link rel="preload" as="font" href="../cbf/assets/fonts/aller.woff2" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  <header class="topbar"><a class="brand" href="./" aria-label="To SFX home"><span class="brand-cube">◆</span> gd / audio lab</a><span class="local-pill"><i></i> LOCAL CONVERTER</span></header>
+  <main>
+    <section class="hero" aria-labelledby="title">
+      <p class="eyebrow">GEOMETRY DASH · SONG TO SOUND EFFECTS</p>
+      <h1 id="title" data-title="TO SFX">TO SFX</h1>
+      <p class="intro">Turn a song into a playable Geometry Dash level, built from the game’s sound effects.</p>
+    </section>
+    <section class="workspace" aria-label="Song conversion">
+      <form id="convert-form" class="panel">
+        <div class="panel-heading"><div><span class="step">01</span><h2>Your audio</h2></div><span class="format-note">WAV · OGG · MP3</span></div>
+        <label class="dropzone" id="dropzone" for="audio-file" tabindex="0">
+          <input id="audio-file" name="file" type="file" accept="audio/wav,audio/x-wav,audio/ogg,audio/mpeg,.wav,.ogg,.mp3" required>
+          <span class="upload-icon" aria-hidden="true">↑</span>
+          <span class="drop-title" id="file-title">Drop a song here</span>
+          <span class="drop-subtitle" id="file-subtitle">or browse from this device · up to 100 MB</span>
+        </label>
+        <div class="fields">
+          <label>Start at <span class="field-unit">seconds</span><input name="start" type="number" min="0" step="0.01" value="0"></label>
+          <label>Length <span class="field-unit">seconds</span><input name="duration" type="number" min="0.25" max="30" step="0.25" value="10"></label>
+          <label>Concurrent SFX <span class="field-unit">layers</span><input name="layers" type="number" min="1" max="12" step="1" value="4"></label>
+          <label>Trigger volume <span class="field-unit">×</span><input name="volume" type="number" min="0.05" max="2" step="0.05" value="0.75"></label>
+        </div>
+        <details class="advanced"><summary>Matching settings</summary><div class="advanced-fields">
+          <label>Window size <span class="field-unit">milliseconds</span><select name="hop"><option value="0.0625" selected>62.5 · detailed</option><option value="0.125">125 · quicker</option><option value="0.25">250 · fastest</option></select></label>
+          <label>Candidate search <span class="field-unit">clips</span><select name="shortlist"><option value="128" selected>128 · thorough</option><option value="64">64 · balanced</option><option value="32">32 · quicker</option></select></label>
+        </div><p>More layers and a thorough search can improve the offline match, but may take longer and can sound less consistent in-game.</p></details>
+        <button class="convert-button" id="convert-button" type="submit"><span>MAKE MY LEVEL</span><b aria-hidden="true">↗</b></button>
+        <p class="privacy-note"><span aria-hidden="true">▣</span> Your audio stays on this computer and is discarded after conversion.</p>
+      </form>
+      <aside class="side-column">
+        <section class="panel status-panel" aria-live="polite">
+          <div class="panel-heading"><div><span class="step">02</span><h2 id="status-heading">Ready when you are</h2></div><span class="status-light" id="status-light"></span></div>
+          <p id="status-copy">Choose a song, set the section you want, then build your level.</p>
+          <div class="progress-track" id="progress-track" hidden><span></span></div>
+          <div class="result" id="result" hidden></div>
+        </section>
+        <section class="panel how-panel">
+          <span class="step">THE SHORT VERSION</span>
+          <ol><li><span>1</span><p>We compare short song segments against the locally cached GD SFX library.</p></li><li><span>2</span><p>SFX triggers are arranged in an ordinary 1× level.</p></li><li><span>3</span><p>Import the downloaded <code>.gmd</code> in Geometry Dash and try it.</p></li></ol>
+          <p class="catalog-status" id="catalog-status">Checking local SFX library…</p>
+        </section>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>
