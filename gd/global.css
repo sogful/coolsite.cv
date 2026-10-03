@@ -4,89 +4,182 @@
   font-display: swap;
 }
 
-.oxygene {
+@font-face {
+  font-family: aller;
+  src: url("cbf/assets/fonts/aller.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: aller;
+  src: url("cbf/assets/fonts/allerbold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: aller;
+  src: url("cbf/assets/fonts/alleritalic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: pusab;
+  src: url("assets/fonts/pusab.woff2") format("woff2");
+  font-display: swap;
+}
+
+body {
+  background: linear-gradient(to bottom, #0065fd 0%, #002e73 100%);
+}
+
+a, p {
+  font-family: aller, sans-serif;
+  text-align: center;
+  font-size: 20px;
+  font-style: normal;
+}
+
+.pusab:not(.gold) {
   position: relative;
   display: inline-block;
+  font-family: pusab, sans-serif;
+  font-size: 50px;
+  text-shadow:
+    -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000,
+    2px 0 0 #000, 2px 2px 0 #000, 0 2px 0 #000,
+    -2px 2px 0 #000, -2px 0 0 #000,
+    5.4px 5.4px 0 rgba(0,0,0,0.35);
+}
+
+.oxygene {
+  position: relative;
+  display: block;
+  width: fit-content;
   max-width: 90vw;
+  margin-inline: auto;
   isolation: isolate;
   font-family: oxygene, sans-serif;
   font-size: 100px;
   line-height: 1;
+  text-align: center;
   text-transform: uppercase;
-  color: #fff;
-  text-shadow: -5px -5px 0 #fff, 0 -5px 0 #fff, 5px -5px 0 #fff,
-    5px 0 0 #fff, 5px 5px 0 #fff, 0 5px 0 #fff, -5px 5px 0 #fff,
-    -5px 0 0 #fff, 10px 10px 0 rgba(0,0,0,0.35);
-  -webkit-text-stroke: 1px #000;
+  color: transparent;
+  text-shadow: none;
+  -webkit-text-stroke: 0;
   stroke-linejoin: round;
+  overflow: visible;
 }
 
 .hero h1.oxygene {
   font-family: oxygene, sans-serif;
   font-size: clamp(58px, 11vw, 94px);
   letter-spacing: 0;
-  color: #fff;
-  text-shadow: -5px -5px 0 #fff, 0 -5px 0 #fff, 5px -5px 0 #fff,
-    5px 0 0 #fff, 5px 5px 0 #fff, 0 5px 0 #fff, -5px 5px 0 #fff,
-    -5px 0 0 #fff, 10px 10px 0 rgba(0,0,0,0.35);
+  color: transparent;
+  text-shadow: none;
   filter: none;
-  -webkit-text-stroke: 1px #000;
+  -webkit-text-stroke: 0;
 }
 
-.oxygene::before,
-.oxygene::after {
-  position: absolute;
-  top: 0;
-  left: 0;
-  paint-order: stroke fill;
-  stroke-linejoin: round;
+.oxygene.cbfheading {
+  font-size: clamp(42px, 13.6vw, 136px);
 }
 
-.oxygene::before {
-  z-index: 0;
-  content: attr(oxygene);
-  color: #000;
-  -webkit-text-stroke: 4px #000;
-  text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000,
-    3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000,
-    -3px 0 0 #000;
-}
-
-.oxygene::after {
-  content: none;
-}
-
-.oxygeneedge,
+.oxygeneupperedge,
+.oxygeneloweredge,
+.oxygenewhite,
+.oxygenefill,
+.oxygeneborder,
+.oxygenelight,
 .oxygeneface {
+  display: block;
   font-family: oxygene, sans-serif;
   text-transform: uppercase;
+  text-align: center;
+  line-height: inherit;
+  white-space: inherit;
   paint-order: stroke fill;
   stroke-linejoin: round;
 }
 
-.oxygeneedge {
+.oxygeneupperedge,
+.oxygeneloweredge {
   position: absolute;
-  z-index: 1;
+  z-index: 5;
   inset: 0;
-  transform: translateY(4px);
-  background: linear-gradient(to bottom, #88cc33 0 50%, #66aa22 50% 100%);
+  color: #fff;
+  text-shadow: none;
+  -webkit-text-fill-color: #fff;
+  -webkit-text-stroke: 0;
+}
+
+.oxygeneupperedge {
+  filter: url(#oxygeneupperedgefilter);
+}
+
+.oxygeneloweredge {
+  z-index: 6;
+  filter: url(#oxygeneloweredgefilter);
+}
+
+.oxygenewhite {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  color: transparent;
+  text-shadow: none;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.1em #fff;
+}
+
+.oxygenefill {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  color: #000;
+  text-shadow: none;
+  -webkit-text-stroke: 0;
+}
+
+.oxygeneborder {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  color: #000;
+  text-shadow: none;
+  filter: url(#oxygeneblackborderfilter);
+  -webkit-text-stroke: 0;
+}
+
+.oxygenelight {
+  position: absolute;
+  z-index: 7;
+  inset: 0;
+  color: #ffffaa;
+  filter: url(#oxygenelightfilter);
+  mask-image: repeating-linear-gradient(to bottom, #000 0 0.5em, transparent 0.5em 1em);
+  mask-size: 100% 1em;
+  mask-repeat: repeat;
+  -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 0.5em, transparent 0.5em 1em);
+  -webkit-mask-size: 100% 1em;
+  -webkit-mask-repeat: repeat;
+}
+
+.oxygeneface {
+  position: relative;
+  z-index: 4;
+  background-image: linear-gradient(to bottom, #ccff55 0 50%, #88ff33 50% 100%);
+  background-size: 100% 1em;
+  background-repeat: repeat-y;
   background-clip: text;
   color: transparent;
   text-shadow: none;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 1px #000;
-}
-
-.oxygeneface {
-  position: relative;
-  z-index: 2;
-  background: linear-gradient(to bottom, #ccff55 0 50%, #88ff33 50% 100%);
-  background-clip: text;
-  color: transparent;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 0.5px #000;
+  -webkit-text-stroke: 0;
 }
 
 .gold {
@@ -160,6 +253,10 @@
     font-size: clamp(58px, 14vw, 82px);
   }
 
+  .pusab:not(.gold),
+  .gold {
+    font-size: clamp(28px, 9vw, 50px);
+  }
 }
 
 .bar {
