@@ -6,12 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>image converter</title>
-  <link rel="icon" type="image/png" href="../icon.png">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23061c42'/%3E%3Cpath d='M3 4h10v8H3z' fill='%23ffbd1a'/%3E%3Cpath d='M5 6h6v4H5z' fill='%23061c42'/%3E%3C/svg%3E">
   <link rel="preload" as="font" type="font/woff2" href="../assets/fonts/pusab.woff2" crossorigin>
 
   <link rel="stylesheet" href="../global.css">
   <link rel="stylesheet" href="styles.css">
   <script src="../global.js" defer></script>
+  <script src="canvasrenderer.js" defer></script>
   <script src="app.js" defer></script>
 
 </head>
@@ -21,7 +22,7 @@
     <section class="hero">
       <p class="heroline">LOCAL IMAGE CONVERTER</p>
       <h1 class="pusab">IMAGE TO LEVEL</h1>
-      <p class="intro">Turn an image into a native Geometry Dash 2.2 mosaic. By default every visible tile is a scaled, no-touch decor object with its own Object HSV transform from one red colour channel.</p>
+            <p class="intro">Fit an image with real Geometry Dash decoration meshes and textures. Search thousands of native object shapes, then give each placement its own HSV transform from one red colour channel.</p>
     </section>
 
     <section class="workspace" aria-label="Image to Geometry Dash level converter">
@@ -31,11 +32,11 @@
             <p class="step">01 / SOURCE</p>
             <h2>Choose an image</h2>
           </div>
-          <span class="formatnote">JPG · PNG · WEBP</span>
+          <span class="formatnote">JPG · PNG · WEBP · SVG</span>
         </div>
 
         <label class="dropzone">
-          <input class="imagefile" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+          <input class="imagefile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.svg">
           <span class="uploadicon" aria-hidden="true">↑</span>
           <span class="droptitle">Drop an image here</span>
           <span class="dropsubtitle">or click to browse from this device</span>
@@ -58,42 +59,77 @@
         <label class="fieldlabel">
           <span>Speed / accuracy</span>
           <select class="presetselect">
-            <option value="fast">Fast · 250 objects</option>
-            <option value="balanced" selected>Balanced · 800 objects</option>
-            <option value="detail">Detail · 1500 objects</option>
+            <option value="fast">Fast · 250 objects · 12 trials</option>
+            <option value="balanced">Balanced · 800 objects · 32 trials</option>
+            <option value="detail" selected>Detail · 1500 objects · 96 trials</option>
           </select>
         </label>
 
         <label class="fieldlabel sliderlabel">
-          <span>Object limit <b class="limitvalue">800</b></span>
-          <input class="limitslider" type="range" min="0" max="1500" value="800" step="25">
-          <span class="fieldhelp">0 to 1500 visible mosaic objects</span>
+          <span>Object limit <b class="limitvalue">1,500</b></span>
+          <input class="limitslider" type="range" min="0" max="1500" value="1500" step="25">
+          <span class="fieldhelp">0 to 1500 no-touch objects total, including any background tiles</span>
+        </label>
+
+        <label class="underlaytoggle">
+          <input class="underlaytoggleinput" type="checkbox" checked>
+          <span>Fill with the image’s most common color</span>
+          <small class="fieldhelp">Adds a solid rectangle-tile base before the fitted sprites. Transparent images skip it; tiles count toward the object limit.</small>
         </label>
 
         <div class="fieldrow">
           <label class="fieldlabel">
-            <span>Sampling</span>
+            <span>Search mode</span>
+            <select class="fitselect">
+              <option value="adaptive" selected>Full texture residual search</option>
+              <option value="grid">Fast object-shape grid</option>
+            </select>
+          </label>
+
+          <label class="fieldlabel">
+            <span>Trials / object <b class="trialvalue">96</b></span>
+            <input class="trialslider" type="range" min="4" max="96" value="96" step="4">
+          </label>
+        </div>
+
+        <div class="fieldrow">
+          <label class="fieldlabel">
+            <span>Image sampling</span>
             <select class="samplerselect">
-              <option value="average" selected>Box average</option>
+              <option value="average" selected>Area average</option>
               <option value="nearest">Nearest pixel</option>
             </select>
           </label>
 
           <label class="fieldlabel">
-            <span>Colour levels <b class="colourvalue">8</b></span>
-            <input class="colourslider" type="range" min="2" max="256" value="8" step="1">
+            <span>Colour levels <b class="colourvalue">256</b></span>
+            <input class="colourslider" type="range" min="2" max="256" value="256" step="1">
           </label>
         </div>
+
+        <label class="fieldlabel sliderlabel">
+          <span>Editor preview zoom <b class="previewzoomvalue">0.35×</b></span>
+          <input class="previewzoomslider" type="range" min="0.15" max="0.60" value="0.35" step="0.01">
+          <span class="fieldhelp previewzoomhelp">At 0.35×, the 720-unit image is 252 px wide, matching this image's native-game crop. PNG export uses the preview's pixel scale.</span>
+        </label>
+
+        <label class="fieldlabel">
+          <span>2.2 axis warp</span>
+          <select class="warpselect">
+            <option value="on">Search X/Y warps (experimental)</option>
+            <option value="off" selected>Rotation + XY scale (verified)</option>
+          </select>
+        </label>
 
         <label class="fieldlabel colourmodefield">
           <span>Colour mapping</span>
           <select class="colourmode">
             <option value="hsv" selected>Object HSV from red channel 999</option>
-            <option value="channels">Shared native colour channels</option>
+            <option value="channels">Per-role native colour channels</option>
           </select>
         </label>
 
-        <p class="explain">Higher limits preserve more image detail. The default HSV method keeps the level palette to one red source channel and moves hue, saturation and brightness onto each object.</p>
+        <p class="explain">The fitter samples each captured native texture’s alpha and shading instead of treating an object as a solid mask. It searches different mesh shapes, rotation, independent X/Y scale and, optionally, the game’s 2.2 axis warp against the remaining image error. Multi-colour objects get separate base and detail fits. The default HSV method keeps the palette to one red source channel, 999, while each object stores its own base/detail hue, saturation and brightness.</p>
 
         <button class="buildbutton" type="submit"><span>BUILD .GMD LEVEL</span><b>↓</b></button>
         <p class="privacynote">Your image stays in this browser. The download is generated locally.</p>
@@ -104,9 +140,9 @@
           <div class="panelhead">
             <div>
               <p class="step">LIVE PREVIEW</p>
-              <h2>Source / level mosaic</h2>
+              <h2>Source / fitted native objects</h2>
             </div>
-            <span class="renderstate">READY</span>
+            <div class="previewstates"><span class="assetstatus">LOADING ATLAS</span><span class="renderstate">WAITING</span></div>
           </div>
 
           <div class="canvasgrid">
@@ -115,35 +151,46 @@
               <canvas class="sourcecanvas" width="640" height="420"></canvas>
             </figure>
             <figure class="canvasfigure">
-              <figcaption>Object 211 mosaic</figcaption>
+              <figcaption>Native object fit</figcaption>
               <canvas class="resultcanvas" width="640" height="420"></canvas>
             </figure>
           </div>
 
           <div class="statgrid">
-            <div><span class="statlabel">TILES</span><strong class="tilecount">0</strong></div>
-            <div><span class="statlabel">GRID</span><strong class="gridcount">0 × 0</strong></div>
+            <div><span class="statlabel">OBJECTS</span><strong class="tilecount">0</strong></div>
+            <div><span class="statlabel">PREVIEW ERROR</span><strong class="gridcount">--</strong></div>
             <div><span class="statlabel">CHANNELS</span><strong class="channelcount">0</strong></div>
             <div><span class="statlabel">GMD SIZE</span><strong class="sizecount">0 KB</strong></div>
           </div>
 
-          <a class="downloadlink" hidden download="soggycat.gmd">DOWNLOAD .GMD</a>
-          <p class="statuscopy">Example image ready. Adjust the object budget or build a level now.</p>
+          <div class="exportlinks">
+            <a class="pngdownload" hidden download="soggycat-fit.png">↓ EXPORT FIT PNG</a>
+            <a class="downloadlink" hidden download="soggycat.gmd">↓ DOWNLOAD .GMD LEVEL</a>
+          </div>
+          <p class="statuscopy" aria-live="polite">Example image ready. Adjust the object budget or build a level now.</p>
+          <a class="exampleslink" href="/.claude/img2gd/">VIEW CROPPED IN-GAME EXAMPLE</a>
         </section>
 
-        <section class="formatpanel">
-          <p class="step">FORMAT NOTES</p>
-          <ul>
-            <li>Writes a plist GMD with raw level data in <code>k4</code> and GMD version <code>k50 = 47</code>.</li>
-            <li>Default: Object <code>211</code> uses X/Y scale, no-touch mode and HSV transforms from one red channel at <code>999</code>.</li>
-            <li>Alternate: shared native colour channels preserve opacity and can be compared against the HSV output.</li>
-            <li>Static art only: no collision, triggers, uploads, or changes to a game install.</li>
-          </ul>
-        </section>
       </aside>
+    </section>
+
+    <section class="objectcatalog" aria-label="Native object catalog">
+      <div class="cataloghead">
+        <div>
+          <p class="step">NATIVE OBJECT LIBRARY</p>
+          <h2 class="catalogheading">Loading stable native objects</h2>
+            <p class="catalogintro">Search captured native object visuals by ID, dimensions or sprite count. Detected animated decorations are excluded because Geometry Dash advances their frames independently of the preview.</p>
+        </div>
+        <label class="catalogsearchlabel">
+          <span>Find an object</span>
+          <input class="catalogsearch" type="search" placeholder="ID, size or sprites" autocomplete="off">
+        </label>
+      </div>
+      <p class="catalogcount" aria-live="polite">Loading the native catalog…</p>
+      <div class="cataloggrid"></div>
+      <button class="catalogmore" type="button" hidden>SHOW MORE OBJECTS</button>
     </section>
   </main>
 
-  <footer class="footer">GEOMETRY DASH 2.2 · LOCAL BROWSER TOOL · 0–1500 OBJECTS</footer>
 </body>
 </html>
