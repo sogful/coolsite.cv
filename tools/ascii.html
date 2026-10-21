@@ -15,10 +15,10 @@
             padding: 0.35em 0.6em; box-sizing: border-box;
             display: flex; flex-direction: column;
             height: 100vh; overflow: hidden;
+            max-width: none;
         }
         h1, h2 {margin: 0}
         .topbar {flex: none; margin-bottom: 0.3em; display: flex; align-items: baseline; gap: 0.6em}
-        .topbar .credit {font-size: 0.72em; color: rgba(0,0,0,0.45)}
 
         /*//////////////////////////////////////////////////////////////////////*/
 
@@ -135,8 +135,7 @@
 
     <div class="topbar">
         <h2>ascii art maker</h2>
-        <span class="credit">based on
-            <a href="https://github.com/stong/gradscii-art" target="_blank" rel="noopener">@stong/gradscii-art</a>! might be a bit slow within a browser..</span>
+        <span class="hint">might be a bit slow within a browser</span>
     </div>
 
     <div class="stage">

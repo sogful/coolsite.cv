@@ -144,10 +144,10 @@ function resample(samples, fromrate, torate) {
 async function loadaudio(file, kind) {
     if (!file) return;
     if (!file.type.startsWith("audio/") && !/\.(wav|mp3|m4a|aac|ogg|opus|flac|weba|aif|aiff)$/i.test(file.name)) {
-        setstatus("Choose an audio file supported by this browser.");
+        setstatus("choose an audio file supported by this browser!");
         return;
     }
-    setstatus(`Reading ${file.name}...`);
+    setstatus(`reading ${file.name}..`);
     try {
         if (!audioctx) audioctx = new AudioContext();
         if (audioctx.state === "suspended") await audioctx.resume();
@@ -176,10 +176,10 @@ async function loadaudio(file, kind) {
             makewave(targetwave, mono);
         }
         clearresult();
-        setstatus(sourceaudio && targetaudio ? "Ready. Tune the slices, then make the mix." : "One more track to go.");
+        setstatus(sourceaudio && targetaudio ? "files ready!" : "also choose the other file");
         synccontrols();
     } catch (error) {
-        setstatus(`Could not decode ${file.name}. Try wav, mp3, or m4a.`);
+        setstatus(`could not decode ${file.name} :(`);
     }
 }
 
@@ -204,7 +204,7 @@ function cleartrack(kind) {
         sethidden(targetdrop, false);
     }
     clearresult();
-    setstatus("Choose two audio files to begin.");
+    setstatus("choose two audio files to begin!");
     synccontrols();
 }
 
@@ -422,7 +422,7 @@ async function findmatches(carrier, target, settings) {
         usage[bestindex] += 1;
         previous = bestindex;
         if ((frameindex + 1) % 12 === 0 || frameindex + 1 === target.vectors.length) {
-            updateprogress(50 + (frameindex + 1) / target.vectors.length * 30, `Matching slices ${frameindex + 1} of ${target.vectors.length}...`);
+            updateprogress(50 + (frameindex + 1) / target.vectors.length * 30, `matching slices ${frameindex + 1}/${target.vectors.length}..`);
             await new Promise(resolve => setTimeout(resolve, 0));
         }
     }
@@ -448,7 +448,7 @@ async function buildoutput(carrier, target, matches, loudness, sourcesamples, ta
             output[outputindex] += sample * target.windowdata[offset] * gain;
         }
         if ((frameindex + 1) % 16 === 0 || frameindex + 1 === matches.length) {
-            updateprogress(80 + (frameindex + 1) / matches.length * 15, `Building audio ${frameindex + 1} of ${matches.length}...`);
+            updateprogress(80 + (frameindex + 1) / matches.length * 15, `building audio ${frameindex + 1} of ${matches.length}..`);
             await new Promise(resolve => setTimeout(resolve, 0));
             checkcancel();
         }
@@ -497,15 +497,18 @@ async function domix() {
     cancelrequested = false;
     generating = true;
     mixbutton.disabled = true;
+
     sethidden(cancelbutton, false);
     sethidden(progress, false);
     progress.value = 0;
-    setstatus("Preparing mix...");
+    setstatus("preparing..");
     clearresult();
+
     const sourcefiledata = sourceaudio;
     const targetfiledata = targetaudio;
     const rate = Number(quality.value);
     const loudness = matchloudness.checked;
+
     const settings = {
         rate,
         frame: Number(framelength.value),
@@ -514,31 +517,36 @@ async function domix() {
         reuse: Number(repeatavoid.value),
         smooth: Number(smoothness.value)
     };
-    const tracker = (label, portion) => updateprogress(portion * 20 + (label === "carrier" ? 0 : 20), `Analyzing ${label} · ${Math.round(portion * 100)}%`);
+    const tracker = (label, portion) => updateprogress(portion * 20 + (label === "carrier" ? 0 : 20), `analyzing ${label} ~ ${Math.round(portion * 100)}%`);
     try {
         const source = resample(sourcefiledata.mono, sourcefiledata.buffer.sampleRate, rate);
         const target = resample(targetfiledata.mono, targetfiledata.buffer.sampleRate, rate);
         const carrierdata = await makefeatures(source, settings, "carrier", tracker);
         const targetdata = await makefeatures(target, settings, "target", tracker);
-        updateprogress(50, "Comparing spectra...");
+        updateprogress(50, "comparing spectra..");
         const matches = await findmatches(carrierdata, targetdata, settings);
         checkcancel();
         const samples = await buildoutput(carrierdata, targetdata, matches, loudness, source, target);
         const wav = makewav(samples, rate);
         if (resulturl) URL.revokeObjectURL(resulturl);
+        
         resulturl = URL.createObjectURL(wav);
         resultsamples = samples;
+        
         resultplayer.src = resulturl;
         downloadbutton.href = resulturl;
-        downloadbutton.download = `${cleanname(targetfiledata.file.name)}-sentence-mix.wav`;
+        downloadbutton.download = `${cleanname(targetfiledata.file.name)}-mix.wav`;
+        
         sethidden(result, false);
         makewave(resultwave, samples);
-        updateprogress(100, "Mix complete. Listen or download the wav.");
+        updateprogress(100, "done!");
+
         result.scrollIntoView({behavior: "smooth", block: "nearest"});
     } catch (error) {
-        setstatus(error.message === "cancelled" ? "Mix cancelled." : "The mix could not be created. Try shorter files or quick analysis quality.");
+        setstatus(error.message === "cancelled" ? "cancelled" : "failed, but i don't know the reason as to why! awh");
     } finally {
         generating = false;
+
         setstatus("");
         sethidden(progress, true);
         sethidden(cancelbutton, true);
@@ -552,7 +560,7 @@ mixbutton.addEventListener("click", () => {
 
 cancelbutton.addEventListener("click", () => {
     cancelrequested = true;
-    setstatus("Stopping after the current slice...");
+    setstatus("stopping..");
 });
 
 window.addEventListener("resize", () => {

@@ -34,7 +34,7 @@
         <div>
             <label for="emoji">emoji -</label>
             <input class="emoji" id="emoji" name="emoji" value="🐈" required>
-            <button class="btn" type="submit">make favicon</button>
+            <button class="btn" type="submit">create favicon</button>
         </div>
     </form>
     <div>
@@ -157,7 +157,7 @@
             const status = document.querySelector(".status");
             const emoji = splitemoji(document.querySelector(".emoji").value);
             if (!emoji.length) return;
-            status.textContent = "loading twemoji..";
+            status.textContent = "loading twemojis..";
             try {
                 const result = await Promise.all(emoji.map(fetchemoji));
                 const svg = compose(result.map(item => item.svg));
@@ -168,7 +168,7 @@
                 document.querySelector(".output").textContent =
                     `<link rel="icon" type="image/svg+xml" href="${url}">`;
                 status.textContent = result.some(item => item.fallback) ?
-                    "ready - unavailable glyphs use your system font" : "ready";
+                    "created, unavailable glyphs use your system font" : "created";
             } catch (error) {
                 if (current !== requestid) return;
                 status.textContent = error.message;
