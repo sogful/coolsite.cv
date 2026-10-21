@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <title>sentence mixer</title>
+
+    <link rel="stylesheet" href="../base.css">
+    <link rel="stylesheet" href="index.css">
+    
+</head>
+<body>
+    <div class="page">
+
+        <main>
+            <section class="hero">
+                <h1 class="title">sentence mixer</h1>
+            </section>
+
+            <section class="tracks">
+                <article class="trackcard sourcecard">
+                    <label class="dropzone sourcedrop">
+                        <span>audio:</span>
+                        <input class="sourcefile fileinput" type="file" accept="audio/*">
+                    </label>
+                    <div class="trackmeta sourcemeta hidden" hidden>
+                        <canvas class="sourcewave waveform" aria-hidden="true"></canvas>
+                        <div class="fileline">
+                            <span class="sourcefilename filename"></span>
+                            <button class="clearbutton clearsource" type="button">remove</button>
+                        </div>
+                        <span class="sourcedetail trackdetail"></span>
+                        <audio class="sourceplayer trackplayer" controls preload="metadata"></audio>
+                    </div>
+                </article>
+
+                <div class="mixmark" aria-hidden="true">into</div>
+
+                <article class="trackcard targetcard">
+                    <label class="dropzone targetdrop">
+                        <span>to recreate:</span>
+                        <input class="targetfile fileinput" type="file" accept="audio/*">
+                    </label>
+                    <div class="trackmeta targetmeta hidden" hidden>
+                        <canvas class="targetwave waveform" aria-hidden="true"></canvas>
+                        <div class="fileline">
+                            <span class="targetfilename filename"></span>
+                            <button class="clearbutton cleartarget" type="button">remove</button>
+                        </div>
+                        <span class="targetdetail trackdetail"></span>
+                        <audio class="targetplayer trackplayer" controls preload="metadata"></audio>
+                    </div>
+                </article>
+            </section>
+
+            <section class="settings">
+                <div class="settingshead">
+                    <h2 class="sectiontitle">settings</h2>
+                </div>
+
+                <div class="controlgrid">
+                    <label class="control">
+                        <span class="controltop"><span>slice length</span><output class="framereadout readout">40 ms</output></span>
+                        <input class="framelength rangeinput" type="range" min="20" max="120" step="5" value="40">
+                    </label>
+                    <label class="control">
+                        <span class="controltop"><span>overlap</span><output class="overlapreadout readout">50%</output></span>
+                        <input class="overlap rangeinput" type="range" min="0" max="75" step="5" value="50">
+                        <span class="controlhint">fills gaps and softens joins</span>
+                    </label>
+                    <label class="control">
+                        <span class="controltop"><span>frequency focus</span><output class="focusreadout readout">neutral</output></span>
+                        <input class="frequencyfocus rangeinput" type="range" min="-100" max="100" step="10" value="0">
+                        <span class="controlhint">manipulate the match towards lower or higher spectral bands</span>
+                    </label>
+                    <label class="control">
+                        <span class="controltop"><span>repeat avoidance</span><output class="repeatsreadout readout">off</output></span>
+                        <input class="repeatavoid rangeinput" type="range" min="0" max="100" step="10" value="0">
+                        <span class="controlhint">don't use the same slice too often</span>
+                    </label>
+                </div>
+
+                <details class="advanced">
+                    <summary>advanced..</summary>
+                    <div class="advancedgrid">
+                        <label class="control">
+                            <span class="controltop"><span>smoothness</span><output class="smoothreadout readout">off</output></span>
+                            <input class="smoothness rangeinput" type="range" min="0" max="100" step="10" value="0">
+                        </label>
+                        <label class="control selectcontrol">
+                            <span class="controltop"><span>analysis quality</span></span>
+                            <select class="quality">
+                                <option value="22050">22.05 kHz</option>
+                                <option value="44100" selected>44.1 kHz</option>
+                            </select>
+                        </label>
+                        <label class="checkcontrol">
+                            <input class="matchloudness checkinput" type="checkbox" checked>
+                            <span><strong class="checktitle">match target loudness</strong></span>
+                        </label>
+                    </div>
+                </details>
+
+                <div class="actionrow">
+                    <button class="mixbutton" type="button" disabled>generate!</button>
+                    <button class="cancelbutton hidden" type="button" hidden>cancel</button>
+                    <span class="status hidden" role="status" aria-live="polite" hidden></span>
+                </div>
+                <progress class="progress hidden" value="0" max="100" hidden></progress>
+            </section>
+
+            <section class="result hidden" hidden>
+                <div class="resulthead">
+                    <h2 class="sectiontitle">Your mix</h2>
+                    <a class="downloadbutton" download="sentence-mix.wav">download wav</a>
+                </div>
+                <canvas class="resultwave waveform" aria-hidden="true"></canvas>
+                <audio class="resultplayer" controls preload="metadata"></audio>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="index.js"></script>
+
+</body>
+</html>

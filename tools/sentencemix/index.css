@@ -1,0 +1,233 @@
+.page {
+    max-width: 800px;
+    min-height: calc(100vh - 2em);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.topline {
+    display: flex;
+    justify-content: space-between;
+    gap: 1em;
+}
+
+.hero {
+    margin: 1.5em 0;
+}
+
+.title, .tracktitle, .sectiontitle {
+    margin: 0;
+}
+
+.intro, .trackhint, .controlhint {
+    margin: 0;
+}
+
+.tracks {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0.75em;
+}
+
+.trackcard {
+    display: flex;
+    min-width: 0;
+    min-height: 250px;
+    flex-direction: column;
+}
+
+.settings, .result {
+    min-width: 0;
+}
+
+.trackhead {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5em;
+    margin-bottom: 0.75em;
+}
+
+.mixmark {
+    align-self: center;
+}
+
+.dropzone {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.5em;
+    cursor: pointer;
+}
+
+.fileinput {
+    width: 100%;
+    max-width: 100%;
+    height: 2.5em;
+    box-sizing: border-box;
+}
+
+.trackmeta {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    padding-top: 0.5em;
+    box-sizing: border-box;
+}
+
+.waveform {
+    display: block;
+    width: 100%;
+    height: 64px;
+}
+
+.fileline {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5em;
+    margin-top: 0.5em;
+    box-sizing: border-box;
+}
+
+.filename {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.clearbutton {
+    flex: 0 0 auto;
+}
+
+.trackdetail {
+    display: block;
+    margin-top: 0.25em;
+}
+
+.trackplayer, .resultplayer {
+    display: block;
+    width: 100%;
+    height: 54px;
+    min-width: 0;
+    margin-top: 0.5em;
+    box-sizing: border-box;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.settings, .result {
+    margin-top: 1em;
+}
+
+.settingshead, .resulthead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75em;
+}
+
+.controlgrid, .advancedgrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1em;
+    margin-top: 1em;
+}
+
+.control {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4em;
+}
+
+.controltop {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.5em;
+}
+
+.rangeinput {
+    width: 100%;
+    margin: 0;
+}
+
+.advanced {
+    margin-top: 1em;
+}
+
+.advancedgrid {
+    align-items: start;
+    margin-top: 0.75em;
+}
+
+.quality {
+    max-width: 100%;
+}
+
+.checkcontrol {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5em;
+}
+
+.checkinput {
+    margin: 0.2em 0 0;
+}
+
+.checktitle, .checkhint {
+    display: block;
+}
+
+.checktitle {
+    margin-bottom: 0.25em;
+}
+
+.actionrow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    margin-top: 1em;
+}
+
+.progress {
+    display: block;
+    width: 100%;
+    margin-top: 0.75em;
+}
+
+.resultwave {
+    height: 80px;
+    margin-top: 0.75em;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+@media (max-width: 640px) {
+    .tracks {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .mixmark {
+        justify-self: center;
+    }
+
+    .controlgrid, .advancedgrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

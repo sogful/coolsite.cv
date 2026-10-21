@@ -17,6 +17,7 @@
             display: flex; align-items: center; justify-content: center;
             background: #111111; overflow: hidden;
             margin: 0; padding: 0; height: 100%; width: 100%;
+            max-width: none;
             font-family: Arial, Tahoma, sans-serif;
         }
         .bg {
@@ -57,6 +58,13 @@
             display: inline-block;
             transform: rotate(1.1deg);
         }
+        .credit {
+            font-size: 0.72em;
+            opacity: 0.65;
+        }
+        .credit .creditlink {
+            transform: none;
+        }
         a:nth-of-type(1) {transform: rotate(-1.0deg)} a:nth-of-type(2) {transform: rotate(1.17deg)}
         a:nth-of-type(3) {transform: rotate(-1.12deg)} a:nth-of-type(4) {transform: rotate(1.1deg)}
         a:nth-of-type(5) {transform: rotate(-1.1deg)} a:nth-of-type(6) {transform: rotate(1.13deg)}
@@ -83,13 +91,16 @@
                 <br>
                 <a href="fontcompress">font compressor</a>
                 <a href="rive">rive animation converter</a>
+                <a href="sentencemix.html">sentence mix audio remixer</a>
+                <span class="credit">based on <a class="creditlink" href="https://github.com/Firepal/stammer" target="_blank" rel="noreferrer">stammer</a></span>
                 <br>
                 <a href="svgfavicon">svg favicon generator</a>
                 <a href="testfile">test file generator</a>
                 <br>
                 <a href="unicode">unicode scribble matcher</a>
                 <a href="braille">braille art maker</a>
-                <a href="braille">ascii art maker</a>
+                <a href="ascii">ascii art maker</a>
+                <span class="credit">based on <a class="creditlink" href="https://github.com/stong/gradscii-art" target="_blank" rel="noreferrer">gradscii-art</a></span>
                 <br>
                 <a href="synthid">(bad) synthid re-applier</a>
                 <br>
