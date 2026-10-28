@@ -69,7 +69,7 @@ function buildgametypepool(seed, golden) {
 
 const rulemasks = {
     5: 0x40001, 6: 0x0010, 7: 0x1000, 8: 0x0010, 9: 0x0300, 10: 0x0c80,
-    12: 0x0020, 13: 0x0040, 14: 0x2c00, 17: 0x0000, 18: 0x4000, 19: 0x43000,
+    11: 0x0300, 12: 0x0020, 13: 0x0040, 14: 0x2c00, 17: 0x0000, 18: 0x4000, 19: 0x43000,
     20: 0x0300, 21: 0x0010, 22: 0x0000, 23: 0x8000, 24: 0x0000, 25: 0xc000,
     26: 0x4000, 27: 0x4000, 28: 0x10000, 29: 0x10000, 30: 0x20000, 31: 0x42001,
 };
@@ -130,12 +130,12 @@ function drawtarget(rng) {
     return rng.get(20) === 1 ? 1 : 2;
 }
 
-function drawrules(deck, target, gametype) {
+function drawrules(deck, target, gametype, rng) {
     const selected = []; let idx = 0;
     let usedmask = gametypeinhmask[gametype] || 0;
     function tryadd(id) {
         let ok = (rulemasks[id] & usedmask) === 0;
-        if (ok && id === 22 && (gametype === 0 || gametype === 1)) {
+        if (ok && id === 23 && (gametype === 0 || gametype === 1)) {
             ok = selected.includes(19) || selected.includes(10);
         }
         if (ok) {selected.push(id); usedmask |= rulemasks[id]}
@@ -187,7 +187,7 @@ function computerulesfordate(date, golden) {
     const extra = {};
     const deck = shuffledeck(builddeck(gametype, day, rng, extra), rng);
     const target = drawtarget(rng);
-    const ruleids = drawrules(deck, target, gametype);
+    const ruleids = drawrules(deck, target, gametype, rng);
     const bonusid = drawbonus(rng, target, gametype, ruleids);
     const difficulty = drawdifficulty(rng, gametype);
 
