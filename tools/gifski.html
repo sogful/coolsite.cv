@@ -221,7 +221,7 @@
     </div>
 
     <script type="module">
-        import {rungifsiclewithprogress} from "../assets/static/js/gifsicle/gifsicleprogress.js";
+        import {convertvideo} from "../assets/static/js/gifski/conversion.js";
 
         const videofile = document.querySelector("#videofile");
         const filesize = document.querySelector("#filesize");
@@ -291,8 +291,8 @@
 
         let fileurl = null;
         let outputurl = null;
-        let encoderworker = null;
-        let cancelencoding = null;
+        let currentconversion = null;
+        const disabledcontrols = new Map();
         let running = false;
         let progressstage = "preparing conversion";
         let conversionstarted = 0;
@@ -372,13 +372,10 @@
 
         stopbutton.addEventListener("click", ()=>{
             running = false;
-            if (cancelencoding) cancelencoding();
-            else if (encoderworker) encoderworker.terminate();
-            encoderworker = null;
+            currentconversion?.abort();
             setprogress(Number(progressbar.value), "conversion stopped", "no output was created.");
             status.textContent = "stopped";
             stopbutton.disabled = true;
-            convert.disabled = false;
         });
 
         /*//////////////////////////////////////////////////////////////////////*/
@@ -391,7 +388,7 @@
                 return;
             }
 
-            let settings = readsettings(sourcevideo);
+            const settings = readsettings(sourcevideo);
             if (!settings) return;
             setrunning(true);
             output.replaceChildren();
@@ -401,29 +398,11 @@
             setprogress(0, "preparing conversion", progresssettings(settings));
 
             try {
-                while (running) {
-                    const frames = await captureframes(sourcevideo, settings);
-                    if (!running) return;
-                    const gif = await encodegif(frames, settings);
-                    if (!running) return;
-                    setprogress(0, "checking output size", `${formatbytes(gif.size)} before size fitting.`);
-                    const result = await fitlimit(gif, settings);
-                    if (!running) return;
-                    if (result.file.size <= settings.limit || !settings.autolimit) {
-                        showoutput(result.file, settings, result.loss);
-                        if (result.file.size > settings.limit) warning.textContent = `${formatbytes(result.file.size)} is over the ${formatbytes(settings.limit)} limit. Choose a smaller resolution, lower fps, or a shorter range.`;
-                        break;
-                    }
-                    const fallback = nextfittingresolution(settings);
-                    if (!fallback) {
-                        showoutput(result.file, settings, result.loss);
-                        warning.textContent = `${formatbytes(result.file.size)} is over the ${formatbytes(settings.limit)} limit. Choose a smaller resolution, lower fps, or a shorter range.`;
-                        break;
-                    }
-                    settings = {...settings, width: fallback.width, height: fallback.height, resolution: presetkey(fallback)};
-                    syncresolutionselection(fallback);
-                    setprogress(0, "trying a smaller resolution", `${fallback.width}x${fallback.height} at ${settings.fps}fps.`);
-                }
+                sourcevideo.pause();
+                currentconversion = new AbortController();
+                const file = await convertvideo(videofile.files[0], settings, setprogress, currentconversion.signal);
+                if (!running) return;
+                showoutput(file, settings);
                 if (!running) return;
                 const resulttext = output.textContent.match(/[\d.]+ MB/)?.[0] || "GIF";
                 setprogress(100, "conversion complete", `${resulttext} created in ${formattime(performance.now() - conversionstarted)}.`);
@@ -437,7 +416,8 @@
                     status.textContent = `failed while ${failedstage}`;
                 }
             } finally {
-                if (running) setrunning(false);
+                currentconversion = null;
+                setrunning(false);
             }
         });
 
@@ -804,8 +784,8 @@
                 limit: numbervalue(limitinput, 9, 0.1) * 1000000,
                 autofps: autofpsinput.checked,
             });
-            const framecount = Math.max(2, Math.floor(settings.duration * settings.fps));
-            const memory = framecount * settings.width * settings.height * 4;
+            const framecount = Math.max(2, Math.round(settings.duration * settings.fps));
+            const memory = estimateframememory(settings);
             estimate.textContent = `${framecount} frames at ${settings.width}x${settings.height}.`;
             warning.textContent = memory > automaticmemorybudget ? memorymessage(settings, memory) : "";
         }
@@ -841,7 +821,6 @@
                 resolution: presetkey(resolution),
                 loop: loopinput.checked,
                 autolimit: autolimitinput.checked,
-                maxloss: 200,
             };
         }
 
@@ -852,7 +831,7 @@
                 fps = findautomaticfps(settings.width, settings.height, settings.duration);
                 automatic.push(`${fps}fps`);
             }
-            return {...settings, fps, quality: 100, automatic};
+            return {...settings, fps, automatic};
         }
 
         function findautomaticfps(width, height, duration){
@@ -862,25 +841,11 @@
         }
 
         function findmaximumfps(width, height, duration){
-            return Math.max(1, Math.floor(automaticmemorybudget / (Math.max(0.001, duration) * width * height * 4)));
+            return Math.max(1, Math.floor(automaticmemorybudget / (Math.min(2, Math.max(0.001, duration)) * width * height * 4 * 4)));
         }
 
         function currentresolution(){
             return resolutionpreset(selectedresolution) || resolutionpresets.find(preset=>presetkey(preset) === "640x360") || resolutionpresets[0];
-        }
-
-        function nextfittingresolution(settings){
-            const ratio = settings.width / settings.height;
-            const currentpixels = settings.width * settings.height;
-            return resolutionpresets
-                .filter(preset=>Math.abs(preset.width / preset.height - ratio) < 0.02 && preset.width * preset.height < currentpixels)
-                .sort((first, second)=>second.width * second.height - first.width * first.height)[0] || null;
-        }
-
-        function syncresolutionselection(preset){
-            selectedresolution = presetkey(preset);
-            const select = videostage.querySelector(".cropcontrols select");
-            if (select && [...select.options].some(option=>option.value === selectedresolution)) select.value = selectedresolution;
         }
 
         function sourcecrop(video){
@@ -894,7 +859,7 @@
         }
 
         function estimateframememory(settings){
-            return Math.max(2, Math.floor(settings.duration * settings.fps)) * settings.width * settings.height * 4;
+            return Math.min(Math.max(2, Math.round(settings.duration * settings.fps)), Math.ceil(settings.fps * 2)) * settings.width * settings.height * 4 * 4;
         }
 
         function memorymessage(settings, memory){
@@ -924,253 +889,7 @@
             return value;
         }
 
-        async function captureframes(video, settings){
-            const memory = estimateframememory(settings);
-            if (memory > automaticmemorybudget) throw new Error(memorymessage(settings, memory));
-            const canvas = document.createElement("canvas");
-            canvas.width = settings.width;
-            canvas.height = settings.height;
-            const context = canvas.getContext("2d", {willReadFrequently: true});
-            const framecount = Math.max(2, Math.floor(settings.duration * settings.fps));
-            const framebytes = settings.width * settings.height * 4;
-            const frames = new Uint8Array(framecount * framebytes);
-            let captured = 0;
-            const updatecaptureprogress = ()=>{
-                const percent = Math.round(captured / framecount * 100);
-                setprogress(percent, "sampling video frames", `${captured}/${framecount} frames - ${settings.width}x${settings.height} at ${settings.fps}fps.`);
-            };
-
-            const addframe = ()=>{
-                drawframe(context, video, settings);
-                frames.set(context.getImageData(0, 0, settings.width, settings.height).data, captured * framebytes);
-                captured += 1;
-                if (captured === framecount || captured % Math.max(1, Math.ceil(framecount / 100)) === 0) updatecaptureprogress();
-            };
-
-            await seekvideo(video, settings.start);
-            addframe();
-            if (captured < framecount) {
-                await seekvideo(video, settings.start + captured / settings.fps);
-                await captureplayingframes(video, settings, framecount, addframe, ()=>captured);
-            }
-            await captureexactframes(video, settings, framecount, captured, addframe);
-
-            if (!running) throw new Error("stopped");
-            if (captured !== framecount) throw new Error("the video did not provide every requested frame");
-            return frames.buffer;
-        }
-
-        async function captureplayingframes(video, settings, framecount, addframe, capturedframes){
-            if (typeof video.requestVideoFrameCallback !== "function") return;
-            const previousrate = video.playbackRate;
-            const samplerate = Math.min(4, Math.max(1, 48 / settings.fps));
-            await new Promise(resolve=>{
-                let callback = 0;
-                let watchdog = 0;
-                let finished = false;
-                const finish = ()=>{
-                    if (finished) return;
-                    finished = true;
-                    clearTimeout(watchdog);
-                    if (callback && typeof video.cancelVideoFrameCallback === "function") video.cancelVideoFrameCallback(callback);
-                    video.pause();
-                    video.playbackRate = previousrate;
-                    resolve();
-                };
-                const schedule = ()=>{
-                    clearTimeout(watchdog);
-                    callback = video.requestVideoFrameCallback((now, metadata)=>{
-                        if (!running) return finish();
-                        const due = Math.floor((metadata.mediaTime - settings.start) * settings.fps + 0.0001);
-                        if (due < capturedframes()) return schedule();
-                        if (due > capturedframes()) return finish();
-                        addframe();
-                        if (capturedframes() >= framecount) return finish();
-                        schedule();
-                    });
-                    watchdog = setTimeout(finish, 1000);
-                };
-                video.playbackRate = samplerate;
-                schedule();
-                video.play().catch(finish);
-            });
-        }
-
-        async function captureexactframes(video, settings, framecount, captured, addframe){
-            for (let index = captured; index < framecount && running; index += 1) {
-                await seekvideo(video, settings.start + index / settings.fps);
-                addframe();
-            }
-        }
-
-        function drawframe(context, video, settings){
-            const sourcewidth = video.videoWidth;
-            const sourceheight = video.videoHeight;
-            context.clearRect(0, 0, settings.width, settings.height);
-            if (settings.crop) {
-                context.drawImage(video, settings.crop.x, settings.crop.y, settings.crop.width, settings.crop.height, 0, 0, settings.width, settings.height);
-                return;
-            }
-            const scale = Math.min(settings.width / sourcewidth, settings.height / sourceheight);
-            const drawwidth = Math.round(sourcewidth * scale);
-            const drawheight = Math.round(sourceheight * scale);
-            const drawx = Math.floor((settings.width - drawwidth) / 2);
-            const drawy = Math.floor((settings.height - drawheight) / 2);
-            context.fillStyle = "#000000";
-            context.fillRect(0, 0, settings.width, settings.height);
-            context.drawImage(video, drawx, drawy, drawwidth, drawheight);
-        }
-
-        function seekvideo(video, time){
-            return new Promise((resolve, reject)=>{
-                const target = Math.max(0, Math.min(time, video.duration || time));
-                if (Math.abs(video.currentTime - target) < 0.0001 && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-                    resolve();
-                    return;
-                }
-                let timer = 0;
-                const done = ()=>{
-                    clearTimeout(timer);
-                    video.removeEventListener("seeked", done);
-                    resolve();
-                };
-                video.addEventListener("seeked", done, {once: true});
-                video.currentTime = target;
-                timer = setTimeout(()=>{
-                    video.removeEventListener("seeked", done);
-                    reject(new Error("video seek timed out"));
-                }, 15000);
-            });
-        }
-
-        function encodegif(frames, settings){
-            return new Promise((resolve, reject)=>{
-                const worker = new Worker("../assets/static/js/gifski/gifskiworker.js", {type: "module"});
-                encoderworker = worker;
-                const framecount = Math.max(2, Math.floor(settings.duration * settings.fps));
-                const framebytes = settings.width * settings.height * 4;
-                let completed = false;
-                const chunks = [];
-                const finish = callback=>{
-                    if (completed) return;
-                    completed = true;
-                    worker.terminate();
-                    if (encoderworker === worker) encoderworker = null;
-                    if (cancelencoding === cancel) cancelencoding = null;
-                    callback();
-                };
-                const cancel = ()=>finish(()=>reject(new Error("stopped")));
-                cancelencoding = cancel;
-                worker.addEventListener("message", async event=>{
-                    const reply = event.data;
-                    if (reply.type === "chunk") {
-                        chunks.push(new File([reply.gif], `part${String(chunks.length).padStart(3, "0")}.gif`, {type: "image/gif"}));
-                        const percent = Math.min(99, Math.round(reply.completed / reply.framecount * 100));
-                        setprogress(percent, "encoding GIF", `${reply.completed}/${reply.framecount} frames.`);
-                        return;
-                    }
-                    if (reply.error) {
-                        finish(()=>reject(new Error(reply.error)));
-                        return;
-                    }
-                    if (reply.type !== "complete") return;
-                    try {
-                        setprogress(99, "joining GIF frames", `${chunks.length} GIF parts.`);
-                        const gif = await mergegifparts(chunks, framecount, settings.loop);
-                        finish(()=>resolve(gif));
-                    } catch (error) {
-                        finish(()=>reject(error));
-                    }
-                });
-                worker.addEventListener("error", event=>{
-                    finish(()=>reject(event.error || new Error(event.message)));
-                }, {once: true});
-                worker.addEventListener("messageerror", ()=>{
-                    finish(()=>reject(new Error("the video frames could not be transferred to the GIF encoder.")));
-                }, {once: true});
-                setprogress(0, "encoding GIF", `0/${framecount} frames.`);
-                worker.postMessage({mode: "encode", frames, framecount, framebytes, width: settings.width, height: settings.height, fps: settings.fps, quality: settings.quality, loop: settings.loop}, [frames]);
-            });
-        }
-
-        async function mergegifparts(parts, framecount, loop){
-            if (parts.length === 1) return parts[0];
-            const input = parts.map((file, index)=>({file, name: `part${String(index).padStart(3, "0")}.gif`}));
-            const names = input.map(item=>item.name);
-            const loopoption = loop ? " --loopcount=0" : "";
-            const result = await rungifsiclewithprogress({
-                input,
-                command: [`--merge ${names.join(" ")}${loopoption} -o /out/gifski.gif`],
-            }, event=>{
-                const fraction = event.total ? event.completed / event.total : 0;
-                const percent = 99 + fraction;
-                setprogress(percent, "joining GIF frames", `${framecount}/${framecount} frames - ${event.detail}.`);
-            });
-            if (!result || !result[0]) throw new Error("gifsicle did not join the GIF frames");
-            return result[0];
-        }
-
-        async function fitlimit(file, settings){
-            if (!settings.autolimit || file.size <= settings.limit * 0.965) return {file, loss: 0};
-            let low = 0;
-            let high = settings.maxloss;
-            const target = settings.limit * 0.965;
-            const minimumtarget = settings.limit * 0.947;
-            let best = file.size <= settings.limit ? file : null;
-            let bestloss = 0;
-            let finalfile = file;
-            const totalsteps = Math.min(4, searchsteps(low, high)) + 1;
-            let step = 0;
-            while (low <= high && running && step < totalsteps - 1) {
-                const loss = Math.floor((low + high) / 2);
-                step += 1;
-                const updateoptimizerprogress = event=>{
-                    const fraction = event.total ? event.completed / event.total : 0;
-                    const percent = Math.round((step - 1 + fraction) / totalsteps * 100);
-                    setprogress(percent, "fitting the size limit", `pass ${step}/${totalsteps} - ${event.completed}/${event.total}: ${event.detail}`);
-                };
-                updateoptimizerprogress({completed: 0, total: 2, detail: "loading GIF input"});
-                const candidate = await optimizeloss(file, loss, updateoptimizerprogress);
-                finalfile = candidate;
-                if (candidate.size <= settings.limit && (!best || Math.abs(candidate.size - target) < Math.abs(best.size - target))) {
-                    best = candidate;
-                    bestloss = loss;
-                }
-                if (candidate.size >= minimumtarget && candidate.size <= settings.limit) break;
-                if (candidate.size <= target) {
-                    high = loss - 1;
-                } else {
-                    low = loss + 1;
-                }
-            }
-            if (!best && running) {
-                step += 1;
-                const loss = settings.maxloss;
-                const updateoptimizerprogress = event=>{
-                    const fraction = event.total ? event.completed / event.total : 0;
-                    const percent = Math.round((step - 1 + fraction) / totalsteps * 100);
-                    setprogress(percent, "fitting the size limit", `pass ${step}/${totalsteps} - ${event.completed}/${event.total}: ${event.detail}`);
-                };
-                const candidate = await optimizeloss(file, loss, updateoptimizerprogress);
-                finalfile = candidate;
-                if (candidate.size <= settings.limit) {
-                    best = candidate;
-                    bestloss = loss;
-                }
-            }
-            return best ? {file: best, loss: bestloss} : {file: finalfile, loss: settings.maxloss};
-        }
-
-        async function optimizeloss(file, loss, onprogress){
-            const result = await rungifsiclewithprogress({
-                input: [{file, name: "source.gif"}],
-                command: [`-O2 --lossy=${loss} source.gif -o /out/compressed.gif`],
-            }, onprogress);
-            if (!result || !result[0]) throw new Error("gifsicle did not return a GIF");
-            return result[0];
-        }
-
-        function showoutput(file, settings, loss){
+        function showoutput(file, settings){
             if (outputurl) URL.revokeObjectURL(outputurl);
             outputurl = URL.createObjectURL(file);
             videostage.replaceChildren();
@@ -1228,13 +947,9 @@
         }
 
         function progresssettings(settings){
-            const framecount = Math.max(2, Math.floor(settings.duration * settings.fps));
+            const framecount = Math.max(2, Math.round(settings.duration * settings.fps));
             const automatic = settings.automatic.length ? ` Automatic values: ${settings.automatic.join(", ")}.` : "";
             return `${framecount} frames - ${settings.width}x${settings.height} - ${settings.fps}fps.${automatic}`;
-        }
-
-        function searchsteps(low, high){
-            return Math.max(1, Math.ceil(Math.log2(high - low + 2)));
         }
 
         function formattime(milliseconds){
@@ -1252,7 +967,16 @@
 
         function setrunning(value){
             running = value;
-            convert.disabled = value;
+            if (value) {
+                for (const control of document.querySelectorAll("input, select, button")) {
+                    if (control === stopbutton) continue;
+                    disabledcontrols.set(control, control.disabled);
+                    control.disabled = true;
+                }
+            } else {
+                for (const [control, disabled] of disabledcontrols) control.disabled = disabled;
+                disabledcontrols.clear();
+            }
             stopbutton.disabled = !value;
         }
 

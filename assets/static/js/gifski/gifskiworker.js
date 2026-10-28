@@ -1,47 +1,33 @@
 import initgifski, {encode as encodegifski} from "./gifski_wasm.js";
+import {inspectgif} from "./gifformat.js";
+import {encodepalette} from "./paletteencoder.js";
 
 let ready = null;
-
 self.addEventListener("message", async event=>{
     try {
         const input = event.data;
-        if (!ready) ready = initgifski();
-        await ready;
-        const started = performance.now();
-        if (input.mode === "sample") {
-            const gif = encodeframes(new Uint8Array(input.frames), input, 0, input.framecount);
-            const elapsed = performance.now() - started;
-            self.postMessage({type: "sample", elapsed, framecount: input.framecount});
-            return;
-        }
         const frames = new Uint8Array(input.frames);
-        const chunkframes = Math.min(120, Math.max(24, Math.round(input.fps * 4)));
-        for (let start = 0; start < input.framecount; start += chunkframes) {
-            const framecount = Math.min(chunkframes, input.framecount - start);
-            const gif = encodeframes(frames, input, start, framecount);
-            const completed = start + framecount;
-            self.postMessage({type: "chunk", completed, framecount: input.framecount, gif: gif.buffer}, [gif.buffer]);
+        if (!Number.isInteger(input.count) || input.count < 1 || frames.length !== input.count * input.width * input.height * 4) throw new Error("the encoder received incomplete video frames");
+        const started = performance.now();
+        let result;
+        if (input.budget) result = encodepalette(frames, input);
+        else {
+            if (!ready) ready = initgifski();
+            await ready;
+            result = {gif: encodeframes(frames, input, 100)};
         }
-        self.postMessage({type: "complete", elapsed: performance.now() - started});
+        const parsed = inspectgif(result.gif);
+        const size = 32 + parsed.frames.reduce((total, frame)=>total + frame.control.length + frame.descriptor.length + frame.palette.length + frame.data.length, 0);
+        const transfer = [result.gif.buffer];
+        if (input.budget) transfer.push(frames.buffer);
+        self.postMessage({type: "encoded", start: input.start, count: input.count, colors: result.colors, averagecolors: result.averagecolors, bytes: size, frames: input.budget ? frames.buffer : null, gif: result.gif.buffer, elapsed: performance.now() - started, upgrade: input.upgrade || false}, transfer);
     } catch (error) {
         self.postMessage({error: error.message || String(error)});
     }
 });
 
-function encodeframes(frames, input, start, framecount){
-    const framebytes = input.width * input.height * 4;
-    const firstbyte = start * framebytes;
-    const lastbyte = firstbyte + framecount * framebytes;
-    return encodegifski(
-        frames.subarray(firstbyte, lastbyte),
-        framecount,
-        input.width,
-        input.height,
-        input.fps,
-        undefined,
-        input.quality,
-        input.loop ? undefined : 0,
-        undefined,
-        undefined,
-    );
+/*//////////////////////////////////////////////////////////////////////*/
+
+function encodeframes(frames, input, quality) {
+    return encodegifski(frames, input.count, input.width, input.height, input.fps, undefined, quality, 0, undefined, undefined);
 }
