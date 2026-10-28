@@ -1,26 +1,23 @@
 function preparecanvascandidate(candidate) {
   if (Number.isFinite(candidate.matrixdeterminant)) return;
-  const radians = candidate.angle * Math.PI / 180;
-  candidate.cos = Math.cos(radians);
-  candidate.sin = Math.sin(radians);
-  const warpx = Number(candidate.warpx || 0) * Math.PI / 180;
-  const warpy = Number(candidate.warpy || 0) * Math.PI / 180;
-  const warp00 = Math.cos(warpy);
-  const warp01 = -Math.sin(warpx);
-  const warp10 = Math.sin(warpy);
-  const warp11 = Math.cos(warpx);
-  candidate.matrix00 = candidate.cos * warp00 - candidate.sin * warp10;
-  candidate.matrix01 = candidate.cos * warp01 - candidate.sin * warp11;
-  candidate.matrix10 = candidate.sin * warp00 + candidate.cos * warp10;
-  candidate.matrix11 = candidate.sin * warp01 + candidate.cos * warp11;
+  const warpx = Number(candidate.warpx || 0);
+  const warpy = Number(candidate.warpy || 0);
+  const usesaxiswarp = warpx !== 0 || warpy !== 0;
+  const baseangle = usesaxiswarp ? 0 : Number(candidate.angle || 0);
+  const rotationx = (usesaxiswarp ? warpy : baseangle) * Math.PI / 180;
+  const rotationy = (usesaxiswarp ? warpx : baseangle) * Math.PI / 180;
+  candidate.matrix00 = Math.cos(rotationy);
+  candidate.matrix01 = -Math.sin(rotationx);
+  candidate.matrix10 = Math.sin(rotationy);
+  candidate.matrix11 = Math.cos(rotationx);
   candidate.matrixdeterminant = candidate.matrix00 * candidate.matrix11 - candidate.matrix01 * candidate.matrix10;
 }
 
 function createcanvaspreview() {
   const tintcanvas = document.createElement("canvas");
-  const tintcontext = tintcanvas.getContext("2d");
+  const tintcontext = tintcanvas.getContext("2d", {willReadFrequently: true});
 
-  function paintbackground(context, width, height, worldwidth, worldheight, tile, tilepixels, color) {
+  function paintbackground(context, width, height, screenwidth, screenheight, tile, tilepixels, color) {
     context.save();
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.globalCompositeOperation = "source-over";
@@ -30,20 +27,21 @@ function createcanvaspreview() {
     if (tile && tilepixels) {
       const tilewidth = tile.width;
       const tileheight = tile.height;
-      const factor = 576 / tilewidth;
       const pixels = context.createImageData(width, height);
       const destination = pixels.data;
       const source = tilepixels;
       const wrap = (value, size) => (value % size + size) % size;
+      const phasecenterx = 255.6;
+      const phasecentery = 384.3;
       for (let y = 0; y < height; y += 1) {
-        const worldy = 120 + worldheight - (y + 0.5) * worldheight / height;
-        const sourcey = wrap(-worldy / factor - 0.5, tileheight);
+        const screeny = phasecentery + (y + 0.5 - height / 2) * screenheight / height;
+        const sourcey = wrap(screeny * tileheight / 576 - 0.5, tileheight);
         const y0 = Math.floor(sourcey);
         const y1 = (y0 + 1) % tileheight;
         const fy = sourcey - y0;
         for (let x = 0; x < width; x += 1) {
-          const worldx = 300 + (x + 0.5) * worldwidth / width;
-          const sourcex = wrap(worldx / factor - 0.5, tilewidth);
+          const screenx = phasecenterx + (x + 0.5 - width / 2) * screenwidth / width;
+          const sourcex = wrap(screenx * tilewidth / 576 - 0.5, tilewidth);
           const x0 = Math.floor(sourcex);
           const x1 = (x0 + 1) % tilewidth;
           const fx = sourcex - x0;
@@ -74,7 +72,18 @@ function createcanvaspreview() {
 
   function drawcandidate(context, candidate, scalex, scaley, spriteimages, spritedimensions) {
     preparecanvascandidate(candidate);
-    for (const sprite of candidate.asset.mesh || []) {
+    const meshes = (candidate.asset.mesh || []).map((sprite, index) => ({
+      sprite,
+      index,
+      order: candidate.asset.meshorder?.[index],
+    }));
+    meshes.sort((left, right) => {
+      const leftorder = left.order ? left.order.order : left.index;
+      const rightorder = right.order ? right.order.order : right.index;
+      return leftorder - rightorder;
+    });
+    for (const entry of meshes) {
+      const sprite = entry.sprite;
       const fallback = [candidate.red, candidate.green, candidate.blue];
       const tint = sprite.role === "fixed"
         ? (sprite.fixedColor || [255, 255, 255])
@@ -86,7 +95,7 @@ function createcanvaspreview() {
       const page = spriteimages[sprite.page];
       const [left, top, width, height] = sprite.source;
       const [pagewidth, pageheight] = spritedimensions[sprite.page];
-      const points = sprite.vertices.map(([x, y]) => {
+      const quadpoints = sprite.vertices.map(([x, y]) => {
         const localx = (x - candidate.asset.centrex) * candidate.width / candidate.asset.naturalwidth;
         const localy = -(y - candidate.asset.centrey) * candidate.height / candidate.asset.naturalheight;
         return {
@@ -95,25 +104,14 @@ function createcanvaspreview() {
         };
       });
       const uv = sprite.uv;
-      const s0 = [uv[0][0] * pagewidth - left, uv[0][1] * pageheight - top];
-      const s1 = [uv[1][0] * pagewidth - left, uv[1][1] * pageheight - top];
-      const s3 = [uv[3][0] * pagewidth - left, uv[3][1] * pageheight - top];
-      const dx1 = s1[0] - s0[0];
-      const dy1 = s1[1] - s0[1];
-      const dx3 = s3[0] - s0[0];
-      const dy3 = s3[1] - s0[1];
-      const determinant = dx1 * dy3 - dx3 * dy1;
-      if (Math.abs(determinant) < 1e-8) continue;
-      const tx1 = points[1].x - points[0].x;
-      const ty1 = points[1].y - points[0].y;
-      const tx3 = points[3].x - points[0].x;
-      const ty3 = points[3].y - points[0].y;
-      const a = (tx1 * dy3 - tx3 * dy1) / determinant;
-      const c = (-tx1 * dx3 + tx3 * dx1) / determinant;
-      const b = (ty1 * dy3 - ty3 * dy1) / determinant;
-      const d = (-ty1 * dx3 + ty3 * dx1) / determinant;
-      const e = points[0].x - a * s0[0] - c * s0[1];
-      const f = points[0].y - b * s0[0] - d * s0[1];
+      const deviationx = (uv[2][0] - uv[1][0] - uv[3][0] + uv[0][0]) * pagewidth;
+      const deviationy = (uv[2][1] - uv[1][1] - uv[3][1] + uv[0][1]) * pageheight;
+      const geometryx = quadpoints[2].x - quadpoints[1].x - quadpoints[3].x + quadpoints[0].x;
+      const geometryy = quadpoints[2].y - quadpoints[1].y - quadpoints[3].y + quadpoints[0].y;
+      const pieces = (Math.max(Math.abs(deviationx), Math.abs(deviationy)) > 1 && !candidate.legacyuv)
+        || Math.max(Math.abs(geometryx), Math.abs(geometryy)) > 0.000001
+        ? [[0, 1, 1, 3], [1, 2, 3, 3]]
+        : [[0, 1, 2, 3]];
       tintcanvas.width = width;
       tintcanvas.height = height;
       tintcontext.globalCompositeOperation = "source-over";
@@ -131,21 +129,44 @@ function createcanvaspreview() {
         data[offset + 2] = Math.round(data[offset + 2] * blue);
       }
       tintcontext.putImageData(tinted, 0, 0);
-      context.save();
-      context.beginPath();
-      context.moveTo(points[0].x, points[0].y);
-      context.lineTo(points[1].x, points[1].y);
-      context.lineTo(points[2].x, points[2].y);
-      context.lineTo(points[3].x, points[3].y);
-      context.closePath();
-      context.clip();
-      context.globalCompositeOperation = sprite.blendDestination === 1 ? "lighter" : "source-over";
-      context.globalAlpha = sprite.opacity;
-      context.imageSmoothingEnabled = true;
-      context.imageSmoothingQuality = candidate.smoothingquality || "medium";
-      context.transform(a, b, c, d, e, f);
-      context.drawImage(tintcanvas, 0, 0);
-      context.restore();
+      for (const piece of pieces) {
+        const points = piece.map(index => quadpoints[index]);
+        const coordinates = piece.map(index => uv[index]);
+        const s0 = [coordinates[0][0] * pagewidth - left, coordinates[0][1] * pageheight - top];
+        const s1 = [coordinates[1][0] * pagewidth - left, coordinates[1][1] * pageheight - top];
+        const s3 = [coordinates[3][0] * pagewidth - left, coordinates[3][1] * pageheight - top];
+        const dx1 = s1[0] - s0[0];
+        const dy1 = s1[1] - s0[1];
+        const dx3 = s3[0] - s0[0];
+        const dy3 = s3[1] - s0[1];
+        const determinant = dx1 * dy3 - dx3 * dy1;
+        if (Math.abs(determinant) < 1e-8) continue;
+        const tx1 = points[1].x - points[0].x;
+        const ty1 = points[1].y - points[0].y;
+        const tx3 = points[3].x - points[0].x;
+        const ty3 = points[3].y - points[0].y;
+        const a = (tx1 * dy3 - tx3 * dy1) / determinant;
+        const c = (-tx1 * dx3 + tx3 * dx1) / determinant;
+        const b = (ty1 * dy3 - ty3 * dy1) / determinant;
+        const d = (-ty1 * dx3 + ty3 * dx1) / determinant;
+        const e = points[0].x - a * s0[0] - c * s0[1];
+        const f = points[0].y - b * s0[0] - d * s0[1];
+        context.save();
+        context.beginPath();
+        context.moveTo(points[0].x, points[0].y);
+        context.lineTo(points[1].x, points[1].y);
+        context.lineTo(points[2].x, points[2].y);
+        context.lineTo(points[3].x, points[3].y);
+        context.closePath();
+        context.clip();
+        context.globalCompositeOperation = sprite.blendDestination === 1 ? "lighter" : "source-over";
+        context.globalAlpha = sprite.opacity;
+        context.imageSmoothingEnabled = sprite.sampler !== "nearest" && candidate.smoothingquality !== "nearest";
+        context.imageSmoothingQuality = candidate.smoothingquality || "medium";
+        context.transform(a, b, c, d, e, f);
+        context.drawImage(tintcanvas, 0, 0);
+        context.restore();
+      }
     }
   }
 

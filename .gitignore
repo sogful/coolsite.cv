@@ -3,6 +3,13 @@ __pycache__/
 
 /gd/cbf
 
+/gd/img/scripts/
+/gd/img/assets/gd-objects/
+/gd/img/assets/gd-objects-v2/
+/gd/img/assets/gd-objects-v3/
+/gd/img/assets/gd-objects-v4/build-report.json
+/gd/img/assets/gd-objects-v4/gd-object-definitions.json.gz
+
 /chuzzle/datainfo
 tools/desktopdestroyer/data
 

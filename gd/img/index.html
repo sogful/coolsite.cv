@@ -12,8 +12,10 @@
   <link rel="stylesheet" href="../global.css">
   <link rel="stylesheet" href="styles.css">
   <script src="../global.js" defer></script>
-  <script src="canvasrenderer.js" defer></script>
-  <script src="app.js" defer></script>
+  <script src="canvasrenderer.js?v=img2gd-native-background-20261028-3" defer></script>
+  <script src="gpurenderer.js?v=img2gd-native-batches-20261028-2" defer></script>
+  <script src="fitter.js?v=img2gd-native-focus-20261028-4" defer></script>
+  <script src="app.js?v=img2gd-native-batches-20261028-8" defer></script>
 
 </head>
 <body class="imgpage">
@@ -22,7 +24,7 @@
     <section class="hero">
       <p class="heroline">LOCAL IMAGE CONVERTER</p>
       <h1 class="pusab">IMAGE TO LEVEL</h1>
-            <p class="intro">Fit an image with real Geometry Dash decoration meshes and textures. Search thousands of native object shapes, then give each placement its own HSV transform from one red colour channel.</p>
+      <p class="intro">Choose an image, set an object limit, and export a Geometry Dash level.</p>
     </section>
 
     <section class="workspace" aria-label="Image to Geometry Dash level converter">
@@ -52,7 +54,7 @@
         <div class="panelhead setuphead">
           <div>
             <p class="step">02 / BUILD</p>
-            <h2>Spend the object budget</h2>
+            <h2>Conversion settings</h2>
           </div>
         </div>
 
@@ -60,21 +62,30 @@
           <span>Speed / accuracy</span>
           <select class="presetselect">
             <option value="fast">Fast · 250 objects · 12 trials</option>
-            <option value="balanced">Balanced · 800 objects · 32 trials</option>
+            <option value="balanced">Balanced · 800 objects · 40 trials</option>
             <option value="detail" selected>Detail · 1500 objects · 96 trials</option>
+            <option value="max">Maximum · 1500 objects · 384 trials</option>
           </select>
         </label>
 
         <label class="fieldlabel sliderlabel">
           <span>Object limit <b class="limitvalue">1,500</b></span>
           <input class="limitslider" type="range" min="0" max="1500" value="1500" step="25">
-          <span class="fieldhelp">0 to 1500 no-touch objects total, including any background tiles</span>
+          <span class="fieldhelp">0 to 1500 no-touch objects total, including the color base</span>
         </label>
 
         <label class="underlaytoggle">
           <input class="underlaytoggleinput" type="checkbox" checked>
-          <span>Fill with the image’s most common color</span>
-          <small class="fieldhelp">Adds a solid rectangle-tile base before the fitted sprites. Transparent images skip it; tiles count toward the object limit.</small>
+          <span>Fill with the image's most common color</span>
+          <small class="fieldhelp">Preset default: on for Fast, Balanced and Detail; off for Maximum. Transparent images skip the base.</small>
+        </label>
+
+        <label class="fieldlabel underlaystylefield">
+          <span>Base shape</span>
+          <select class="underlaystyle">
+            <option value="single" selected>One scaled rectangle</option>
+            <option value="tiled">Tiled rectangles</option>
+          </select>
         </label>
 
         <div class="fieldrow">
@@ -88,9 +99,19 @@
 
           <label class="fieldlabel">
             <span>Trials / object <b class="trialvalue">96</b></span>
-            <input class="trialslider" type="range" min="4" max="96" value="96" step="4">
+            <input class="trialslider" type="range" min="4" max="768" value="96" step="4">
+            <span class="fieldhelp">More trials search more native object variants and take longer. Maximum starts at 384.</span>
           </label>
         </div>
+
+        <label class="fieldlabel seedsearchfield" hidden>
+          <span>Maximum seed search</span>
+          <select class="seedsearchselect">
+            <option value="3" selected>Standard · 3 starts</option>
+            <option value="6">Deep · 6 starts</option>
+          </select>
+          <span class="fieldhelp">Deep search compares additional deterministic fits and may take about twice as long.</span>
+        </label>
 
         <div class="fieldrow">
           <label class="fieldlabel">
@@ -129,8 +150,6 @@
           </select>
         </label>
 
-        <p class="explain">The fitter samples each captured native texture’s alpha and shading instead of treating an object as a solid mask. It searches different mesh shapes, rotation, independent X/Y scale and, optionally, the game’s 2.2 axis warp against the remaining image error. Multi-colour objects get separate base and detail fits. The default HSV method keeps the palette to one red source channel, 999, while each object stores its own base/detail hue, saturation and brightness.</p>
-
         <button class="buildbutton" type="submit"><span>BUILD .GMD LEVEL</span><b>↓</b></button>
         <p class="privacynote">Your image stays in this browser. The download is generated locally.</p>
       </form>
@@ -168,7 +187,6 @@
             <a class="downloadlink" hidden download="soggycat.gmd">↓ DOWNLOAD .GMD LEVEL</a>
           </div>
           <p class="statuscopy" aria-live="polite">Example image ready. Adjust the object budget or build a level now.</p>
-          <a class="exampleslink" href="/.claude/img2gd/">VIEW CROPPED IN-GAME EXAMPLE</a>
         </section>
 
       </aside>
@@ -179,7 +197,7 @@
         <div>
           <p class="step">NATIVE OBJECT LIBRARY</p>
           <h2 class="catalogheading">Loading stable native objects</h2>
-            <p class="catalogintro">Search captured native object visuals by ID, dimensions or sprite count. Detected animated decorations are excluded because Geometry Dash advances their frames independently of the preview.</p>
+          <p class="catalogintro">Search by object ID, dimensions or sprite count.</p>
         </div>
         <label class="catalogsearchlabel">
           <span>Find an object</span>

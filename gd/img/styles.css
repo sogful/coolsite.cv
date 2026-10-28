@@ -268,8 +268,10 @@ select {
 
 .presetselect,
 .fitselect,
+.seedsearchselect,
 .samplerselect,
 .warpselect,
+.underlaystyle,
 .colourmode {
   width: 100%;
   min-height: 39px;
@@ -284,8 +286,10 @@ select {
 
 .presetselect:focus,
 .fitselect:focus,
+.seedsearchselect:focus,
 .samplerselect:focus,
 .warpselect:focus,
+.underlaystyle:focus,
 .colourmode:focus,
 .limitslider:focus,
 .trialslider:focus,
@@ -297,8 +301,10 @@ select {
 
 .presetselect option,
 .fitselect option,
+.seedsearchselect option,
 .samplerselect option,
 .warpselect option,
+.underlaystyle option,
 .colourmode option {
   color: #fff;
   background: var(--panel);
@@ -346,6 +352,15 @@ select {
 .underlaytoggle .fieldhelp {
   line-height: 1.5;
   font-weight: 400;
+}
+
+.underlaystylefield {
+  margin-top: 10px;
+}
+
+.underlaystyle:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .fieldrow {
@@ -528,20 +543,6 @@ select {
 .statuscopy {
   margin: 12px 0 0;
   color: #c9dcf4;
-}
-
-.exampleslink {
-  display: inline-block;
-  margin-top: 10px;
-  color: var(--lime);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-decoration: none;
-}
-
-.exampleslink:hover {
-  text-decoration: underline;
 }
 
 .formatpanel {
