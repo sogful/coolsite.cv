@@ -82,6 +82,7 @@ function sampleasset(candidate, x, y) {
 }
 
 function fitcandidate(candidate, step) {
+  if (batchfitteractive) return batchfitter.fit(candidate, step);
   if (candidate.asset.samplingdisabled) return Number.NEGATIVE_INFINITY;
   const bounds = candidatebounds(candidate);
   const numerator = [0, 0, 0];
@@ -204,6 +205,7 @@ function refinegeometry(candidate) {
 }
 
 function paintcandidate(candidate) {
+  if (batchfitteractive && candidate.role !== "underlay") return batchfitter.paint(candidate);
   const bounds = candidatebounds(candidate);
   if (candidate.baseRGB && candidate.detailRGB) {
     const image = rendercandidatepixels(candidate, candidate.baseRGB, candidate.detailRGB, bounds);
@@ -290,6 +292,7 @@ function colorbenefit(image, bounds) {
 }
 
 function refinecandidatecolors(candidate) {
+  if (batchfitteractive) return batchfitter.refine(candidate);
   const hasbase = assethasrole(candidate.asset, "base");
   const hasdetail = assethasrole(candidate.asset, "detail");
   if (!assetneedsrolefit(candidate.asset)) {
@@ -445,9 +448,10 @@ async function fitadaptive(limit, trials, revision, extraoffset = 0) {
   const random = randomseed(extraoffset);
   const buckets = presetselect.value !== "fast" && trials >= 32 ? createassetbuckets(extraoffset) : null;
   const baseobjects = installunderlay(limit);
+  if (batchfitteractive) batchfitter.reset();
   const fitlimit = limit - baseobjects;
   const rejected = new Set();
-  const retrylimit = presetselect.value === "detail" ? 4 : 1;
+  const retrylimit = fitretries || (presetselect.value === "detail" ? 4 : 1);
   for (let index = 0; index < fitlimit; index += 1) {
     if (revision !== fitrevision) return false;
     const focus = findfocus(rejected);

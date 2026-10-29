@@ -85,6 +85,11 @@ let fitrevision = 0;
 let fiterror = 0;
 let seedretryoffset = 0;
 let fittime = 0;
+let batchfitter = null;
+let batchfitteractive = false;
+let fitpixels = 0;
+let fitretries = 0;
+let searchcount = 1;
 
 function cleannumber(value, digits = 3) {
   return Number(value.toFixed(digits)).toString();
@@ -116,9 +121,9 @@ function sourceisopaque() {
 
 function targetsize(width, height, limit, opaque) {
   const ratio = width / height;
-  const pixels = presetselect.value === "max" && opaque
+  const pixels = fitpixels || (presetselect.value === "max" && opaque
     ? 5200
-    : Math.max(1600, Math.min(2000, Math.max(limit, 1) * 2.5));
+    : Math.max(1600, Math.min(2000, Math.max(limit, 1) * 2.5)));
   const columns = Math.max(24, Math.round(Math.sqrt(pixels * ratio)));
   const rows = Math.max(24, Math.round(columns / ratio));
   return {width: columns, height: rows};
@@ -674,11 +679,7 @@ function updatepreview(updatecatalog = false) {
   const objectsummary = underlaycount
     ? `${underlaycount.toLocaleString()} dominant-color base object${underlaycount === 1 ? "" : "s"} + ${fittedcount.toLocaleString()} fitted sprites (${underlaymessage})`
     : `${fittedcount.toLocaleString()} fitted sprites (${underlaymessage})`;
-  const maxseedsearch = presetselect.value === "max" && Number(trialslider.value) >= 384;
-  const maxseedcount = maxseedsearch ? Number(seedsearchselect.value) : 0;
-  const seednote = maxseedsearch
-    ? seedretryoffset ? ` · best of ${maxseedcount} selected seed +${seedretryoffset}` : ` · best of ${maxseedcount} deterministic seeds`
-    : seedretryoffset ? ` · recovered with alternate seed +${seedretryoffset}` : "";
+  const seednote = searchcount > 1 ? ` · best of ${searchcount} searches` : "";
   statuscopy.textContent = `${objectsummary} · ${plan.length.toLocaleString()} objects total${seednote}. ${method}, ${transforms}, ${mapping}, ${fiterror.toFixed(1)}% preview mean RGB error vs source at ${cleannumber(Number(previewzoomslider.value))}× editor zoom in ${Math.max(1, Math.round(fittime))} ms.`;
   if (updatecatalog) rendercatalog(true);
 }
@@ -697,65 +698,8 @@ async function refresh(revision = fitrevision) {
   renderstate.textContent = "FITTING";
   const started = performance.now();
   seedretryoffset = 0;
-  preparetarget();
   const limit = Number(limitslider.value);
-  if (fitselect.value === "grid") fitgrid(limit);
-  else if (!await fitadaptive(limit, Number(trialslider.value), revision)) return false;
-  if (revision !== fitrevision) return false;
-  const recoverylimit = Math.max(8, limit * 0.05);
-  const maxseedsearch = fitselect.value === "adaptive" && presetselect.value === "max"
-    && Number(trialslider.value) >= 384 && limit > 0;
-  let bestscore = maxseedsearch ? measurefittedpreview() : measuretargeterror();
-  if (maxseedsearch) {
-    const seedoffsets = Number(seedsearchselect.value) >= 6 ? [1, 17, 64, 65, 81] : [1, 17];
-    let bestplan = plan.slice();
-    let bestpixels = new Uint8ClampedArray(fittedpixels);
-    let bestunderlaycount = underlaycount;
-    let bestunderlaymessage = underlaymessage;
-    for (const [index, extraoffset] of seedoffsets.entries()) {
-      if (revision !== fitrevision) return false;
-      statuscopy.textContent = `Maximum accuracy is comparing deterministic search ${index + 2} of ${seedoffsets.length + 1}.`;
-      preparetarget();
-      if (!await fitadaptive(limit, Number(trialslider.value), revision, extraoffset)) return false;
-      const score = measurefittedpreview();
-      if (score < bestscore) {
-        bestscore = score;
-        bestplan = plan.slice();
-        bestpixels = new Uint8ClampedArray(fittedpixels);
-        bestunderlaycount = underlaycount;
-        bestunderlaymessage = underlaymessage;
-        seedretryoffset = extraoffset;
-      }
-    }
-    plan = bestplan;
-    fittedpixels = bestpixels;
-    underlaycount = bestunderlaycount;
-    underlaymessage = bestunderlaymessage;
-  } else if (fitselect.value === "adaptive" && limit > 0 && plan.length < limit
-    && plan.length < recoverylimit && bestscore > 8) {
-    let bestplan = plan.slice();
-    let bestpixels = new Uint8ClampedArray(fittedpixels);
-    let bestunderlaycount = underlaycount;
-    let bestunderlaymessage = underlaymessage;
-    for (const extraoffset of [1, 17]) {
-      preparetarget();
-      if (!await fitadaptive(limit, Number(trialslider.value), revision, extraoffset)) return false;
-      const score = measuretargeterror();
-      if (score < bestscore) {
-        bestscore = score;
-        bestplan = plan.slice();
-        bestpixels = new Uint8ClampedArray(fittedpixels);
-        bestunderlaycount = underlaycount;
-        bestunderlaymessage = underlaymessage;
-        seedretryoffset = extraoffset;
-      }
-      if (revision !== fitrevision || bestscore <= 8 || bestplan.length >= recoverylimit) break;
-    }
-    plan = bestplan;
-    fittedpixels = bestpixels;
-    underlaycount = bestunderlaycount;
-    underlaymessage = bestunderlaymessage;
-  }
+  if (!await runfitsearch(limit, Number(trialslider.value), revision)) return false;
   if (revision !== fitrevision) return false;
   fittime = performance.now() - started;
   updatepreview(true);
