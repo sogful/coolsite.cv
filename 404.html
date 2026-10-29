@@ -21,7 +21,7 @@
         else if (path.startsWith("elevator")) {redirectto = "https://coolsite.cv/utdr/elevator"}
         else if (path.startsWith("swatchling")) {redirectto = "https://coolsite.cv/utdr/swatchlings"}
         else if (path.startsWith("gdaudio")) {redirectto = "https://coolsite.cv/gd/audio"}
-        else if (path.startsWith("dl")) {redirectto = "https://coolsite.cv/bookmarks"}
+        else if (path.startsWith("dl")) {redirectto = "/tools/bookmarks/" + location.search + location.hash}
         else if (path.startsWith("bestai")) {redirectto = "https://archive.coolsite.cv/bestai"}
         else if (path.startsWith("csstrace") || path.startsWith("svgfavicon") || path.startsWith("testfile")) {
             var toolname = path.split("/")[0];
@@ -37,11 +37,48 @@
         }
         else if (path.startsWith("contact")) {redirectto = "https://x.com/messages/compose?recipient_id=1565678264265457664&hellobro"}
         else if (path.startsWith("chuzzle/save")) {redirectto = "https://archive.coolsite.cv/chuzzlesave"}
-        // the chuzzarium shop page was /chuzzle/store before it was /chuzzle/shop
         else if (path === "chuzzle/store" || path.startsWith("chuzzle/store/")) {
             redirectto = "https://coolsite.cv/chuzzle/shop" + path.slice("chuzzle/store".length)
                 + location.search + location.hash;
         }
+
+        /*//////////////////////////////////////////////////////////////////////*/
+
+        const movedfiles = {
+            "1kb": "misc/1kb",
+            "grief": "misc/grief",
+            "love": "misc/love",
+            "rarecats": "misc/rarecats",
+            "stupiddumb": "misc/stupiddumb",
+            "wemmbu": "misc/wemmbu",
+            "tools/ascii": "tools/asciiart",
+            "tools/braille": "tools/brailleart",
+            "tools/unicode": "tools/unicodescribble",
+            "tools/gifski": "tools/gif"
+        };
+        const movedfolders = {
+            "bookmarks": "tools/bookmarks",
+            "grub": "misc/grub",
+            "mc": "misc/mc",
+            "tools/sentencemix": "tools/audiomix"
+        };
+        const movedpath = location.pathname.replace(/^\/+/, "");
+        const movedname = path.replace(/\.html$/, "");
+        let movedtarget = null;
+
+        if (Object.prototype.hasOwnProperty.call(movedfiles, movedname)) {
+            movedtarget = "/" + movedfiles[movedname] + (path.endsWith(".html") ? ".html" : "");
+        } else if (path === "tools/sentencemix.html") {
+            movedtarget = "/tools/audiomix/";
+        } else {
+            for (const [previous, current] of Object.entries(movedfolders)) {
+                if (path === previous || path.startsWith(previous + "/")) {
+                    movedtarget = "/" + current + movedpath.slice(previous.length);
+                    break;
+                }
+            }
+        }
+        if (movedtarget) {redirectto = movedtarget + location.search + location.hash}
         window.__redirectto = redirectto;
         
 
