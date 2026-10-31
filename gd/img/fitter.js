@@ -369,7 +369,7 @@ function createassetbuckets(extraoffset = 0) {
 }
 
 function chooseasset(trial, trials, random, buckets) {
-  const pool = samplinglibrary.length ? samplinglibrary : library;
+  const pool = fitassetpool();
   if (buckets) {
     const bucket = buckets[trial % buckets.length];
     const index = Math.min(pool.length - 1, Math.floor((bucket + random()) * pool.length / buckets.length));
@@ -448,7 +448,7 @@ async function fitadaptive(limit, trials, revision, extraoffset = 0) {
   const random = randomseed(extraoffset);
   const buckets = presetselect.value !== "fast" && trials >= 32 ? createassetbuckets(extraoffset) : null;
   const baseobjects = installunderlay(limit);
-  if (batchfitteractive) batchfitter.reset();
+  if (batchfitteractive) batchfitter.reset(fitcoverage);
   const fitlimit = limit - baseobjects;
   const rejected = new Set();
   const retrylimit = fitretries || (presetselect.value === "detail" ? 4 : 1);

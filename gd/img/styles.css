@@ -256,6 +256,8 @@ select {
   margin-top: 15px;
 }
 
+.seedsearchfield[hidden] {display: none}
+
 .fieldlabel span:first-child {
   display: flex;
   justify-content: space-between;
@@ -269,6 +271,7 @@ select {
 .presetselect,
 .fitselect,
 .seedsearchselect,
+.coverageselect,
 .samplerselect,
 .warpselect,
 .underlaystyle,
@@ -287,6 +290,7 @@ select {
 .presetselect:focus,
 .fitselect:focus,
 .seedsearchselect:focus,
+.coverageselect:focus,
 .samplerselect:focus,
 .warpselect:focus,
 .underlaystyle:focus,
@@ -302,6 +306,7 @@ select {
 .presetselect option,
 .fitselect option,
 .seedsearchselect option,
+.coverageselect option,
 .samplerselect option,
 .warpselect option,
 .underlaystyle option,
@@ -358,7 +363,9 @@ select {
   margin-top: 10px;
 }
 
-.underlaystyle:disabled {
+.underlaystyle:disabled,
+.coverageselect:disabled,
+.warpselect:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }

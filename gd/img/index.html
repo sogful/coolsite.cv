@@ -10,14 +10,16 @@
   <link rel="preload" as="font" type="font/woff2" href="../assets/fonts/pusab.woff2" crossorigin>
 
   <link rel="stylesheet" href="../global.css">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=img2gd-regions-20261030-1">
   <script src="../global.js" defer></script>
   <script src="canvasrenderer.js?v=img2gd-native-background-20261028-3" defer></script>
   <script src="gpurenderer.js?v=img2gd-native-batches-20261028-2" defer></script>
-  <script src="batchfitter.js?v=img2gd-native-fit-20261028-1" defer></script>
-  <script src="fitter.js?v=img2gd-native-focus-20261028-5" defer></script>
-  <script src="fitsearch.js?v=img2gd-native-fit-20261028-1" defer></script>
-  <script src="app.js?v=img2gd-native-batches-20261028-9" defer></script>
+  <script src="batchfitter.js?v=img2gd-native-fit-20261029-4" defer></script>
+  <script src="fitter.js?v=img2gd-native-focus-20261030-7" defer></script>
+  <script src="texturepools.js?v=img2gd-texture-pools-20261030-1" defer></script>
+  <script src="regions.js?v=img2gd-native-regions-20261030-2" defer></script>
+  <script src="fitsearch.js?v=img2gd-native-fit-20261030-2" defer></script>
+  <script src="app.js?v=img2gd-native-batches-20261030-3" defer></script>
 
 </head>
 <body class="imgpage">
@@ -94,7 +96,9 @@
           <label class="fieldlabel">
             <span>Search mode</span>
             <select class="fitselect">
-              <option value="adaptive" selected>Full texture residual search</option>
+              <option value="auto" selected>Automatic flat-art recognition</option>
+              <option value="adaptive">Full texture residual search</option>
+              <option value="regions">Clean color regions (flat art)</option>
               <option value="grid">Fast object-shape grid</option>
             </select>
           </label>
@@ -106,13 +110,21 @@
           </label>
         </div>
 
+        <label class="fieldlabel coveragefield">
+          <span>Fitting coverage</span>
+          <select class="coverageselect">
+            <option value="1" selected>1 sample / pixel - faster</option>
+            <option value="2">4 samples / pixel - slower</option>
+          </select>
+        </label>
+
         <label class="fieldlabel seedsearchfield" hidden>
           <span>Maximum seed search</span>
           <select class="seedsearchselect">
             <option value="3" selected>Standard · 3 starts</option>
             <option value="6">Deep · 6 starts</option>
           </select>
-          <span class="fieldhelp">Deep search compares additional deterministic fits and may take about twice as long.</span>
+          <span class="fieldhelp">Deep search adds three more starts.</span>
         </label>
 
         <div class="fieldrow">

@@ -1,6 +1,7 @@
 function capturefit(score) {
   return {score, plan: plan.slice(), pixels: new Uint8ClampedArray(fittedpixels),
-    target: {...target}, source: targetpixels, underlaycount, underlaymessage, offset: seedretryoffset};
+    target: {...target}, source: targetpixels, underlaycount, underlaymessage, offset: seedretryoffset,
+    pool: fitpoolname};
 }
 
 function restorefit(best) {
@@ -11,6 +12,7 @@ function restorefit(best) {
   underlaycount = best.underlaycount;
   underlaymessage = best.underlaymessage;
   seedretryoffset = best.offset;
+  fitpoolname = best.pool || "full";
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
@@ -19,11 +21,20 @@ async function runfitsearch(limit, trials, revision) {
   batchfitteractive = false;
   fitpixels = 0;
   fitretries = 0;
+  fitcoverage = 1;
+  fitpoolname = "full";
   searchcount = 1;
+  regionfitactive = false;
+  updatefields();
   preparetarget();
   if (fitselect.value === "grid") {
     fitgrid(limit);
     return revision === fitrevision;
+  }
+  if (["auto", "regions"].includes(fitselect.value)) {
+    const result = await fitcolorregions(limit, revision);
+    if (result !== null) return result;
+    preparetarget();
   }
   if (!await fitadaptive(limit, trials, revision)) return false;
   if (revision !== fitrevision) return false;
@@ -64,11 +75,16 @@ async function runfitsearch(limit, trials, revision) {
       const pools = presetselect.value === "max"
         ? [{pixels: 2000, native: false}, {pixels: 2000, native: true}, {pixels: 5200, native: true}]
         : [{pixels: 5200, native: true}];
+      if (Number(coverageselect.value) === 2) pools.push({pixels: 5200, native: true, coverage: 2});
+      if (texturepools.white.length) pools.push({pixels: 5200, native: true,
+        coverage: Number(coverageselect.value) === 2 ? 2 : 1, pool: "white"});
       for (const [index, pool] of pools.entries()) {
         if (revision !== fitrevision) return false;
         statuscopy.textContent = `Comparing candidate pool ${index + 1} of ${pools.length}.`;
         fitpixels = pool.pixels;
         fitretries = 4;
+        fitcoverage = pool.coverage || 1;
+        fitpoolname = pool.pool || "full";
         batchfitteractive = pool.native;
         if (batchfitteractive && !batchfitter) batchfitter = createbatchfitter();
         preparetarget();
@@ -89,6 +105,7 @@ async function runfitsearch(limit, trials, revision) {
       batchfitteractive = false;
       fitpixels = 0;
       fitretries = 0;
+      fitcoverage = 1;
       batchfitter?.clear();
     }
   }

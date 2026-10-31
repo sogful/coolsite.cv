@@ -5,6 +5,7 @@ const examplebutton = document.querySelector(".examplebutton");
 const presetselect = document.querySelector(".presetselect");
 const seedsearchfield = document.querySelector(".seedsearchfield");
 const seedsearchselect = document.querySelector(".seedsearchselect");
+const coverageselect = document.querySelector(".coverageselect");
 const limitslider = document.querySelector(".limitslider");
 const underlaytoggle = document.querySelector(".underlaytoggleinput");
 const underlaystyle = document.querySelector(".underlaystyle");
@@ -43,14 +44,15 @@ const catalogheading = document.querySelector(".catalogheading");
 const catalogmore = document.querySelector(".catalogmore");
 const catalogversion = "img2gd-native-batches-20261028-23";
 const seedoffset = 97;
+const levelorigin = {x: 360, y: 300};
 
 const sourceimage = new Image();
 const background = [6, 18, 40];
 const presetdata = {
-  fast: {limit: 250, trials: 12, colours: 32, fit: "adaptive", sampler: "average", underlay: true},
-  balanced: {limit: 800, trials: 40, colours: 128, fit: "adaptive", sampler: "average", underlay: true},
-  detail: {limit: 1500, trials: 96, colours: 256, fit: "adaptive", sampler: "average", underlay: true},
-  max: {limit: 1500, trials: 384, colours: 256, fit: "adaptive", sampler: "average", underlay: false},
+  fast: {limit: 250, trials: 12, colours: 32, fit: "auto", sampler: "average", underlay: true, coverage: 1},
+  balanced: {limit: 800, trials: 40, colours: 128, fit: "auto", sampler: "average", underlay: true, coverage: 1},
+  detail: {limit: 1500, trials: 96, colours: 256, fit: "auto", sampler: "average", underlay: true, coverage: 1},
+  max: {limit: 1500, trials: 384, colours: 256, fit: "auto", sampler: "average", underlay: false, coverage: 2},
 };
 
 let imageurl = "";
@@ -89,6 +91,7 @@ let batchfitter = null;
 let batchfitteractive = false;
 let fitpixels = 0;
 let fitretries = 0;
+let fitcoverage = 1;
 let searchcount = 1;
 
 function cleannumber(value, digits = 3) {
@@ -378,6 +381,7 @@ async function loadnativeatlas() {
         naturalwidth: bounds[2] - bounds[0], naturalheight: bounds[3] - bounds[1]};
     });
   if (!defaultasset) throw new Error("The native atlas has no drawable objects");
+  preparetexturepools();
   atlasready = true;
   assetstatus.textContent = `ATLAS ${library.length.toLocaleString()}`;
   catalogheading.textContent = `${library.length.toLocaleString()} stable native object visuals`;
@@ -549,8 +553,8 @@ function objectposition(candidate, pixelscale, scalex, scaley) {
   const rotatedx = candidate.matrix00 * unwarpedx - candidate.matrix01 * unwarpedy;
   const rotatedy = -candidate.matrix10 * unwarpedx + candidate.matrix11 * unwarpedy;
   return {
-    x: 300 + candidate.x * pixelscale - rotatedx,
-    y: 120 + (target.height - candidate.y) * pixelscale - rotatedy,
+    x: levelorigin.x + candidate.x * pixelscale - rotatedx,
+    y: levelorigin.y + (target.height - candidate.y) * pixelscale - rotatedy,
   };
 }
 
@@ -592,18 +596,25 @@ function buildsource() {
       if (!hasbase) basechannel = detailchannel;
     }
     candidate.channel = hsvmode ? 999 : basechannel;
-    const scalex = candidate.role === "underlay" ? candidate.width * pixelscale / candidate.asset.naturalwidth
+    const macro = candidate.role === "underlay" || candidate.macro && macroassets.has(candidate.asset.id);
+    const scalex = macro ? candidate.width * pixelscale / candidate.asset.naturalwidth
       : Math.min(3, candidate.width * pixelscale / candidate.asset.naturalwidth);
-    const scaley = candidate.role === "underlay" ? candidate.height * pixelscale / candidate.asset.naturalheight
+    const scaley = macro ? candidate.height * pixelscale / candidate.asset.naturalheight
       : Math.min(3, candidate.height * pixelscale / candidate.asset.naturalheight);
     const position = objectposition(candidate, pixelscale, scalex, scaley);
+    const warpx = Number(cleannumber(candidate.warpx || 0));
+    const warpy = Number(cleannumber(candidate.warpy || 0));
+    const angle = warpx === warpy && warpx ? warpx : candidate.angle;
     const fields = [
-      "1", candidate.asset.id, "2", cleannumber(position.x), "3", cleannumber(position.y), "20", "5", "21", basechannel, "22", detailchannel, "96", "1", "64", "1", "67", "1", "121", "1", "24", candidate.role === "underlay" ? "3" : "5", "25", index + 1, "128", cleannumber(scalex), "129", cleannumber(scaley), "6", cleannumber(candidate.angle),
+      "1", candidate.asset.id, "2", cleannumber(position.x), "3", cleannumber(position.y), "20", "5", "21", basechannel, "22", detailchannel, "96", "1", "64", "1", "67", "1", "121", "1", "24", candidate.role === "underlay" ? "3" : "5", "25", index + 1, "128", cleannumber(scalex), "129", cleannumber(scaley), "6", cleannumber(angle),
     ];
-    if (candidate.warpy) fields.push("131", cleannumber(candidate.warpy));
-    if (candidate.warpx) fields.push("132", cleannumber(candidate.warpx));
+    if (warpx !== warpy) {
+      if (warpy) fields.push("131", cleannumber(warpy));
+      if (warpx) fields.push("132", cleannumber(warpx));
+    }
     if (hsvmode) fields.push("41", "1", "42", "1", "43", candidate.basehsv, "44", candidate.detailhsv);
     for (const [key, value] of Object.entries(candidate.asset.gmdfields || {})) fields.push(key, value);
+    fields.push("372", "1");
     parts.push(fields.join(","));
   }
   const header = ["kA2", "0", "kA3", "0", "kA4", "0", "kA6", "1", "kA7", "1", "kA8", "0", "kA9", "0", "kA10", "0", "kA11", "0", "kA13", "0", "kA22", "0", "kA40", "1", "kS38", `${colorlines.join("|")}|`];
@@ -655,8 +666,12 @@ function updatefields() {
   trialvalue.textContent = trialslider.value;
   colourvalue.textContent = colourslider.value;
   previewzoomvalue.textContent = `${cleannumber(Number(previewzoomslider.value))}×`;
-  seedsearchfield.hidden = presetselect.value !== "max" || Number(trialslider.value) < 384;
+  seedsearchfield.hidden = presetselect.value !== "max" || Number(trialslider.value) < 384
+    || fitselect.value === "regions" || fitselect.value === "grid" || regionfitactive;
   underlaystyle.disabled = !underlaytoggle.checked;
+  coverageselect.disabled = !["detail", "max"].includes(presetselect.value)
+    || fitselect.value === "regions" || fitselect.value === "grid" || regionfitactive;
+  warpselect.disabled = fitselect.value === "regions" || regionfitactive;
 }
 
 function updatepreview(updatecatalog = false) {
@@ -671,9 +686,10 @@ function updatepreview(updatecatalog = false) {
   gridcount.textContent = `${fiterror.toFixed(1)}%`;
   channelcount.textContent = result.channels.toLocaleString();
   sizecount.textContent = prettysize(new Blob([levelsource]).size);
-  renderstate.textContent = fitselect.value === "adaptive" ? "SPRITE FIT" : "SPRITE MOSAIC";
+  renderstate.textContent = fitselect.value === "grid" ? "SPRITE MOSAIC" : "SPRITE FIT";
   const mapping = colourmode.value === "hsv" ? "one HSV-red channel 999" : "native base/detail colour channels";
-  const method = fitselect.value === "adaptive" ? `${trialslider.value} sprite trials per object` : "native shape cells";
+  const method = regionfitactive ? "clean color regions" : fitselect.value === "grid"
+    ? "native shape cells" : `${trialslider.value} sprite trials per object`;
   const transforms = warpselect.value === "on" ? "rotation, XY scale and axis warp" : "rotation and XY scale";
   const fittedcount = plan.length - underlaycount;
   const objectsummary = underlaycount
@@ -754,6 +770,7 @@ function applypreset() {
   fitselect.value = preset.fit;
   samplerselect.value = preset.sampler;
   underlaytoggle.checked = preset.underlay;
+  coverageselect.value = preset.coverage;
   schedulepreview();
 }
 
@@ -808,13 +825,20 @@ underlaytoggle.addEventListener("change", () => {
 underlaystyle.addEventListener("change", schedulepreview);
 trialslider.addEventListener("input", schedulepreview);
 seedsearchselect.addEventListener("change", schedulepreview);
+coverageselect.addEventListener("change", schedulepreview);
 colourslider.addEventListener("input", schedulepreview);
 previewzoomslider.addEventListener("input", () => {
   updatefields();
   if (atlasready && sourceimage.naturalWidth && target.width) updatepreview();
 });
 previewzoomslider.addEventListener("change", schedulepreview);
-fitselect.addEventListener("change", schedulepreview);
+fitselect.addEventListener("change", () => {
+  if (fitselect.value === "regions") {
+    warpselect.value = "on";
+    coverageselect.value = "2";
+  }
+  schedulepreview();
+});
 samplerselect.addEventListener("change", schedulepreview);
 warpselect.addEventListener("change", schedulepreview);
 colourmode.addEventListener("change", schedulepreview);
