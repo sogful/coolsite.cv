@@ -1,0 +1,98 @@
+.editorcontrols {
+    display: grid; align-items: end;
+    grid-template-columns: minmax(0,1fr); gap: 12px;
+    padding: 0 24px 8px;
+    min-height: 64px; box-sizing: border-box;
+}
+.trimbar {
+    width: min(100%,960px); min-width: 0;
+    margin: 0 auto;
+}
+.trimbar[hidden] {
+    display: block; visibility: hidden;
+}
+.trimtimes {
+    display: flex; justify-content: space-between;
+    gap: 8px; font-size: 12px;
+    color: var(--secondary); font-variant-numeric: tabular-nums;
+    margin-bottom: 8px;
+}
+.trimtrack {
+    position: relative; height: 32px;
+    border-radius: 4px; background: var(--input);
+    touch-action: none; cursor: crosshair;
+    margin: 0 10px;
+    --start: 0%; --end: 100%;
+    --position: 0%;
+}
+.trimselection {
+    position: absolute; top: 0;
+    bottom: 0; left: var(--start);
+    right: calc(100% - var(--end)); border: 2px solid var(--primary);
+    background: rgba(254,44,85,0.12); pointer-events: none;
+}
+.trimposition {
+    position: absolute; top: 4px;
+    bottom: 4px; left: var(--position);
+    width: 2px; background: var(--foreground);
+    pointer-events: none;
+}
+.trimhandle {
+    position: absolute; top: -4px;
+    bottom: -4px; width: 20px;
+    padding: 0; border: 0;
+    border-radius: 4px; background: var(--primary);
+    transform: translateX(-50%); cursor: ew-resize;
+    touch-action: none;
+}
+.trimhandle::after {
+    content: ""; position: absolute;
+    width: 3px; height: 16px;
+    left: 8px; top: 12px;
+    border-radius: 2px; background: #ffffff;
+}
+.trimhandle:focus-visible {outline: 2px solid var(--foreground)}
+.trimleft {left: var(--start)}
+.trimright {left: var(--end)}
+.videoinfo {
+    display: flex; align-items: end;
+    justify-content: end; gap: 8px;
+    padding: 4px 24px 2px; box-sizing: border-box;
+    min-width: 0;
+}
+.metadata {
+    margin: 0; font-size: 12px;
+    color: var(--secondary); white-space: nowrap;
+    min-height: 14px; min-width: 0;
+}
+.fit {
+    width: auto; padding: 4px 10px;
+    font-size: 13px; flex-shrink: 0;
+}
+.accountdetails {
+    font-size: 12px; color: var(--secondary);
+    line-height: 1.5; white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.flowactions[hidden] {display: none}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+@media (max-width:600px) {
+    .editorcontrols {
+        align-items: stretch;
+        gap: 12px; padding: 0 16px 8px;
+    }
+    .trimbar {width: 100%}
+    .videoinfo {padding: 4px 16px 2px}
+    .metadata {
+        min-width: 0; white-space: normal;
+        font-size: 11px;
+    }
+    .fit {max-width: 110px}
+}
+
+.closepublishing {margin-left: auto}
+.flowprogress:empty {display: none}
+
+.flowsource {margin: 16px 0}

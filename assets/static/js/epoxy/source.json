@@ -1,0 +1,11 @@
+{
+  "version": "2.1.20-1",
+  "integrity": "sha512-4xRxm8KGcLdHpVrTC2SG0+7khJFH6J6z6XlUsBJSb6Prj3ejVtsVbiWmGkZQcza+F9JZIKmL+i3KC9hHryZ01Q==",
+  "tarball": "https://registry.npmjs.org/@mercuryworkshop/epoxy-tls/-/epoxy-tls-2.1.20-1.tgz",
+  "source": "https://github.com/MercuryWorkshop/epoxy-tls/tree/9cde724aea1a0f5e46b1c962b3d19ca1389af074",
+  "license": "AGPL-3.0-only",
+  "files": {
+    "minimal/epoxy.js": "index.js",
+    "minimal/epoxy.wasm": "index.wasm"
+  }
+}

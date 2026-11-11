@@ -1,0 +1,29 @@
+{
+  "source": "TikTok live web font-face rules, 2026-11-08",
+  "files": [
+    {
+      "file": "regular.woff2",
+      "url": "https://sf16-website-login.neutral.ttwstatic.com/obj/tiktok_web_login_static/tiktok_fonts/TikTokFont-Regular.woff2?_default_font=1&v=2",
+      "bytes": 56492,
+      "sha256": "52a37b3a78eb5b59df3bdb129b9115c6fed9bec6ca62b55ae56d8c2701de5972"
+    },
+    {
+      "file": "semibold.woff2",
+      "url": "https://sf16-website-login.neutral.ttwstatic.com/obj/tiktok_web_login_static/tiktok_fonts/TikTokFont-Semibold.woff2?_default_font=1&v=2",
+      "bytes": 56968,
+      "sha256": "c0b1c3c6995c24eabd1a6fcc4f00523e022b546cf1fa4fce6c30d04763244d1b"
+    },
+    {
+      "file": "bold.woff2",
+      "url": "https://sf16-website-login.neutral.ttwstatic.com/obj/tiktok_web_login_static/tiktok_fonts/TikTokFont-Bold.woff2?_default_font=1&v=2",
+      "bytes": 58172,
+      "sha256": "5ac2037030385ad8cf10e486b44475d778eef2e2a377751fbf3c938fd3991b1c"
+    },
+    {
+      "file": "display.woff2",
+      "url": "https://sf16-website-login.neutral.ttwstatic.com/obj/tiktok_web_login_static/tiktok_fonts/TikTokDisplayFont-Bold.woff2?_default_font=1&v=2",
+      "bytes": 58828,
+      "sha256": "e4dd3bb15ae6492d5ddff59e08075a6023463b82cfe6c284470fec0d86fe52ae"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import {joingifs, inspectgif} from "./gifformat.js";
+import {joingifs, inspectgif} from "./gifformat.js?v=20261108";
 
 export function convertvideo(file, settings, onprogress, signal) {
     return new Promise((resolve, reject)=>{

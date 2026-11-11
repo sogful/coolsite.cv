@@ -60,6 +60,16 @@ export function inspectgif(input) {
 export function joingifs(parts, settings) {
     const parsed = parts.map(inspectgif);
     const frames = parsed.flatMap(part=>part.frames);
+    if (settings.sticker && frames.length === 1 && frames[0].delay >= 4) {
+        const frame = frames[0];
+        const first = Math.floor(frame.delay / 2);
+        frames.splice(0,1,...[first,frame.delay - first].map(delay => {
+            const control = frame.control.slice();
+            control[4] = delay & 255;
+            control[5] = delay >> 8;
+            return {...frame,control,delay};
+        }));
+    }
     if (parsed.some(part=>part.width !== settings.width || part.height !== settings.height) || frames.length < 2) throw new Error("the encoder did not produce a complete animation");
     const duration = Math.round(settings.duration * 100);
     const actual = frames.reduce((total, frame)=>total + frame.delay, 0);

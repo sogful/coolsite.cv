@@ -1,0 +1,140 @@
+@font-face {
+    font-family: "tiktok"; src: url("../../../../assets/fonts/tiktok/regular.woff2") format("woff2");
+    font-weight: 400; font-display: swap;
+}
+@font-face {
+    font-family: "tiktok"; src: url("../../../../assets/fonts/tiktok/semibold.woff2") format("woff2");
+    font-weight: 500 600; font-display: swap;
+}
+@font-face {
+    font-family: "tiktok"; src: url("../../../../assets/fonts/tiktok/bold.woff2") format("woff2");
+    font-weight: 700; font-display: swap;
+}
+@font-face {
+    font-family: "tiktokdisplay"; src: url("../../../../assets/fonts/tiktok/display.woff2") format("woff2");
+    font-weight: 700; font-display: swap;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.app {
+    --background: #ffffff; --surface: #ffffff;
+    --foreground: #161823; --secondary: rgba(22,24,35,0.75);
+    --input: rgba(22,24,35,0.06); --line: rgba(22,24,35,0.12);
+    --primary: #fe2c55; --placeholder: #f1f1f1;
+    font-family: "tiktok",Arial,Tahoma,PingFangSC,sans-serif; color: var(--foreground);
+    background: var(--background); color-scheme: light;
+}
+.app.dark {
+    --background: #121212; --surface: #252525;
+    --foreground: rgba(255,255,255,0.9); --secondary: rgba(255,255,255,0.75);
+    --input: rgba(255,255,255,0.12); --line: rgba(255,255,255,0.12);
+    --primary: #ff3b5c; --placeholder: #252525;
+    color-scheme: dark;
+}
+.btn, .iconbutton, .accountbutton, .rowhandle {
+    font: inherit; color: inherit;
+    cursor: pointer; box-sizing: border-box;
+}
+.btn {
+    display: inline-flex; align-items: center;
+    justify-content: center; min-height: 40px;
+    padding: 0 16px; border: 1px solid var(--line);
+    border-radius: 4px; background: var(--background);
+    font-weight: 600; text-decoration: none;
+    white-space: nowrap;
+}
+.btn:hover {background: var(--input)}
+.primary {
+    background: var(--primary); border-color: var(--primary);
+    color: #ffffff;
+}
+.primary:hover {
+    background: var(--primary); filter: brightness(0.94);
+}
+.btn:disabled {
+    opacity: 0.4; cursor: default;
+}
+.iconbutton {
+    display: grid; place-items: center;
+    width: 40px; height: 40px;
+    padding: 8px; border: 0;
+    border-radius: 50%; background: var(--input);
+    flex-shrink: 0;
+}
+.icon {
+    display: block; width: 24px;
+    height: 24px; fill: currentColor;
+}
+.fieldlabel, .originlabel, .requestlabel {
+    display: grid; gap: 8px;
+    margin: 16px 0;
+}
+.start, .end, .fit, .flowdevice, .loginrequest, .origin {
+    box-sizing: border-box; width: 100%;
+    min-width: 0; padding: 12px;
+    color: var(--foreground); background: var(--input);
+    border: 1px solid transparent; border-radius: 4px;
+    font: inherit;
+}
+.start:focus, .end:focus, .fit:focus, .flowdevice:focus, .loginrequest:focus, .origin:focus {border-color: var(--secondary)}
+.dialogtitle, .flowtitle {
+    font-family: "tiktokdisplay",Arial,sans-serif; font-weight: 700;
+    line-height: 1.2; margin: 0;
+}
+.dialogtitle {font-size: 26px}
+.flowtitle {
+    font-size: 23px; margin-bottom: 16px;
+}
+.flowcopy {
+    line-height: 1.5; margin: 12px 0;
+}
+.launcher, .approve {
+    color: var(--primary); font-weight: 600;
+}
+.publishing, .trimdialog {
+    box-sizing: border-box; width: 480px;
+    max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px);
+    padding: 24px; border: 0;
+    border-radius: 8px; color: var(--foreground);
+    background: var(--background); font: inherit;
+}
+.publishing::backdrop, .trimdialog::backdrop {background: rgba(0,0,0,0.5)}
+.dialogbar {
+    display: flex; justify-content: space-between;
+    align-items: center; gap: 16px;
+    margin-bottom: 24px;
+}
+.dialogbody {
+    overflow: auto; min-height: 0;
+}
+.publishing[open] {
+    display: flex; flex-direction: column;
+}
+.flowactions {
+    display: flex; gap: 12px;
+    margin-top: 24px; flex-shrink: 0;
+}
+.flowcontinue {
+    flex: 1; background: var(--primary);
+    border-color: var(--primary); color: #ffffff;
+}
+.flowprogress, .logintime, .sessionstatus {
+    color: var(--secondary); font-size: 13px;
+    line-height: 1.4;
+}
+.publishstatus {
+    white-space: pre-wrap; line-height: 1.4;
+}
+.loginqr {
+    display: block; width: 220px;
+    max-width: 100%; margin: 16px auto;
+}
+.flowstep[hidden], .flowrequest[hidden], .flowsource[hidden], .flowbackend[hidden], .flowback[hidden], .flowcontinue[hidden], .approvalinstructions[hidden], .approvalresult[hidden], .bannerneeded[hidden], .logintime[hidden], .approve[hidden], .disconnect[hidden], .cancelauth[hidden], .qrpanel[hidden], .copyverify[hidden] {display: none}
+
+.sessionstatus:empty, .publishstatus:empty {display: none}
+
+.flowhint {
+    color: var(--secondary); font-size: 13px;
+    line-height: 1.4; margin: 12px 0;
+}
