@@ -34,6 +34,7 @@ const sizecount = document.querySelector(".sizecount");
 const assetstatus = document.querySelector(".assetstatus");
 const renderstate = document.querySelector(".renderstate");
 const downloadlink = document.querySelector(".downloadlink");
+const gdlvldownload = document.querySelector(".gdlvldownload");
 const pngdownload = document.querySelector(".pngdownload");
 const statuscopy = document.querySelector(".statuscopy");
 const cataloggrid = document.querySelector(".cataloggrid");
@@ -79,8 +80,11 @@ let atlasready = false;
 let cataloglimit = 72;
 const sampledtexture = [0, 0, 0, 0];
 let levelsource = "";
+let levelraw = "";
 let currentdownload = "";
+let currentgdlvldownload = "";
 let currentpngdownload = "";
+let exportversion = 0;
 let pngversion = 0;
 let refreshid = 0;
 let fitrevision = 0;
@@ -625,18 +629,6 @@ function buildsource() {
     channels: hsvmode ? 1 : colors.size, objects: parts.length + helpers.length, helpers: helpers.length};
 }
 
-function xmlescape(value) {
-  const escape = {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&apos;"};
-  return value.replace(/[&<>"']/g, character => escape[character]);
-}
-
-function asbase64(value) {
-  const bytes = new TextEncoder().encode(value);
-  let binary = "";
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary);
-}
-
 function levelname() {
   const name = imagename.replace(/\.[^/.]+$/, "").trim();
   return name || "Image mosaic";
@@ -655,10 +647,16 @@ function updatepngdownload() {
   }, "image/png");
 }
 
-function gmddocument(raw) {
-  const title = xmlescape(levelname());
-  const description = asbase64("Generated locally by GD Image to Level. Static no-touch native-object image fit.");
-  return `<?xml version="1.0" encoding="utf-8"?>\n<plist version="1.0" gjver="2.0"><dict><k>kCEK</k><i>4</i><k>k2</k><s>${title}</s><k>k3</k><s>${description}</s><k>k4</k><s>${xmlescape(raw)}</s><k>k5</k><s>GD Image</s><k>k13</k><t/><k>k14</k><f/><k>k16</k><i>1</i><k>k17</k><i>22</i><k>k21</k><i>2</i><k>k45</k><i>0</i><k>k50</k><i>47</i></dict></plist>`;
+function invalidateexports() {
+  exportversion += 1;
+  downloadlink.hidden = true;
+  gdlvldownload.hidden = true;
+  downloadlink.removeAttribute("href");
+  gdlvldownload.removeAttribute("href");
+  if (currentdownload) URL.revokeObjectURL(currentdownload);
+  if (currentgdlvldownload) URL.revokeObjectURL(currentgdlvldownload);
+  currentdownload = "";
+  currentgdlvldownload = "";
 }
 
 function prettysize(bytes) {
@@ -685,7 +683,9 @@ function updatepreview(updatecatalog = false) {
   drawresult();
   fiterror = measurepreviewerror();
   const result = buildsource();
-  levelsource = gmddocument(result.raw);
+  invalidateexports();
+  levelraw = result.raw;
+  levelsource = gmddocument(levelraw, levelname());
   updatepngdownload();
   tilecount.textContent = result.objects.toLocaleString();
   gridcount.textContent = `${fiterror.toFixed(1)}%`;
@@ -715,7 +715,7 @@ async function refresh(revision = fitrevision) {
     statuscopy.textContent = "Loading the medium native object atlas in the background.";
     return false;
   }
-  downloadlink.hidden = true;
+  invalidateexports();
   pngdownload.hidden = true;
   renderstate.textContent = "FITTING";
   const started = performance.now();
@@ -733,7 +733,7 @@ function schedulepreview() {
   const revision = ++fitrevision;
   updatefields();
   if (!sourceimage.naturalWidth) return;
-  downloadlink.hidden = true;
+  invalidateexports();
   pngdownload.hidden = true;
   renderstate.textContent = atlasready ? "QUEUED" : "WAITING";
   window.clearTimeout(refreshid);
@@ -748,7 +748,7 @@ function loadimage(url, name) {
   imagename = name;
   sourceimage.src = url;
   sourcename.textContent = `${name} · loading preview`;
-  downloadlink.hidden = true;
+  invalidateexports();
   pngdownload.hidden = true;
   renderstate.textContent = "LOADING";
 }
@@ -757,16 +757,30 @@ function validimage(file) {
   return file && (file.type.startsWith("image/") || file.name.toLowerCase().endsWith(".svg"));
 }
 
-function downloadlevel() {
-  if (!levelsource) return;
-  if (currentdownload) URL.revokeObjectURL(currentdownload);
+async function downloadlevel() {
+  if (!levelsource || fitreadyrevision !== fitrevision) return;
+  invalidateexports();
+  const version = exportversion;
+  const revision = fitrevision;
+  const raw = levelraw;
+  const name = levelname();
   currentdownload = URL.createObjectURL(new Blob([levelsource], {type: "application/xml"}));
   downloadlink.href = currentdownload;
-  downloadlink.download = `${levelname()}.gmd`;
-  downloadlink.textContent = "↓  DOWNLOAD .GMD LEVEL";
+  downloadlink.download = `${name}.gmd`;
   downloadlink.hidden = false;
-  const transforms = warpselect.value === "on" ? "free rotation, XY scale and axis warp" : "free rotation and independent XY scale";
-  statuscopy.textContent = `GMD ready: ${tilecount.textContent} objects, ${channelcount.textContent} colour channels, ${transforms} saved locally.${visibilitywarning()}`;
+  statuscopy.textContent = "GMD ready. Preparing GDLVL...";
+  try {
+    const contents = await gdlvldocument(raw, name);
+    if (version !== exportversion || revision !== fitrevision || fitreadyrevision !== fitrevision) return;
+    currentgdlvldownload = URL.createObjectURL(new Blob([contents], {type: "application/octet-stream"}));
+    gdlvldownload.href = currentgdlvldownload;
+    gdlvldownload.download = `${name}.gdlvl`;
+    gdlvldownload.hidden = false;
+    statuscopy.textContent = `GMD and GDLVL ready: ${tilecount.textContent} objects, ${channelcount.textContent} colour channels.${visibilitywarning()}`;
+  } catch (error) {
+    if (version !== exportversion || revision !== fitrevision || fitreadyrevision !== fitrevision) return;
+    statuscopy.textContent = `GMD ready. GDLVL export failed: ${error.message}${visibilitywarning()}`;
+  }
 }
 
 function applypreset() {

@@ -10,7 +10,7 @@
   <link rel="preload" as="font" type="font/woff2" href="../assets/fonts/pusab.woff2" crossorigin>
 
   <link rel="stylesheet" href="../global.css">
-  <link rel="stylesheet" href="styles.css?v=img2gd-regions-20261030-1">
+  <link rel="stylesheet" href="styles.css?v=img2gd-export-20261108-1">
   <script src="../global.js" defer></script>
   <script src="canvasrenderer.js?v=img2gd-native-background-20261028-3" defer></script>
   <script src="gpurenderer.js?v=img2gd-native-batches-20261028-2" defer></script>
@@ -20,7 +20,9 @@
   <script src="regions.js?v=img2gd-regions-20261108-2" defer></script>
   <script src="visibility.js?v=img2gd-visibility-20261108-2" defer></script>
   <script src="fitsearch.js?v=img2gd-native-fit-20261030-2" defer></script>
-  <script src="app.js?v=img2gd-visibility-20261108-3" defer></script>
+  <script src="gmd.js?v=img2gd-export-20261108-1" defer></script>
+  <script src="gdlvl.js?v=img2gd-export-20261108-1" defer></script>
+  <script src="app.js?v=img2gd-export-20261108-1" defer></script>
 
 </head>
 <body class="imgpage">
@@ -165,7 +167,7 @@
           </select>
         </label>
 
-        <button class="buildbutton" type="submit"><span>BUILD .GMD LEVEL</span><b>↓</b></button>
+        <button class="buildbutton" type="submit"><span>BUILD LEVEL FILES</span><b>↓</b></button>
         <p class="privacynote">Your image stays in this browser. The download is generated locally.</p>
       </form>
 
@@ -198,8 +200,9 @@
           </div>
 
           <div class="exportlinks">
-            <a class="pngdownload" hidden download="soggycat-fit.png">↓ EXPORT FIT PNG</a>
             <a class="downloadlink" hidden download="soggycat.gmd">↓ DOWNLOAD .GMD LEVEL</a>
+            <a class="gdlvldownload" hidden download="soggycat.gdlvl">↓ DOWNLOAD .GDLVL LEVEL</a>
+            <a class="pngdownload" hidden download="soggycat-fit.png">↓ EXPORT FIT PNG</a>
           </div>
           <p class="statuscopy" aria-live="polite">Example image ready. Adjust the object budget or build a level now.</p>
         </section>

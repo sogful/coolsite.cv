@@ -519,6 +519,7 @@ select {
 }
 
 .downloadlink,
+.gdlvldownload,
 .pngdownload {
   display: flex;
   min-height: 43px;
@@ -533,17 +534,19 @@ select {
 }
 
 .downloadlink[hidden],
+.gdlvldownload[hidden],
 .pngdownload[hidden] {
   display: none;
 }
 
 .downloadlink:hover,
+.gdlvldownload:hover,
 .pngdownload:hover {
   filter: brightness(1.06);
 }
 
 .pngdownload {
-  color: #d6ecff;
+  grid-column: 1 / -1; color: #d6ecff;
   background: #15528e;
 }
 
