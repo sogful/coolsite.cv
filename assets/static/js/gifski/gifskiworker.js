@@ -1,6 +1,6 @@
 import initgifski, {encode as encodegifski} from "./gifski_wasm.js";
 import {inspectgif} from "./gifformat.js";
-import {encodepalette} from "./paletteencoder.js";
+import {encodepalette} from "./paletteencoder.js?v=20261107";
 
 let ready = null;
 self.addEventListener("message", async event=>{
@@ -25,6 +25,8 @@ self.addEventListener("message", async event=>{
         self.postMessage({error: error.message || String(error)});
     }
 });
+
+self.postMessage({type: "ready"});
 
 /*//////////////////////////////////////////////////////////////////////*/
 

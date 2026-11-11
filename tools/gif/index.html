@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <title>gifski</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%3E%3Cpath%20d%3D%22M29%2011h6v14h-6zM1%2011h6v14H1zm8%200h18v14H9z%22%20fill%3D%22%23BBDDF5%22%2F%3E%3Cpath%20fill%3D%22%23231F20%22%20d%3D%22M35%2011V6H1v5h6v14h-6V11h6zm-8%2014H9V11h18v14z%22%2F%3E%3Cpath%20fill%3D%22%23F5F8FA%22%20d%3D%22M31%207h2v3h-2zm-4%200h2v3h-2zm-4%200h2v3h-2zm-4%200h2v3h-2zm-4%200h2v3h-2zm-4%200h2v3H7zm-4%200h2v3H3zm28%2019h2v3h-2zm-4%200h2v3h-2zm-4%200h2v3h-2zm-4%200h2v3h-2zm-4%200h2v3h-2zm-4%200h2v3h-2zm-4%200h2v3H7zm-4%200h2v3H3z%22%2F%3E%3Cpath%20fill%3D%22%2388C9F9%22%20d%3D%22M29%2025V11h1v14zM9%2025V11h1v14z%22%2F%3E%3C%2Fsvg%3E">
+
+    <link rel="stylesheet" href="../base.css">
+    <link rel="stylesheet" href="index.css">
+
+
+</head>
+<body>
+    <h2>gifski</h2>
+    <div class="controls">
+        <form class="form" id="form">
+            <fieldset class="optiongroup">
+                <legend class="optiontitle">source</legend>
+                <div class="optionrow">
+                    <label>video <input class="videoinput" type="file" id="videofile" accept="video/*"></label>
+                    <span class="hint" id="filesize"></span>
+                </div>
+            </fieldset>
+            <fieldset class="optiongroup">
+                <legend class="optiontitle">output</legend>
+                <div class="optionrow">
+                    <label>fps <input type="number" id="fps" min="1" max="50" value="24"></label>
+                    <label class="automatic"><input type="checkbox" id="autofps"> choose a safe fps</label>
+                    <label><input type="checkbox" id="loop" checked> loop GIF</label>
+                </div>
+            </fieldset>
+            <fieldset class="optiongroup">
+                <legend class="optiontitle">compression</legend>
+                <div class="optionrow">
+                    <label>max size <input type="number" id="limit" min="0.1" step="0.1" value="9">MB</label>
+                    <label class="automatic"><input type="checkbox" id="autolimit" checked> fit the size limit</label>
+                </div>
+            </fieldset>
+            <fieldset class="optiongroup">
+                <legend class="optiontitle">presets and conversion</legend>
+                <div class="optionrow">
+                    <button class="btn" id="widepreset" type="button">profile banner preset</button>
+                    <button class="btn" id="smallpreset" type="button">small size preset</button>
+                </div>
+                <div class="actionrow">
+                    <button class="btn" id="convert" type="button">convert</button>
+                    <button class="btn" id="stop" type="button" disabled>stop</button>
+                    <span class="status" id="status"></span>
+                </div>
+                <div class="hint" id="estimate"></div>
+                <p class="warning" id="warning"></p>
+            </fieldset>
+        </form>
+        <div class="progresspanel" id="progresspanel" hidden>
+            <div class="progressheader"><strong id="progresstitle">preparing conversion</strong><span id="progresspercent">0%</span></div>
+            <progress class="progressbar" id="progressbar" max="100" value="0"></progress>
+            <div class="hint progressdetails" id="progressdetails"></div>
+        </div>
+        <div class="preview" id="preview" hidden>
+            <div class="videostage" id="videostage"></div>
+            <section class="trimeditor" id="trimeditor" aria-label="video trim" hidden>
+                <div class="trimtimeline" id="trimtimeline" aria-label="selected video range">
+                    <div class="trimselected" id="trimselected"></div>
+                    <button class="trimexcluded" id="trimleft" type="button" aria-label="play from trim start"></button>
+                    <button class="trimexcluded" id="trimright" type="button" aria-label="play before trim end"></button>
+                    <div class="trimplayhead" id="trimplayhead"></div>
+                    <input class="trimslider" type="range" id="trimstart" min="0" max="0" step="0.001" value="0" aria-label="trim start">
+                    <input class="trimslider" type="range" id="trimend" min="0" max="0" step="0.001" value="0" aria-label="trim end">
+                </div>
+                <div class="trimlabels trimcontrols" id="trimcontrols">
+                    <input class="trimtime" type="text" id="starttime" value="00:00:00:000" inputmode="text" aria-label="trim start time">
+                    <input class="trimtime" type="text" id="endtime" value="00:00:00:000" inputmode="text" aria-label="trim end time">
+                </div>
+                <label class="fullvideocontrol"><input type="checkbox" id="fullduration" checked> full video</label>
+                <input type="hidden" id="start" value="0">
+                <input type="hidden" id="end" value="0">
+                <input type="hidden" id="duration" value="3">
+            </section>
+        </div>
+        <div class="output" id="output" hidden></div>
+    </div>
+
+    <script type="module" src="index.js"></script>
+
+</body>
+</html>

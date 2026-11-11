@@ -1,0 +1,145 @@
+.controls {
+    max-width: 760px;
+}
+.form {
+    display: grid; gap: 0.75em;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.optiongroup {
+    min-width: 0; margin: 0;
+    border: 0; border-bottom: 1px solid #c7d0d9;
+    padding: 0 0 0.75em;
+}
+.optiontitle {
+    color: #394b5b; padding: 0 0.25em;
+    font-weight: 700;
+}
+.optionrow {
+    display: flex; flex-wrap: wrap;
+    align-items: center; gap: 0.7em 1.2em;
+}
+.optionrow + .optionrow {
+    margin-top: 0.7em;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.automatic {
+    color: #39546d; white-space: nowrap;
+}
+.actionrow {
+    display: flex; flex-wrap: wrap;
+    align-items: center; gap: 0.7em 1em;
+}
+.preview {
+    margin-top: 0.75em;
+}
+.previewmedia {
+    display: block; max-width: 100%;
+    background: #000000;
+}
+.adjustmentstage {
+    position: relative; display: inline-block;
+    max-width: 100%; background: #000000;
+}
+.adjustmentstage .previewmedia {max-width: 100%}
+.cropcontrols {
+    position: absolute; top: 0.6em;
+    right: 0.6em; z-index: 3;
+    display: flex; gap: 0.45em;
+    max-width: calc(100% - 1.2em);
+}
+.cropcontrols select {
+    min-width: 0; max-width: 15em;
+    color: #000000; background: #ffffff;
+}
+.cropoverlay {
+    position: absolute; inset: 0;
+    pointer-events: none;
+}
+.cropbox {
+    position: absolute; display: none;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.56);
+    pointer-events: none;
+}
+.cropbox.active {display: block}
+.trimeditor {
+    margin: 0;
+}
+.trimtimeline {
+    position: relative; height: 2.5em;
+    margin: 0; overflow: hidden;
+    border: 1px solid #000000; background: #ffffff;
+}
+.trimtimeline.trimdisabled {
+    opacity: 0.5; filter: grayscale(1);
+    cursor: not-allowed;
+}
+.trimcontrols.trimdisabled {opacity: 0.5}
+.trimselected {
+    position: absolute; top: 0;
+    bottom: 0; background: #ffffff;
+}
+.trimexcluded {
+    position: absolute; top: 0;
+    bottom: 0; z-index: 2;
+    border: 0; padding: 0;
+    background: rgba(0,0,0,0.72); cursor: pointer;
+}
+.trimplayhead {
+    position: absolute; top: 0;
+    bottom: 0; z-index: 4;
+    width: 2px; background: #000000;
+    pointer-events: none;
+}
+.trimslider {
+    position: absolute; top: 0;
+    left: 0; z-index: 5;
+    width: 100%; height: 100%;
+    margin: 0; appearance: none;
+    background: transparent; pointer-events: none;
+}
+.trimslider::-webkit-slider-thumb {
+    width: 1.1em; height: 2.5em;
+    border: 1px solid #000000; border-radius: 0;
+    background: #ffffff; cursor: ew-resize;
+    appearance: none; pointer-events: auto;
+}
+.trimlabels {
+    display: flex; justify-content: space-between;
+    gap: 0.75em; margin-top: 0.3em;
+}
+.trimtime {
+    width: 8.6em; border: 1px solid #000000;
+    color: #000000; background: #ffffff;
+    font: inherit; text-align: center;
+}
+.fullvideocontrol {margin-top: 0.55em}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.status {
+    color: #52616e; font-size: 0.9em;
+}
+.output {
+    margin-top: 0.75em; font-family: monospace;
+}
+.progresspanel {
+    margin-top: 0.75em;
+}
+.progressheader {
+    display: flex; justify-content: space-between;
+    gap: 1em;
+}
+.progressbar {
+    width: 100%; margin-top: 0.45em;
+}
+.progressdetails {
+    margin-top: 0.45em; white-space: pre-wrap;
+}
+.warning {
+    color: #985500; font-size: 0.9em;
+}

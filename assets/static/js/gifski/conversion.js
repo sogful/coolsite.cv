@@ -2,9 +2,10 @@ import {joingifs, inspectgif} from "./gifformat.js";
 
 export function convertvideo(file, settings, onprogress, signal) {
     return new Promise((resolve, reject)=>{
-        const decoder = new Worker(new URL("./decoderworker.js", import.meta.url));
-        const pool = Array.from({length: Math.min(2, Math.max(1, (navigator.hardwareConcurrency || 2) - 1))}, ()=>({worker: new Worker(new URL("./gifskiworker.js", import.meta.url), {type: "module"}), busy: false}));
-        const workers = [decoder, ...pool.map(item=>item.worker)];
+        const job = crypto.randomUUID();
+        const decoder = new Worker(new URL("./decoderworker.js?v=20261107", import.meta.url));
+        const pool = Array.from({length: Math.min(2, Math.max(1, (navigator.hardwareConcurrency || 2) - 1))}, ()=>({worker: null, ready: false, busy: false}));
+        const workers = [decoder];
         const queue = [];
         const parts = new Map();
         const cached = [];
@@ -29,13 +30,13 @@ export function convertvideo(file, settings, onprogress, signal) {
         const next = ()=>{
             if (ended) return;
             for (const item of pool) {
-                if (item.busy || !queue.length) continue;
+                if (!item.ready || item.busy || !queue.length) continue;
                 const batch = queue.shift();
                 item.busy = true;
                 const budget = target ? Math.floor(target * batch.count / framecount) : 0;
                 item.worker.postMessage({...batch, width: settings.width, height: settings.height, fps: settings.fps, colors, budget}, [batch.frames]);
             }
-            if (!decoded || completed !== framecount || pool.some(item=>item.busy)) return;
+            if (!decoded || completed !== framecount || pool.some(item=>!item.ready || item.busy)) return;
             try {
                 const ordered = [...parts.entries()].sort((first, second)=>first[0] - second[0]).map(item=>item[1]);
                 const output = joingifs(ordered, settings);
@@ -64,32 +65,48 @@ export function convertvideo(file, settings, onprogress, signal) {
             if (reply.type === "decoded") decoded = true;
             next();
         });
-        for (const item of pool) item.worker.addEventListener("message", event=>{
-            if (ended) return;
-            const reply = event.data;
-            if (reply.error) return finish(new Error(reply.error));
-            try {
-                inspectgif(reply.gif);
-                if (!reply.upgrade || reply.gif.byteLength > parts.get(reply.start).byteLength) parts.set(reply.start, new Uint8Array(reply.gif));
-                if (!reply.upgrade) {
-                    completed += reply.count;
-                    if (reply.frames && reply.averagecolors < 200) {
-                        cached.push({frames: reply.frames, start: reply.start, count: reply.count, colors: reply.colors, averagecolors: reply.averagecolors, bytes: reply.bytes});
-                        cached.sort((first, second)=>first.averagecolors - second.averagecolors);
-                        if (cached.length > 3) cached.pop();
-                    }
-                }
-                colors = reply.colors || colors;
-                item.busy = false;
-                onprogress(Math.min(98, Math.round(completed / framecount * 98)), "encoding GIF", `${completed}/${framecount} frames - ${settings.width}x${settings.height} - ${settings.fps}fps`);
-                if (!reply.upgrade) decoder.postMessage({type: "acknowledge"});
-                next();
-            } catch (error) {finish(error);}
-        });
-        for (const worker of workers) {
+        const watchworker = worker=>{
             worker.addEventListener("error", event=>finish(new Error(event.message || "video conversion failed")));
             worker.addEventListener("messageerror", ()=>finish(new Error("video frame transfer failed")));
-        }
+        };
+        const startworker = index=>{
+            const item = pool[index];
+            try {
+                item.worker = new Worker(new URL(`./gifskiworker.js?v=20261107&job=${job}&worker=${index}`, import.meta.url), {type: "module"});
+            } catch (error) {finish(error); return;}
+            workers.push(item.worker);
+            watchworker(item.worker);
+            item.worker.addEventListener("message", event=>{
+                if (ended) return;
+                const reply = event.data;
+                if (reply.error) return finish(new Error(reply.error));
+                if (reply.type === "ready") {
+                    item.ready = true;
+                    if (index + 1 < pool.length) startworker(index + 1);
+                    next();
+                    return;
+                }
+                try {
+                    inspectgif(reply.gif);
+                    if (!reply.upgrade || reply.gif.byteLength > parts.get(reply.start).byteLength) parts.set(reply.start, new Uint8Array(reply.gif));
+                    if (!reply.upgrade) {
+                        completed += reply.count;
+                        if (reply.frames && reply.averagecolors < 200) {
+                            cached.push({frames: reply.frames, start: reply.start, count: reply.count, colors: reply.colors, averagecolors: reply.averagecolors, bytes: reply.bytes});
+                            cached.sort((first, second)=>first.averagecolors - second.averagecolors);
+                            if (cached.length > 3) cached.pop();
+                        }
+                    }
+                    colors = reply.colors || colors;
+                    item.busy = false;
+                    onprogress(Math.min(98, Math.round(completed / framecount * 98)), "encoding GIF", `${completed}/${framecount} frames - ${settings.width}x${settings.height} - ${settings.fps}fps`);
+                    if (!reply.upgrade) decoder.postMessage({type: "acknowledge"});
+                    next();
+                } catch (error) {finish(error);}
+            });
+        };
+        watchworker(decoder);
+        startworker(0);
         onprogress(0, "reading video", `${framecount} frames - ${settings.width}x${settings.height} - ${settings.fps}fps`);
         decoder.postMessage({file, settings});
     });

@@ -69,6 +69,8 @@ async function decodevideo({file, settings}) {
     };
     const capture = frame=>{
         const crop = settings.crop || {x: 0, y: 0, width: frame.displayWidth, height: frame.displayHeight};
+        context.fillStyle = "#000000";
+        context.fillRect(0, 0, settings.width, settings.height);
         context.drawImage(frame, crop.x, crop.y, crop.width, crop.height, 0, 0, settings.width, settings.height);
         const pixels = context.getImageData(0, 0, settings.width, settings.height).data;
         let signature = 2166136261;
