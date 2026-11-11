@@ -15,11 +15,12 @@
   <script src="canvasrenderer.js?v=img2gd-native-background-20261028-3" defer></script>
   <script src="gpurenderer.js?v=img2gd-native-batches-20261028-2" defer></script>
   <script src="batchfitter.js?v=img2gd-native-fit-20261029-4" defer></script>
-  <script src="fitter.js?v=img2gd-native-focus-20261030-7" defer></script>
+  <script src="fitter.js?v=img2gd-visibility-20261108-1" defer></script>
   <script src="texturepools.js?v=img2gd-texture-pools-20261030-1" defer></script>
-  <script src="regions.js?v=img2gd-native-regions-20261030-2" defer></script>
+  <script src="regions.js?v=img2gd-regions-20261108-2" defer></script>
+  <script src="visibility.js?v=img2gd-visibility-20261108-2" defer></script>
   <script src="fitsearch.js?v=img2gd-native-fit-20261030-2" defer></script>
-  <script src="app.js?v=img2gd-native-batches-20261030-3" defer></script>
+  <script src="app.js?v=img2gd-visibility-20261108-3" defer></script>
 
 </head>
 <body class="imgpage">
@@ -74,8 +75,8 @@
 
         <label class="fieldlabel sliderlabel">
           <span>Object limit <b class="limitvalue">1,500</b></span>
-          <input class="limitslider" type="range" min="0" max="1500" value="1500" step="25">
-          <span class="fieldhelp">0 to 1500 no-touch objects total, including the color base</span>
+          <input class="limitslider" type="range" min="0" max="1500" value="1500" step="1">
+          <span class="fieldhelp">0 to 1500 objects total, including bases and visibility helpers</span>
         </label>
 
         <label class="underlaytoggle">

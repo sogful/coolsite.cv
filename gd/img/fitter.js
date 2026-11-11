@@ -449,7 +449,7 @@ async function fitadaptive(limit, trials, revision, extraoffset = 0) {
   const buckets = presetselect.value !== "fast" && trials >= 32 ? createassetbuckets(extraoffset) : null;
   const baseobjects = installunderlay(limit);
   if (batchfitteractive) batchfitter.reset(fitcoverage);
-  const fitlimit = limit - baseobjects;
+  const fitlimit = limit - baseobjects - visibilitycount();
   const rejected = new Set();
   const retrylimit = fitretries || (presetselect.value === "detail" ? 4 : 1);
   for (let index = 0; index < fitlimit; index += 1) {
@@ -504,7 +504,7 @@ async function fitadaptive(limit, trials, revision, extraoffset = 0) {
 
 function fitgrid(limit) {
   const baseobjects = installunderlay(limit);
-  const grid = gridsize(target.width, target.height, limit - baseobjects);
+  const grid = gridsize(target.width, target.height, limit - baseobjects - visibilitycount());
   const total = grid.columns * grid.rows;
   const pixelscale = 720 / target.width;
   for (let row = 0; row < grid.rows; row += 1) {

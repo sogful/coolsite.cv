@@ -363,6 +363,7 @@ function coarseregion(region, palette, rectangle = false) {
 
 async function fitcolorregions(limit, revision) {
   if (!limit || !sourceisopaque()) return null;
+  const reserved = limit > visibilitycost ? visibilitycost : 0;
   fitpixels = 64000;
   preparetarget();
   const analysis = vectorregions();
@@ -382,7 +383,7 @@ async function fitcolorregions(limit, revision) {
       || analysis.palette[region.color].reduce((sum, value, index) => sum + (value - dominantcolor[index]) ** 2, 0) >= 500);
     let groups = [];
     let tolerance = 1.4;
-    const available = limit - plan.length;
+    const available = limit - reserved - plan.length;
     for (let attempt = 0; attempt < 6; attempt += 1) {
       groups = regions.map((region, index) => ({
         region, objects: index === 0 && !underlaycount ? [coarseregion(region, analysis.palette, true)]
@@ -393,7 +394,7 @@ async function fitcolorregions(limit, revision) {
     }
     for (const group of groups) {
       if (revision !== fitrevision) return false;
-      const remaining = limit - plan.length;
+      const remaining = limit - reserved - plan.length;
       if (!remaining) break;
       const objects = group.objects.length <= remaining ? group.objects : [coarseregion(group.region, analysis.palette)];
       for (const candidate of objects) {

@@ -84,6 +84,7 @@ let currentpngdownload = "";
 let pngversion = 0;
 let refreshid = 0;
 let fitrevision = 0;
+let fitreadyrevision = -1;
 let fiterror = 0;
 let seedretryoffset = 0;
 let fittime = 0;
@@ -574,6 +575,7 @@ function buildsource() {
   }
   const pixelscale = 720 / Math.max(target.width, 1);
   const parts = [];
+  const helpers = visibilityobjects();
   for (let index = 0; index < plan.length; index += 1) {
     const candidate = plan[index];
     const fallbackRGB = [candidate.red, candidate.green, candidate.blue];
@@ -614,11 +616,13 @@ function buildsource() {
     }
     if (hsvmode) fields.push("41", "1", "42", "1", "43", candidate.basehsv, "44", candidate.detailhsv);
     for (const [key, value] of Object.entries(candidate.asset.gmdfields || {})) fields.push(key, value);
+    if (helpers.length) fields.push("57", "5001");
     fields.push("372", "1");
     parts.push(fields.join(","));
   }
   const header = ["kA2", "0", "kA3", "0", "kA4", "0", "kA6", "1", "kA7", "1", "kA8", "0", "kA9", "0", "kA10", "0", "kA11", "0", "kA13", "0", "kA22", "0", "kA40", "1", "kS38", `${colorlines.join("|")}|`];
-  return {raw: `${header.join(",")};${parts.join(";")};`, channels: hsvmode ? 1 : colors.size};
+  return {raw: `${header.join(",")};${[...parts, ...helpers].join(";")};`,
+    channels: hsvmode ? 1 : colors.size, objects: parts.length + helpers.length, helpers: helpers.length};
 }
 
 function xmlescape(value) {
@@ -642,7 +646,7 @@ function updatepngdownload() {
   const version = ++pngversion;
   pngdownload.hidden = true;
   resultcanvas.toBlob(blob => {
-    if (!blob || version !== pngversion) return;
+    if (!blob || version !== pngversion || fitreadyrevision !== fitrevision) return;
     if (currentpngdownload) URL.revokeObjectURL(currentpngdownload);
     currentpngdownload = URL.createObjectURL(blob);
     pngdownload.href = currentpngdownload;
@@ -675,6 +679,7 @@ function updatefields() {
 }
 
 function updatepreview(updatecatalog = false) {
+  if (fitreadyrevision !== fitrevision) return;
   resizecanvases();
   drawsource();
   drawresult();
@@ -682,7 +687,7 @@ function updatepreview(updatecatalog = false) {
   const result = buildsource();
   levelsource = gmddocument(result.raw);
   updatepngdownload();
-  tilecount.textContent = plan.length.toLocaleString();
+  tilecount.textContent = result.objects.toLocaleString();
   gridcount.textContent = `${fiterror.toFixed(1)}%`;
   channelcount.textContent = result.channels.toLocaleString();
   sizecount.textContent = prettysize(new Blob([levelsource]).size);
@@ -696,7 +701,8 @@ function updatepreview(updatecatalog = false) {
     ? `${underlaycount.toLocaleString()} dominant-color base object${underlaycount === 1 ? "" : "s"} + ${fittedcount.toLocaleString()} fitted sprites (${underlaymessage})`
     : `${fittedcount.toLocaleString()} fitted sprites (${underlaymessage})`;
   const seednote = searchcount > 1 ? ` · best of ${searchcount} searches` : "";
-  statuscopy.textContent = `${objectsummary} · ${plan.length.toLocaleString()} objects total${seednote}. ${method}, ${transforms}, ${mapping}, ${fiterror.toFixed(1)}% preview mean RGB error vs source at ${cleannumber(Number(previewzoomslider.value))}× editor zoom in ${Math.max(1, Math.round(fittime))} ms.`;
+  const helpernote = result.helpers ? ` + ${result.helpers} visibility helpers` : "";
+  statuscopy.textContent = `${objectsummary}${helpernote} · ${result.objects.toLocaleString()} objects total${seednote}. ${method}, ${transforms}, ${mapping}, ${fiterror.toFixed(1)}% preview mean RGB error vs source at ${cleannumber(Number(previewzoomslider.value))}× editor zoom in ${Math.max(1, Math.round(fittime))} ms.${visibilitywarning()}`;
   if (updatecatalog) rendercatalog(true);
 }
 
@@ -718,6 +724,7 @@ async function refresh(revision = fitrevision) {
   if (!await runfitsearch(limit, Number(trialslider.value), revision)) return false;
   if (revision !== fitrevision) return false;
   fittime = performance.now() - started;
+  fitreadyrevision = revision;
   updatepreview(true);
   return true;
 }
@@ -759,7 +766,7 @@ function downloadlevel() {
   downloadlink.textContent = "↓  DOWNLOAD .GMD LEVEL";
   downloadlink.hidden = false;
   const transforms = warpselect.value === "on" ? "free rotation, XY scale and axis warp" : "free rotation and independent XY scale";
-  statuscopy.textContent = `GMD ready: ${plan.length.toLocaleString()} no-touch native objects, ${channelcount.textContent} colour channels, ${transforms} saved locally.`;
+  statuscopy.textContent = `GMD ready: ${tilecount.textContent} objects, ${channelcount.textContent} colour channels, ${transforms} saved locally.${visibilitywarning()}`;
 }
 
 function applypreset() {
@@ -844,7 +851,7 @@ warpselect.addEventListener("change", schedulepreview);
 colourmode.addEventListener("change", schedulepreview);
 form.addEventListener("submit", event => {
   event.preventDefault();
-  if (!levelsource || !["SPRITE FIT", "SPRITE MOSAIC"].includes(renderstate.textContent)) {
+  if (!levelsource || fitreadyrevision !== fitrevision || !["SPRITE FIT", "SPRITE MOSAIC"].includes(renderstate.textContent)) {
     statuscopy.textContent = "Wait for the image fit to finish before exporting.";
     return;
   }
