@@ -13,12 +13,13 @@
 
     <link rel="stylesheet" href="base.css">
     <style>
-        body {
-            display: flex; align-items: center; justify-content: center;
-            background: #111111; overflow: hidden;
-            margin: 0; padding: 0; height: 100%; width: 100%;
-            max-width: none;
-            font-family: Arial, Tahoma, sans-serif;
+        .page {
+            display: flex; align-items: center;
+            justify-content: center; background: #111111;
+            overflow-x: hidden; overflow-y: auto;
+            margin: 0; padding: 0;
+            min-height: 100svh; width: 100%;
+            max-width: none; font-family: Arial, Tahoma, sans-serif;
         }
         .bg {
             position: fixed;
@@ -36,8 +37,10 @@
         /*//////////////////////////////////////////////////////////////////////*/
 
         .content {
-            display: flex; align-items: center; justify-content: center;
-            max-width: 90vw; height: 100vh;
+            display: flex; align-items: center;
+            justify-content: center; max-width: 90vw;
+            min-height: 100svh; box-sizing: border-box;
+            padding: 24px 0;
         }
 
         :any-link {
@@ -77,7 +80,7 @@
     </style>
 
 </head>
-<body>
+<body class="page">
 
     <div class="bg"></div>
 
@@ -86,26 +89,31 @@
             <h3>tools</h3>
 
             <div class="list">
-                <a href="cdx">web archive link downloader</a>
-                <a href="csstrace">css keyframe tracer</a>
+                <a href="cdx.html">cdx downloader</a>
+                <a href="csstrace.html">css tracer</a>
                 <br>
-                <a href="fontcompress">font compressor</a>
-                <a href="rive">rive animation converter</a>
+                <a href="fontcompress.html">font compressor</a>
+                <a href="rive.html">riv extractor</a>
+                <a href="gif/">gif converter</a>
+                <a href="stickerbanner/">sticker banner</a>
                 <a href="audiomix/">sentence mixer</a>
                 <span class="credit">based on <a class="creditlink" href="https://github.com/Firepal/stammer" target="_blank" rel="noreferrer">stammer</a></span>
                 <br>
-                <a href="svgfavicon">svg favicon generator</a>
-                <a href="testfile">test file generator</a>
+                <a href="svgfavicon.html">create favicon</a>
+                <a href="testfile.html">create placeholder files</a>
                 <br>
-                <a href="unicodescribble">unicode scribble matcher</a>
+                <a href="unicodescribble.html">unicode scribble matcher</a>
                 <a href="unicodeart/">unicode art</a>
-                <a href="brailleart">braille art maker</a>
-                <a href="asciiart">ascii art maker</a>
+                <a href="brailleart.html">braille art maker</a>
+                <a href="asciiart.html">ascii art maker</a>
                 <span class="credit">based on <a class="creditlink" href="https://github.com/stong/gradscii-art" target="_blank" rel="noreferrer">gradscii-art</a></span>
                 <br>
-                <a href="synthid">synthid re-applier (not really..)</a>
+                <a href="synthid.html">fake synthid generator</a>
                 <br>
-                <a href="wifi">wigle search</a>
+                <a href="bookmarks/">bookmarks</a>
+                <a href="wifi.html">wigle search</a>
+                <br>
+                <a href="desktopdestroyer/">desktop destroyer</a>
             </div>
 
         </div>
