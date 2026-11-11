@@ -1,0 +1,178 @@
+.app {
+    max-width: 1040px; margin: 0 auto;
+}
+.title {
+    font-size: 24px; margin: 0
+}
+.settings, .toolbar {
+    display: flex; flex-wrap: wrap;
+    gap: 12px; align-items: center;
+}
+.settings {
+    margin-bottom: 8px; font-size: 13px
+}
+.linecount {width: 42px}
+.artwidth {width: 115px}
+.widthvalue {width: 44px}
+.toolbar {
+    gap: 6px; font-size: 12px
+}
+.tool {
+    width: 30px; height: 30px;
+    padding: 5px; display: inline-flex;
+    align-items: center; justify-content: center;
+}
+.tool .icon, .actions .icon {
+    width: 20px; height: 20px
+}
+.tool .icon {fill: currentColor}
+.tool.selected {
+    background: #222; color: #fff
+}
+.importlabel {
+    cursor: pointer; border: 1px solid #999;
+    padding: 3px 7px; background: #fff;
+}
+.imagefile {display: none}
+.loading {margin-left: auto}
+/*//////////////////////////////////////////////////////////////////////*/
+
+.drawwrap {
+    position: relative; margin: 8px 0;
+    background: #fff; border: 1px solid #bbb;
+    max-width: 100%; width: 880px;
+}
+.drawing {
+    display: block; width: 100%;
+    touch-action: none; cursor: crosshair;
+}
+.drawing:focus-visible {outline: 2px solid #487ba0}
+.guides {
+    position: absolute; inset: 0;
+    pointer-events: none; opacity: 0.35;
+}
+.guideline {
+    position: absolute; left: 0;
+    right: 0; border-top: 1px dashed #b5bac1;
+}
+.drawprompt {
+    position: absolute; left: 50%;
+    top: 50%; transform: translate(-50%,-50%);
+    color: #aaa; font-size: 13px;
+    pointer-events: none;
+}
+/*//////////////////////////////////////////////////////////////////////*/
+
+.result {margin: 12px 0 18px}
+.resulthead {
+    display: flex; align-items: center;
+    gap: 12px; margin-bottom: 7px;
+}
+.sectiontitle {
+    font-size: 14px; margin: 0
+}
+.resultstatus {
+    font-size: 11px; color: #666
+}
+.resulthead .copy {
+    margin-left: auto; font-size: 12px
+}
+.surface {
+    display: flex; gap: 12px;
+    padding: 16px; overflow: auto;
+    min-height: 52px;
+}
+.avatar {
+    width: 40px; height: 40px;
+    flex: 0 0 40px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: #536a80; color: #fff;
+    font: 20px Arial;
+}
+.message {
+    min-width: 0; flex: 1
+}
+.byline {
+    display: flex; gap: 6px;
+    align-items: baseline; margin-bottom: 2px;
+    white-space: nowrap;
+}
+.author {font-weight: 600}
+.timestamp {
+    color: #aaa; font-size: 12px
+}
+.arttext {
+    min-height: 20px; overflow-wrap: normal;
+    width: max-content; min-width: 100%;
+    font-kerning: normal; text-rendering: auto;
+    white-space: pre-wrap;
+}
+/*//////////////////////////////////////////////////////////////////////*/
+
+.youtube {
+    background: #0f0f0f; color: #f1f1f1
+}
+.youtube, .youtube .arttext {font-family: unicodeyoutube, Arial, sans-serif}
+.youtube .author {font-weight: 500}
+.youtube .byline {
+    font-size: 12px; line-height: 18px
+}
+.youtube .arttext {
+    font-size: 14px; line-height: 20px
+}
+.actions {
+    display: flex; align-items: center;
+    gap: 14px; margin-top: 8px;
+    font-size: 12px; height: 24px;
+}
+.actions .icon {
+    fill: none; stroke: currentColor
+}
+.actions .dislike {transform: rotate(180deg)}
+.discord {
+    background: #323339; color: #f3f3f4
+}
+.discord, .discord .arttext {font-family: unicodediscord, unicodenoto, "Helvetica Neue", Helvetica, Arial, sans-serif}
+.discord .byline {
+    font-size: 16px; line-height: 22px
+}
+.discord .arttext {
+    font-size: 16px; line-height: 22px
+}
+.discord .arttext {white-space: break-spaces}
+.twitter {
+    background: #000; color: #e7e9ea
+}
+.twitter, .twitter .arttext {font-family: unicodetwitter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif}
+.twitter .author {font-weight: 700}
+.twitter .byline {
+    font-size: 15px; line-height: 20px;
+    transform: translateZ(0);
+}
+.twitter .timestamp {
+    font-size: 15px; color: #71767b
+}
+.twitter .arttext {
+    font-size: 15px; line-height: 20px;
+    transform: translateZ(0);
+}
+/*//////////////////////////////////////////////////////////////////////*/
+
+.error {color: #a22525}
+@media (min-width: 900px) {
+    .app {min-width: 760px}
+}
+@media (max-width: 600px) {
+    .settings {gap: 10px}
+    .surface {
+        padding: 12px; gap: 8px
+    }
+    .avatar {
+        width: 32px; height: 32px;
+        flex-basis: 32px
+    }
+    .resultstatus {max-width: 145px}
+    .byline {
+        white-space: normal; flex-wrap: wrap
+    }
+}

@@ -1,0 +1,23 @@
+{
+  "youtube": {
+    "file": "youtube.bin.gz",
+    "fingerprint": "v5:youtube:true:081b71d49f68ea7d71cb9fd8ec4ec1e821dc4ffbd5c7d8124fbbea4f62aa1f38",
+    "sha256": "cf88730ca67722ae91e4d07581e464688e5b5342e8030219389f35def3607d43",
+    "captured": "2026-11-03",
+    "glyphs": 4693
+  },
+  "discord": {
+    "file": "discord.bin.gz",
+    "fingerprint": "v5:discord:true:3928172d49e85e390b085ce8d634b8c0f9a8beff7309e3d17ba33a63543a90a6",
+    "sha256": "9270182b64a6ab00fa101adf3450310e3e3bfb3dad9656538b82a229e116c0c7",
+    "captured": "2026-11-03",
+    "glyphs": 4742
+  },
+  "twitter": {
+    "file": "twitter.bin.gz",
+    "fingerprint": "v5:twitter:true:329cf5e966847963dcd91b53a3eba596f880ce26d81672d5141ef6fa99470623",
+    "sha256": "9559c4389918f21934626e05634acb9e18381c946d1bb1ce03842f4fb71a5564",
+    "captured": "2026-11-03",
+    "glyphs": 4703
+  }
+}
