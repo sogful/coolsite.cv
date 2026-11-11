@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <title>fake synthid generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="../base.css">
+
+    <link rel="stylesheet" href="index.css">
+
+    <link rel="stylesheet" href="../branding.css">
+</head>
+<body>
+
+    <h2 class="toolheading" aria-label="fake synthid generator">
+
+        <img class="toollogo" src="logo.png" alt="fake synthid generator" width="481" height="58">
+
+    </h2>
+    <div class="hint">or "slander" tool..? use it nicely</div>
+    <br>
+    <div class="hint">will basically NEVER trip verify ai tool in gemini, as that would require a private key</div><sup class="hint">(and where would anyone get that?)</sup>
+    <div class="hint">BUT it will trip most other ai detectors.. they're a little bit gullible..</div>
+    <div class="hint">so, yeah, permanent work in progress, if you somehow have any ideas <a href="/contact">here's a contact link</a></div>
+
+    <label class="drop" id="drop">
+        <input type="file" id="file" accept="image/*">
+        drop an image here, click to pick a file, or paste from clipboard
+    </label>
+
+    <div class="panels" id="panels" hidden>
+        <div class="panel">
+            <canvas class="view" id="origcv"></canvas>
+            <span class="cap">input</span>
+        </div>
+        <div class="panel">
+            <canvas class="view" id="outcv"></canvas>
+            <span class="cap">output</span>
+        </div>
+        <div class="panel">
+            <canvas class="view" id="patcv"></canvas>
+            <span class="cap">watermark</span>
+        </div>
+    </div>
+
+    <div class="readout" id="readout" hidden></div>
+
+    <button id="download" hidden>download image</button>
+    <script src="index.js"></script>
+
+</body>
+</html>

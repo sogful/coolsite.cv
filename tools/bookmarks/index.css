@@ -1,0 +1,213 @@
+html, body {
+    margin: 0; min-height: 100%;
+    background: #3c3c3c; font-family: "Segoe UI", sans-serif;
+    color: #c7c7c7; font-size: 0.875em;
+}
+.bookmarksheader {
+    background: #1f2020; display: flex;
+    align-items: stretch; flex-direction: row;
+    flex-wrap: wrap; overflow: hidden;
+    max-height: none; position: relative;
+    z-index: 10000;
+}
+.listing {
+    position: relative; display: inline-flex;
+    flex-direction: row; align-items: center;
+    gap: 6px; height: 34px;
+    margin: auto 0; padding: 0 7.5px;
+    border: 0; background: transparent;
+    color: #c7c7c7; font: inherit;
+    cursor: pointer; text-decoration: none;
+    white-space: nowrap; border-radius: 5px;
+    overflow: hidden; flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent; background: transparent;
+}
+.listing::before {
+    content: ""; position: absolute;
+    inset: 4px; border-radius: 5px;
+    background: #363737; opacity: 0;
+    pointer-events: none; transition: opacity 0.25s ease-out;
+    z-index: 0;
+}
+.listing:hover::before,
+    .listing:focus-visible::before {
+    opacity: 1;
+}
+.listing:focus-visible {
+    outline: 2px solid #888; outline-offset: 2px;
+}
+.listing .clickfill {
+    position: absolute; inset: 4px;
+    border-radius: 5px; background: #565757;
+    transform: scaleX(0); transform-origin: center center;
+    pointer-events: none; opacity: 1;
+    z-index: 1;
+}
+.listing.clickpressing .clickfill {
+    transition: transform 0.25s ease-out; transform: scaleX(1);
+}
+.listing.clickfading .clickfill {
+    transition: transform 0.25s ease-out, opacity 0.25s ease-out; transform: scaleX(1);
+    opacity: 0;
+}
+.listing.folderheld .clickfill {
+    transform: scaleX(1); opacity: 1;
+    transition: none;
+}
+.listing.folderreleasing .clickfill {
+    transition: transform 0.25s ease-out, opacity 0.25s ease-out; transform: scaleX(1);
+    opacity: 0;
+}
+.iconwrap {
+    width: 16px; height: 16px;
+    flex: 0 0 16px; display: flex;
+    align-items: center; justify-content: center;
+    z-index: 2;
+}
+.iconwrap img {
+    width: 16px; height: 16px;
+    display: block; object-fit: contain;
+}
+.iconwrap.primaryfolder {
+    width: 20px; height: 20px;
+}
+.iconwrap.primaryfolder svg {
+    width: 20px; height: 20px;
+    display: block;
+}
+.titletext {
+    position: relative; z-index: 2;
+}
+.folderpanel {
+    position: relative; padding: 0;
+    border-radius: 10px; opacity: 1;
+    transition: none; overflow: hidden;
+    will-change: opacity;
+}
+.folderpanel.fadingin {
+    opacity: 0; transition: opacity 0.25s ease;
+}
+.folderpanelscroll {
+    max-height: inherit; overflow-x: hidden;
+    overflow-y: auto; scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.folderpanelscroll::-webkit-scrollbar {
+    width: 0; height: 0;
+}
+.folderpanel.folderpanelshow {
+    opacity: 1;
+}
+.folderpanel .listing {
+    color: #e3e3e3; height: 30px;
+    width: 100%; border-radius: 0;
+    gap: 12px; padding: 0 20px;
+    transition: none;
+}
+.folderpanel .listing::before {
+    inset: 0; border-radius: 0;
+    background: #363635; transition: none;
+}
+.folderpanel .listing:hover::before,
+    .folderpanel .listing:focus-visible::before {
+    opacity: 1;
+}
+.folderportal {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 20000;
+}
+.folderstack {
+    position: absolute; display: flex;
+    left: 0; top: 0;
+    flex-direction: row; align-items: flex-start;
+    pointer-events: none;
+}
+.folderpanel {
+    pointer-events: auto; background: #1f2020;
+    min-width: 160px; max-width: min(420px, calc(100vw - 16px));
+    max-height: min(90vh, calc(100vh - 24px)); box-shadow: 4px 8px 24px rgba(0, 0, 0, 0.45);
+}
+.folderpanel + .folderpanel {
+    margin-left: 0;
+}
+.folderpanelinner {
+    display: flex; flex-direction: column;
+    gap: 0; padding: 6px 0;
+}
+.scrolloverlay {
+    position: absolute; display: flex;
+    align-items: center; justify-content: center;
+    left: 0; right: 0;
+    height: 28px; background: #1f2020;
+    color: #c7c7c7; opacity: 0;
+    pointer-events: none; transition: none;
+    z-index: 5;
+}
+.scrolloverlay.show {
+    opacity: 1; pointer-events: auto;
+}
+.scrolloverlay.top {
+    top: 0;
+}
+.scrolloverlay.bottom {
+    bottom: 0;
+}
+.scrolloverlay svg path {
+    fill: currentColor;
+}
+.errbanner {
+    padding: 12px 16px; background: #4a2020;
+    color: #fcc;
+}
+.bottombar {
+    position: fixed; justify-content: center;
+    align-items: center; bottom: 2em;
+    color: #e3e3e3;
+}
+.info {
+    background-color: #1f2020; position: fixed;
+    display: flex; bottom: 1em;
+    left: 1em; padding: 1em;
+    border-radius: 1.5em; flex-direction: column;
+    text-align: left; justify-content: center;
+}
+.info a {
+    padding-bottom: 5px;
+}
+h2 {
+    margin: 0 0 5px 0;
+}
+sup a {
+    color: #e3e3e3; opacity: 0.5;
+    text-decoration: underline wavy #444;
+}
+.download {
+    background-color: #1f2020; position: fixed;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    bottom: 1em; right: 1em;
+    padding: 1em; border-radius: 1.5em;
+    user-select: none; cursor: pointer;
+}
+h3 {
+    margin: 0;
+}
+.folderdownload {
+    position: absolute; top: 4px;
+    right: 4px; width: 22px;
+    height: 22px; overflow: hidden;
+    display: flex; align-items: center;
+    justify-content: center; border: none;
+    cursor: pointer; color: #c7c7c7;
+    opacity: 0.75; background: transparent;
+    z-index: 6; transition: opacity 0.15s ease, background 0.15s ease;
+}
+.folderdownload:hover {
+    opacity: 1; background: #363635;
+}
+.folderdownload svg {
+    position: absolute; top: 0;
+    left: 0; width: 100%;
+    height: 100%; display: block;
+    fill: currentColor;
+}

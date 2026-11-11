@@ -1,0 +1,92 @@
+body {
+    padding-bottom: 3em; max-width: 64em;
+}
+h2 {
+    margin: 0;
+}
+a {
+    color: #3a6ea5;
+}
+.tokenbox {
+    margin: 0.8em 0; padding: 0.8em 1em;
+    border: 1px solid #c5c5ca; background: #f7f7f9;
+    display: flex; flex-wrap: wrap;
+    gap: 0.5em; align-items: center;
+}
+.tokenbox input {
+    flex: 1 1 22em; padding: 0.3em 0.5em;
+    border: 1px solid #999;
+}
+.tokenbox .saved {
+    color: #3a9d6a; font-family: monospace;
+}
+fieldset {
+    border: 1px solid #c5c5ca; margin: 0.8em 0;
+    padding: 0.6em 0.9em 0.9em;
+}
+legend {
+    font-size: 0.85em; color: #555;
+    padding: 0 0.3em;
+}
+.grid {
+    display: grid; gap: 0.5em 1em;
+    grid-template-columns: repeat(auto-fill, minmax(15em, 1fr));
+}
+.grid label {
+    display: flex; flex-direction: column;
+    align-items: flex-start; gap: 0.15em;
+    font-size: 0.85em; color: #444;
+}
+.grid label.inline {
+    flex-direction: row; align-items: center;
+    gap: 0.4em;
+}
+.grid input, .grid select {
+    width: 100%; padding: 0.3em 0.4em;
+    border: 1px solid #999; font-size: 0.95em;
+}
+button, .btn {
+    padding: 0.4em 1.1em; border: 1px solid #222;
+    background: #222; color: #fff;
+    cursor: pointer; font-size: 0.9em;
+}
+button:hover, .btn:hover {
+    background: #000;
+}
+button:disabled {
+    opacity: 0.4; cursor: default;
+}
+button.secondary, .btn.secondary {
+    background: #fff; color: #222;
+}
+button.secondary:hover {
+    background: #eee;
+}
+.runrow {
+    margin: 0.8em 0; display: flex;
+    gap: 0.6em; align-items: center;
+}
+.status {
+    font-size: 0.85em; color: #777;
+}
+.resultwrap {
+    overflow: auto; margin-top: 0.8em;
+}
+table.results {
+    border-collapse: collapse; font-size: 0.8em;
+    width: 100%; min-width: 60em;
+}
+table.results th, table.results td {
+    border: 1px solid #e2e2e2; padding: 3px 6px;
+    text-align: left; white-space: nowrap;
+}
+table.results th {
+    background: #eee;
+}
+table.results tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+.resultbar {
+    margin-top: 0.6em; display: flex;
+    gap: 0.6em; align-items: center;
+}

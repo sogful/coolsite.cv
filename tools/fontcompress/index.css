@@ -1,0 +1,62 @@
+h1, h2 {
+    margin: 0;
+}
+input {
+    margin: 0; padding: 0;
+}
+textarea {
+    width: 32em; max-width: 90vw;
+    resize: vertical;
+}
+.opts label {
+    gap: 0.25em; margin-right: 0.9em;
+    user-select: none; white-space: nowrap;
+}
+.output {
+    margin-top: 1em; font-family: monospace;
+    font-size: 0.85em; padding: 0.5em;
+    border: 1px solid #ccc; white-space: pre-wrap;
+    word-break: break-all;
+}
+.output:empty {
+    display: none;
+}
+.preview {
+    margin-top: 0.6em; padding: 0.6em;
+    border: 1px solid #e2e2e2; flex-wrap: wrap;
+    gap: 0.3em;
+}
+.preview {
+    display: none;
+}
+.preview:not(:empty) {
+    display: flex;
+}
+.err:empty {
+    display: none;
+}
+.glyph {
+    display: inline-flex; flex-direction: column;
+    align-items: center; padding: 0.2em 0.3em;
+    border: 1px solid #e2e2e2; min-width: 2em;
+}
+.glyph .ch {
+    font-family: "PreviewFont", sans-serif; font-size: 28px;
+    line-height: 1;
+}
+.glyph .cep {
+    font-size: 9px; color: #999;
+    font-family: monospace; margin-top: 2px;
+}
+button.runbtn:hover {
+    background: #eee;
+}
+button.runbtn:disabled {
+    opacity: 0.5; cursor: wait;
+}
+.err {
+    color: #c33; margin-top: 0.4em;
+}
+sup {
+    opacity: 0.5;
+}

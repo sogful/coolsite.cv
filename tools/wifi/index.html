@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <title>wigle search</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../base.css">
+
+    <link rel="stylesheet" href="index.css">
+
+    <link rel="stylesheet" href="../branding.css">
+</head>
+<body>
+
+    <h2 class="toolheading" aria-label="wigle search">
+
+        <img class="toollogo" src="logo.png" alt="wigle search" width="282" height="54">
+
+    </h2>
+
+    <div class="tokenbox" id="tokenbox">
+        <label>api token (base64)
+            <input type="password" id="tokeninput" placeholder="paste encoded token here" autocomplete="off">
+        </label>
+        <button id="savetoken">save</button>
+        <span class="saved" id="tokensaved" hidden>token saved</span>
+        <button class="secondary" id="cleartoken" hidden>clear</button>
+    </div>
+
+    <form id="searchform" autocomplete="off">
+
+        <fieldset>
+            <legend>ssid / network</legend>
+            <div class="grid">
+                <label>ssid (exact)
+                    <input type="text" data-param="ssid" placeholder="mynetwork">
+                </label>
+                <label>ssid like (wildcard, use %)
+                    <input type="text" data-param="ssidlike" placeholder="%coffee%">
+                </label>
+                <label>bssid / netid (mac)
+                    <input type="text" data-param="netid" placeholder="aa:bb:cc:dd:ee:ff">
+                </label>
+                <label>encryption
+                    <select data-param="encryption">
+                        <option value="">any</option>
+                        <option value="none">none / open</option>
+                        <option value="wep">wep</option>
+                        <option value="wpa">wpa</option>
+                        <option value="wpa2">wpa2</option>
+                        <option value="wpa3">wpa3</option>
+                    </select>
+                </label>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>location</legend>
+            <div class="grid">
+                <label>min latitude
+                    <input type="number" step="any" data-param="latrange1" placeholder="34.0">
+                </label>
+                <label>max latitude
+                    <input type="number" step="any" data-param="latrange2" placeholder="34.2">
+                </label>
+                <label>min longitude
+                    <input type="number" step="any" data-param="longrange1" placeholder="-118.5">
+                </label>
+                <label>max longitude
+                    <input type="number" step="any" data-param="longrange2" placeholder="-118.2">
+                </label>
+                <label>closest lat (for radius search)
+                    <input type="number" step="any" data-param="closestLat">
+                </label>
+                <label>closest long (for radius search)
+                    <input type="number" step="any" data-param="closestLong">
+                </label>
+                <label>variance (degrees, w/ closest point)
+                    <input type="number" step="any" data-param="variance" placeholder="0.01">
+                </label>
+                <label>country
+                    <input type="text" data-param="country" placeholder="US">
+                </label>
+                <label>region / state
+                    <input type="text" data-param="region">
+                </label>
+                <label>city
+                    <input type="text" data-param="city">
+                </label>
+                <label>road
+                    <input type="text" data-param="road">
+                </label>
+                <label>postal code
+                    <input type="text" data-param="postalcode">
+                </label>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>filters &amp; options</legend>
+            <div class="grid">
+                <label>free networks
+                    <select data-param="freenet">
+                        <option value="">any</option>
+                        <option value="true">only free</option>
+                        <option value="false">exclude free</option>
+                    </select>
+                </label>
+                <label>pay networks
+                    <select data-param="paynet">
+                        <option value="">any</option>
+                        <option value="true">only pay</option>
+                        <option value="false">exclude pay</option>
+                    </select>
+                </label>
+                <label>results per page (max 100)
+                    <input type="number" data-param="resultsPerPage" value="100" min="1" max="100">
+                </label>
+                <label class="inline">
+                    <input type="checkbox" data-param="onlymandatory" style="width:auto">
+                    only mandatory fields (faster)
+                </label>
+            </div>
+        </fieldset>
+
+        <div class="runrow">
+            <button type="submit" id="runbtn">search</button>
+            <button type="button" class="secondary" id="resetbtn">reset fields</button>
+            <span class="status" id="status"></span>
+        </div>
+
+    </form>
+
+    <div class="resultwrap" id="resultwrap" hidden>
+        <table class="results" id="resultstable"></table>
+    </div>
+    <div class="resultbar" id="resultbar" hidden>
+        <button class="secondary" id="loadmore">load more</button>
+        <button class="secondary" id="downloadcsv">download csv</button>
+        <span class="status" id="resultcount"></span>
+    </div>
+
+    <script src="index.js"></script>
+
+</body>
+</html>

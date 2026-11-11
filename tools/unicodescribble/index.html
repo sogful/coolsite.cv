@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <title>unicode scribble matcher</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="../base.css">
+
+    <link rel="stylesheet" href="index.css">
+
+    <link rel="stylesheet" href="../branding.css">
+</head>
+<body>
+    <h2 class="toolheading" aria-label="unicode scribble matcher">
+        <img class="toollogo" src="logo.png" alt="unicode scribble matcher" width="524" height="50">
+    </h2>
+    <div class="hint">shapecatcher clone :p</div>
+
+    <div class="row stage">
+        <div>
+            <canvas class="pad" width="340" height="340"></canvas>
+            <div class="row tools">
+                <button type="button" data-mode="draw" class="active">✐</button>
+                <button type="button" data-mode="erase">🁛</button>
+                <button type="button" class="cropbtn">⛶</button>
+                <button type="button" class="clearbtn">ㆫ</button>
+            </div>
+            <div class="row tools">
+                <button type="button" data-set="symbol" class="active">𐌀</button>
+                <button type="button" data-set="emoji">㋡</button>
+                <label class="hint"><input type="checkbox" class="accurate"> accurate</label>
+                <label class="hint"><input type="checkbox" class="nounifont"> no unifont</label>
+                <label class="hint clrwrap" style="display:none">colour <input type="color" class="penclr" value="#e23030"></label>
+            </div>
+        </div>
+        <div>
+            <canvas class="seen" width="120" height="120"></canvas>
+            <div class="status hint">starting..</div>
+            <button type="button" class="minibtn rebuildbtn" disabled>(refresh)</button>
+        </div>
+    </div>
+
+    <div class="results"></div>
+
+    <script src="index.js"></script>
+
+</body>
+</html>

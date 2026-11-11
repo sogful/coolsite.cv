@@ -1,0 +1,209 @@
+body {
+    padding: 0; height: 100vh;
+    display: flex; overflow: hidden;
+    justify-content: center; align-items: center;
+}
+.app, .appmain {
+    width: 800px; height: 800px;
+    min-width: 0; min-height: 0;
+    margin: 0 auto; display: grid;
+    grid-template-columns: 1fr; gap: 8px;
+    padding: 8px; box-sizing: border-box;
+    transform-origin: center center;
+}
+.panel, .panelmain {
+    padding: 18px 8px; background: #fff;
+    overflow: hidden; display: flex;
+    flex-direction: column; border: 1px solid #ccc;
+}
+.controlsrow {
+    display: flex; flex-wrap: wrap;
+    gap: 8px; align-items: center;
+    margin-bottom: 8px; font-size: 12px;
+}
+.controlsrow label, .togglerow label {
+    display: flex; align-items: center;
+    gap: 4px; white-space: nowrap;
+    cursor: pointer;
+}
+select, input[type="file"], input[type="number"], button {
+    font-size: 12px; max-width: 170px;
+}
+.stageouter {
+    padding: 4px; margin-bottom: 8px;
+    flex: 1; box-sizing: border-box;
+}
+.stagescroll {
+    position: relative; width: 100%;
+    height: 100%;
+}
+.canvaswrapper {
+    margin: 0 auto; position: relative;
+    width: 100%; height: 100%;
+}
+.canvasmain {
+    position: relative; display: flex;
+    width: 100%; height: 100%;
+    background: #eee; overflow: hidden;
+    align-items: center; justify-content: center;
+}
+.aspectbox {
+    position: relative; width: 80%;
+    height: 80%; border: 1px dashed #000;
+    box-sizing: border-box; background: #eee;
+}
+.canvasgrid {
+    position: absolute; inset: 0;
+    pointer-events: none;
+}
+.canvasvideo {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain; background: #fff;
+}
+.overelement {
+    position: absolute; left: 50%;
+    top: 50%; width: 160px;
+    height: 160px; border: 1px solid #000;
+    background: rgba(255, 255, 255, 0.5); cursor: move;
+    transform-origin: center center;
+}
+.overlabel {
+    position: absolute; inset: 4px;
+    display: flex; align-items: center;
+    justify-content: center; font-size: 11px;
+}
+.overimg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain; display: none;
+}
+.handle {
+    position: absolute; width: 14px;
+    height: 14px; cursor: pointer;
+    background: #fff; border: 1px solid #000;
+    display: flex; align-items: center;
+    justify-content: center;
+}
+.handle svg {
+    width: 8px; height: 8px;
+    fill: none; stroke: #000;
+    stroke-width: 1.2; stroke-linecap: round;
+}
+.handlexy {
+    right: -7px; bottom: -7px;
+    cursor: nwse-resize;
+}
+.handlex {
+    right: -7px; top: 50%;
+    transform: translateY(-50%); cursor: ew-resize;
+}
+.handley {
+    top: -7px; left: 50%;
+    transform: translateX(-50%); cursor: ns-resize;
+}
+.handlerotate {
+    top: -7px; right: -7px;
+    cursor: grab;
+}
+.canvasmetrics span {
+    margin-right: 8px;
+}
+.transport, .transportleft, .transportright {
+    display: flex; align-items: center;
+    gap: 8px; margin: 4px 0 6px;
+    font-size: 11px; justify-content: space-between;
+}
+.transportleft, .transportright {
+    gap: 4px; flex-wrap: wrap;
+}
+.timelabel {
+    font-variant-numeric: tabular-nums; padding: 1px 4px;
+}
+.trimcontainer {
+    margin-top: 8px; padding-top: 6px;
+}
+.trimlabelrow {
+    display: flex; justify-content: space-between;
+    align-items: center; font-size: 11px;
+    margin-bottom: 4px;
+}
+.trimtrack {
+    position: relative; height: 16px;
+}
+.trimbg {
+    position: absolute; left: 0;
+    right: 0; top: 50%;
+    transform: translateY(-50%); height: 6px;
+    background: #e0e0e0;
+}
+.trimwindow {
+    position: absolute; top: 50%;
+    transform: translateY(-50%); height: 6px;
+    background: #b0b0b0; pointer-events: none;
+}
+.trimprogress {
+    position: absolute; top: 50%;
+    transform: translateY(-50%); height: 2px;
+    background: #000; pointer-events: none;
+}
+.trimhandle {
+    position: absolute; top: 50%;
+    transform: translateY(-50%); width: 6px;
+    height: 16px; background: #fff;
+    border: 1px solid #000; cursor: ew-resize;
+}
+.stack {
+    display: flex; flex-direction: column;
+    gap: 10px;
+}
+.sectiontitle {
+    font-size: 12px; font-weight: 600;
+    margin-bottom: 4px;
+}
+.togglerow {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 6px;
+    font-size: 11px; margin-bottom: 4px;
+}
+.codeblock {
+    margin-top: 4px; padding: 8px;
+    border: 1px solid #ccc; font-family: monospace;
+    font-size: 11px; max-height: 320px;
+    overflow: auto; position: relative;
+    background: #fff;
+}
+.codelabel {
+    position: absolute; right: 8px;
+    top: 6px; font-size: 10px;
+    text-transform: uppercase;
+}
+pre {
+    margin: 0; white-space: pre;
+}
+code {
+    font-family: inherit; font-size: inherit;
+}
+.exportoverlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4); display: none;
+    align-items: center; justify-content: center;
+}
+.exportbox {
+    background: #fff; border: 1px solid #ccc;
+    padding: 12px; max-width: 80vw;
+    max-height: 80vh; box-sizing: border-box;
+    display: flex; flex-direction: column;
+    gap: 8px;
+}
+.exporthead {
+    display: flex; justify-content: space-between;
+    align-items: center;
+}
+.exporttitle {
+    font-weight: 600; font-size: 13px;
+}
+.codeblock {
+    flex: 1; min-width: 300px;
+    min-height: 200px;
+}

@@ -1,0 +1,87 @@
+body {
+    padding-left: 0.25em;
+}
+.hint {
+    font-size: 0.75em; color: rgba(0,0,0,0.4);
+}
+sup {
+    opacity: 0.5;
+}
+.stage {
+    display: flex; flex-wrap: wrap;
+    gap: 1.1em; align-items: flex-start;
+}
+.pad {
+    background: #fff; display: block;
+    border: 1px solid #d8d8da; touch-action: none;
+    cursor: crosshair;
+}
+.tools {
+    display: flex; align-items: center;
+    gap: 0.4em; flex-wrap: wrap;
+}
+.tools button, .minibtn {
+    font-size: 0.85em; padding: 0.2em 0.7em;
+    border: 1px solid #cfcfd2; background: #fff;
+    cursor: pointer;
+}
+.tools button:hover, .minibtn:hover {
+    background: #efefef;
+}
+.tools button.active {
+    background: #222; color: #fff;
+    border-color: #222;
+}
+.tools label {
+    gap: 0.35em;
+}
+.minibtn:disabled {
+    opacity: 0.45; cursor: default;
+}
+.penclr {
+    width: 2.4em; height: 1.5em;
+    padding: 0; cursor: pointer;
+    border: 1px solid #cfcfd2; background: none;
+}
+.seen {
+    display: block; image-rendering: pixelated;
+    border: 1px solid #e2e2e2; background: #fff;
+}
+.status {
+    margin: 0.4em 0;
+}
+.results {
+    display: flex; flex-wrap: wrap;
+    gap: 0.4em; margin-top: 0.6em;
+    min-height: 4.6em;
+}
+.res {
+    display: flex; flex-direction: column;
+    align-items: center; border: 1px solid #e2e2e2;
+    background: #fff; padding: 0.25em 0.45em 0.35em;
+    min-width: 3.3em; cursor: pointer;
+}
+.res:hover {
+    background: #f0f0f0;
+}
+.res .ch {
+    display: block; width: 52px;
+    height: 52px;
+}
+.res .nm {
+    font-size: 9px; color: #666;
+    margin-top: 3px; max-width: 7.4em;
+    text-align: center; line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+.res .cp {
+    font-size: 9px; color: #999;
+    font-family: monospace; margin-top: 2px;
+}
+.res .sc {
+    font-size: 9px; color: #3a9d6a;
+    margin-top: 1px;
+}
+.res.copied {
+    background: #eafaf0; border-color: #9dd8b6;
+}

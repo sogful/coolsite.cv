@@ -1,0 +1,75 @@
+body {
+    padding-left: 0.25em; padding-bottom: 3em;
+    max-width: 56em;
+}
+h1, h2 {
+    margin: 0;
+}
+.hint {
+    font-size: 0.78em; color: rgba(0,0,0,0.45);
+    line-height: 1.4;
+}
+a {
+    color: #3a6ea5;
+}
+.drop {
+    margin: 0.8em 0; padding: 1.5em 1em;
+    border: 2px dashed #c5c5ca; background: #fff;
+    text-align: center; cursor: pointer;
+    font-size: 0.9em; color: #666;
+    display: block;
+}
+.drop.over {
+    border-color: #3a6ea5; background: #eef3f9;
+}
+.drop input {
+    display: none;
+}
+.panels {
+    display: flex; flex-wrap: wrap;
+    gap: 1.1em; margin-top: 0.6em;
+}
+.panel {
+    display: flex; flex-direction: column;
+    gap: 0.3em;
+}
+.panel .cap {
+    font-size: 0.72em; color: #888;
+}
+canvas.view {
+    display: block; max-width: 300px;
+    max-height: 300px; width: auto;
+    height: auto; border: 1px solid #ccc;
+    background: #fff; image-rendering: auto;
+}
+button {
+    margin-top: 0.9em; font-size: 0.9em;
+    padding: 0.45em 1.3em; border: 1px solid #222;
+    background: #222; color: #fff;
+    cursor: pointer;
+}
+button:hover {
+    background: #000;
+}
+button:disabled {
+    opacity: 0.4; cursor: default;
+}
+.readout {
+    margin-top: 0.8em; font-family: monospace;
+    font-size: 0.8em; border: 1px solid #ccc;
+    padding: 0.5em 0.7em; white-space: pre-wrap;
+    word-break: break-word; max-width: 36em;
+}
+.bar {
+    display: inline-block; width: 10em;
+    height: 0.55em; vertical-align: middle;
+    margin-left: 0.6em; background: #e2e2e2;
+    overflow: hidden;
+}
+.bar > i {
+    display: block; height: 100%;
+    background: #3a9d6a;
+}
+sup {
+    font-size: 0.65em !important;
+}

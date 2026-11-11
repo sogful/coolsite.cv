@@ -1,0 +1,77 @@
+<!-- 
+    IF YOU'RE RUNNING THIS IN LIVE PREVIEW, DON'T SAVE THE ARCHIVE FILES INTO THE WORKSPACE!!
+    the page will refresh since new changes will be found in the workspace and you'll lose progress, so yeah
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <title>cdx downloader</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="../branding.css">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+
+<body>
+    <div class="header">
+        <img src="/assets/svgs/ia.svg">
+        <div><h1 class="toolheading" aria-label="cdx downloader"><img class="toollogo" src="logo.png" alt="cdx downloader" width="355" height="57"></h1>
+        a simple web archive link extractor</div>
+    </div>
+    <div class="persistbox">
+        <label>
+            format output file as
+            <select class="format">
+                <option value="linksonly">links only (.txt)</option>
+                <option value="archivesonly">archives only (.txt)</option>
+                <option value="archiveinfo">archives + info (.csv)</option>
+            </select>
+        </label>
+        <label>
+            <input type="checkbox" class="limitenabled" checked>and 
+            <select class="limittype">
+                <option value="fast">quickly</option>
+                <option value="slow">slowly</option>
+            </select> limit to
+            <input type="number" class="limitval" min="1" value="1000000" style="width:4em"> results
+        </label>
+        <label> and match
+            <select class="matchtype">
+                <option value="prefix">all urls that start with this exact path</option>
+                <option value="host">all urls on this (sub)domain</option>
+                <option value="domain" selected>all urls on this (sub)domain and its subdomains</option>
+        
+            </select>
+        </label>
+        <label><input type="checkbox" class="dedupechk"> and dedupe</label>
+        <label><input type="checkbox" class="skip404chk"> and skip 404/410s</label>
+        <br>
+        <label> only between
+            <input type="text" class="datefrom" placeholder="from (yyyymmdd)" style="width:9em">
+            and
+            <input type="text" class="dateto" placeholder="to (yyyymmdd)" style="width:9em">
+        </label>
+        <label> mimetypes
+            <input type="text" class="mimefilter" placeholder="e.g. text/html,image/png" style="width:14em">
+        </label>
+        <label> status codes
+            <input type="text" class="statusfilter" placeholder="e.g. 200,301" style="width:8em">
+        </label>
+    </div>
+    <form class="domaininputrow" autocomplete="off">
+        <textarea class="domainfield" placeholder="example.com&#10;a.e.x.com/file.html" spellcheck="false"
+            autocomplete="off" rows="4"></textarea>
+        <button type="submit" class="runbtn">run</button>
+    </form>
+    <div class="progresswrap">
+        <div class="progress"></div>
+        <button type="button" class="stopbtn" style="display:none">stop</button>
+    </div>
+    <div class="outputrow"></div>
+    <script src="index.js"></script>
+</body>
+</html>

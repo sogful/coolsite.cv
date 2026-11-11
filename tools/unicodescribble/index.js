@@ -1,0 +1,730 @@
+const dpad = document.querySelector(".pad");
+const dctx = dpad.getContext("2d", {willReadFrequently: true});
+const W = dpad.width, H = dpad.height;
+
+const seen = document.querySelector(".seen");
+const sctx = seen.getContext("2d");
+const statusel = document.querySelector(".status");
+const resultsel = document.querySelector(".results");
+const rebuildbtn = document.querySelector(".rebuildbtn");
+
+const GRID = 24, FIT = 22, DIM = GRID * GRID;
+const CELL = 64, COLS = 64, BATCH = 1024;
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+const FONTS = [
+    {fam: "GoNotoScribble", url: "/assets/fonts/gonoto.woff2"},
+    {fam: "Symbols2Scribble", url: "/assets/fonts/symbols2.woff2"},
+    {fam: "MathScribble", url: "/assets/fonts/math.woff2"},
+    {fam: "MusicScribble", url: "/assets/fonts/music.woff2"},
+    {fam: "UnifontScribble", url: "/assets/fonts/unifont.woff2"},
+    {fam: "UnifontUpperScribble", url: "/assets/fonts/unifontupper.woff2"},
+];
+const cpSURL = "/assets/static/scribble/scribble-cps.bin";
+const EMOJIURL = "/assets/static/scribble/scribble-emoji.bin";
+const NAMESURL = "/assets/static/scribble/scribble-names.txt.gz";
+const IDXVER = 6;
+const IDXKEY = "scribble-v" + IDXVER;
+const QSCALE = 300;
+
+const fallback = 
+'"Segoe UI Symbol","Segoe UI","Roboto","Helvetica Neue","Arial","Liberation Sans","Ubuntu","Cantarell","Noto Sans",system-ui,sans-serif';
+const renderfont = FONTS.map(f => '"' + f.fam + '"').join(",") + "," + fallback;
+const renderfontnouni = FONTS.filter(f => f.fam.indexOf("Unifont") < 0)
+    .map(f => '"' + f.fam + '"').join(",") + "," + fallback;
+
+const emojifont =
+'"Segoe UI Emoji","Apple Color Emoji",' +
+'"Noto Color Emoji","Twemoji Mozilla",' +
+'"UnifontScribble","UnifontUpperScribble",sans-serif';
+const emojifontnouni =
+'"Segoe UI Emoji","Apple Color Emoji",' +
+'"Noto Color Emoji","Twemoji Mozilla",sans-serif';
+
+// emoji codepoint set
+let EMOJILIST = [];
+let EMOJISET = new Set();
+let glyphnames = null;
+
+function status(t) {statusel.textContent = t}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+function feature(data, stride, rx, ry, rw, rh, whole) {
+    let minx = 1e9, miny = 1e9, maxx = -1, maxy = -1;
+    for (let y = 0; y < rh; y++) {
+        let base = ((ry + y) * stride + rx) * 4 + 3;
+        for (let x = 0; x < rw; x++) {
+            if (data[base + x * 4] > 16) {
+                if (x < minx) minx = x;
+                if (x > maxx) maxx = x;
+                if (y < miny) miny = y;
+                if (y > maxy) maxy = y;
+            }
+        }
+    }
+    if (maxx < 0) return null;
+    minx += rx; maxx += rx; miny += ry; maxy += ry;
+    if (whole) {minx = rx; miny = ry; maxx = rx + rw - 1; maxy = ry + rh - 1}
+
+    const bw = maxx - minx + 1, bh = maxy - miny + 1;
+    const s = Math.max(bw, bh) / FIT;
+    const offx = (GRID - bw / s) / 2, offy = (GRID - bh / s) / 2;
+
+    const grid = new Float32Array(DIM);
+    for (let oy = 0; oy < GRID; oy++) {
+        let sy0 = miny + (oy - offy) * s;
+        let iy0 = Math.floor(sy0), iy1 = Math.ceil(sy0 + s);
+        if (iy0 < miny) iy0 = miny;
+        if (iy1 > maxy + 1) iy1 = maxy + 1;
+        for (let ox = 0; ox < GRID; ox++) {
+            let sx0 = minx + (ox - offx) * s;
+            let ix0 = Math.floor(sx0), ix1 = Math.ceil(sx0 + s);
+            if (ix0 < minx) ix0 = minx;
+            if (ix1 > maxx + 1) ix1 = maxx + 1;
+            let sum = 0;
+            for (let yy = iy0; yy < iy1; yy++) {
+                let b = (yy * stride) * 4 + 3;
+                for (let xx = ix0; xx < ix1; xx++) sum += data[b + xx * 4];
+            }
+            let v = sum / (s * s);
+            grid[oy * GRID + ox] = v > 255 ? 255 : v;
+        }
+    }
+
+    const blur = boxblur(boxblur(grid));
+    let mean = 0;
+    for (let i = 0; i < DIM; i++) mean += blur[i];
+    mean /= DIM;
+    const vec = new Float32Array(DIM);
+    let norm = 0;
+    for (let i = 0; i < DIM; i++) {
+        const d = blur[i] - mean;
+        vec[i] = d; norm += d * d;
+    }
+    if (norm < 1e-6) return null;
+    norm = Math.sqrt(norm);
+    for (let i = 0; i < DIM; i++) vec[i] /= norm;
+    return {vec: vec, grid: blur};
+}
+
+function boxblur(g) {
+    const o = new Float32Array(DIM);
+    for (let y = 0; y < GRID; y++) {
+        for (let x = 0; x < GRID; x++) {
+            let sum = 0, cnt = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+                const ny = y + dy;
+                if (ny < 0 || ny >= GRID) continue;
+                for (let dx = -1; dx <= 1; dx++) {
+                    const nx = x + dx;
+                    if (nx < 0 || nx >= GRID) continue;
+                    sum += g[ny * GRID + nx]; cnt++;
+                }
+            }
+            o[y * GRID + x] = sum / cnt;
+        }
+    }
+    return o;
+}
+
+// tiny hash that drops twins/identical chars
+function hashfeat(vec) {
+    let h = 2166136261;
+    for (let i = 0; i < DIM; i += 7) {
+        h = (Math.imul(h ^ (((vec[i] * 120) + 128) | 0), 16777619)) >>> 0;
+    }
+    return h;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+function idbopen() {
+    return new Promise((res, rej) => {
+        const r = indexedDB.open("scribbleidx", 1);
+        r.onupgradeneeded = () => r.result.createObjectStore("idx");
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+    });
+}
+async function idbget(key) {
+    try {
+        const db = await idbopen();
+        return await new Promise((res, rej) => {
+            const q = db.transaction("idx", "readonly").objectStore("idx").get(key);
+            q.onsuccess = () => res(q.result);
+            q.onerror = () => rej(q.error);
+        });
+    } catch (e) {return null}
+}
+async function idbput(key, val) {
+    try {
+        const db = await idbopen();
+        await new Promise((res, rej) => {
+            const q = db.transaction("idx", "readwrite").objectStore("idx").put(val, key);
+            q.onsuccess = () => res();
+            q.onerror = () => rej(q.error);
+        });
+    } catch (e) {}
+}
+async function idbdel(key) {
+    try {
+        const db = await idbopen();
+        await new Promise((res) => {
+            const q = db.transaction("idx", "readwrite").objectStore("idx").delete(key);
+            q.onsuccess = () => res();
+            q.onerror = () => res();
+        });
+    } catch (e) {}
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+let glyphcep = null; let emojicep = null;
+let emojifeat = null; let emojicolor = null; let emojiuni = null;
+let ready = false; let indexing = false;
+
+async function rasterise(codepoints, font, wantcolor, altfont) {
+    const gc = document.createElement("canvas");
+    gc.width = COLS * CELL;
+    const gctx = gc.getContext("2d", {willReadFrequently: true});
+    const feats = [], kept = [], colors = [], unis = [];
+    const seenh = new Set();
+
+    for (let start = 0; start < codepoints.length; start += BATCH) {
+        const batch = codepoints.slice(start, start + BATCH);
+        const rows = Math.ceil(batch.length / COLS);
+        gc.height = rows * CELL;
+
+        gctx.clearRect(0, 0, gc.width, gc.height);
+        gctx.fillStyle = "#000";
+        gctx.textAlign = "center";
+        gctx.textBaseline = "middle";
+        gctx.font = "46px " + font;
+        fillbatch(gctx, batch, wantcolor);
+        const img = gctx.getImageData(0, 0, gc.width, gc.height);
+
+        gctx.clearRect(0, 0, gc.width, gc.height);
+        gctx.font = "46px " + altfont;
+        fillbatch(gctx, batch, wantcolor);
+        const alt = gctx.getImageData(0, 0, gc.width, gc.height);
+
+        for (let i = 0; i < batch.length; i++) {
+            const col = i % COLS, rw = (i / COLS) | 0;
+            const r = feature(img.data, gc.width, col * CELL, rw * CELL, CELL, CELL);
+            if (!r) continue;
+            if (!wantcolor) {
+                const h = hashfeat(r.vec);
+                if (seenh.has(h)) continue;
+                seenh.add(h);
+            }
+            feats.push(quantise(r.vec));
+            kept.push(batch[i]);
+            unis.push(cellsdiffer(img.data, alt.data, gc.width,
+                col * CELL, rw * CELL) ? 1 : 0);
+            if (wantcolor)
+                colors.push(avgcolor(img.data, gc.width, col * CELL, rw * CELL));
+        }
+        status("indexing " + Math.min(start + BATCH, codepoints.length) +
+            "/" + codepoints.length + "..");
+        await new Promise(res => requestAnimationFrame(res));
+    }
+    return {kept: kept, feats: feats, colors: colors, unis: unis};
+}
+
+function fillbatch(gctx, batch, wantcolor) {
+    for (let i = 0; i < batch.length; i++) {
+        const col = i % COLS, rw = (i / COLS) | 0;
+        const ch = String.fromCodePoint(batch[i]) + (wantcolor ? "️" : "");
+        gctx.fillText(ch, col * CELL + CELL / 2, rw * CELL + CELL / 2);
+    }
+}
+
+function cellsdiffer(a, b, stride, rx, ry) {
+    for (let y = 0; y < CELL; y++) {
+        let base = ((ry + y) * stride + rx) * 4 + 3;
+        for (let x = 0; x < CELL; x++)
+            if (a[base + x * 4] !== b[base + x * 4]) return true;
+    }
+    return false;
+}
+
+function avgcolor(data, stride, rx, ry) {
+    let r = 0, g = 0, b = 0, a = 0;
+    for (let y = 0; y < CELL; y++) {
+        let idx = ((ry + y) * stride + rx) * 4;
+        for (let x = 0; x < CELL; x++, idx += 4) {
+            const al = data[idx + 3];
+            if (al > 24) {
+                r += data[idx] * al; g += data[idx + 1] * al;
+                b += data[idx + 2] * al; a += al;
+            }
+        }
+    }
+    if (!a) return [136, 136, 136];
+    return [Math.round(r / a), Math.round(g / a), Math.round(b / a)];
+}
+
+async function buildindex(cps) {
+    indexing = true;
+    rebuildbtn.disabled = true;
+    await document.fonts.ready;
+
+    const sym = await rasterise(cps.filter(c => !EMOJISET.has(c)),
+        renderfont, false, renderfontnouni);
+    const emo = await rasterise(EMOJILIST, emojifont, true, emojifontnouni);
+
+    const cparr = new Int32Array(sym.kept);
+    const farr = new Int8Array(sym.feats.length * DIM);
+    for (let i = 0; i < sym.feats.length; i++) farr.set(sym.feats[i], i * DIM);
+    const uarr = new Uint8Array(sym.unis);
+
+    const ecparr = new Int32Array(emo.kept);
+    const efarr = new Int8Array(emo.feats.length * DIM);
+    for (let i = 0; i < emo.feats.length; i++) efarr.set(emo.feats[i], i * DIM);
+    const euarr = new Uint8Array(emo.unis);
+    const ecolarr = new Uint8Array(emo.colors.length * 3);
+    for (let i = 0; i < emo.colors.length; i++) {
+        ecolarr[i * 3] = emo.colors[i][0];
+        ecolarr[i * 3 + 1] = emo.colors[i][1];
+        ecolarr[i * 3 + 2] = emo.colors[i][2];
+    }
+
+    glyphcep = cparr;
+    emojicep = ecparr; emojifeat = efarr; emojicolor = ecolarr;
+    emojiuni = euarr;
+    indexing = false;
+    rebuildbtn.disabled = false;
+    status(cparr.length + " symbols + " + ecparr.length + " emoji ready");
+    await idbput(IDXKEY, {v: IDXVER, dim: DIM, cps: cparr, feats: farr,
+        unifont: uarr, emojicep: ecparr, emojifeat: efarr,
+        emojicolor: ecolarr, emojiunifont: euarr});
+    armworker(farr, cparr.length, uarr);
+}
+
+function quantise(v) {
+    const q = new Int8Array(DIM);
+    for (let j = 0; j < DIM; j++) {
+        const x = Math.round(v[j] * QSCALE);
+        q[j] = x > 127 ? 127 : x < -127 ? -127 : x;
+    }
+    return q;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+async function fetchcps() {
+    const buf = await (await fetch(cpSURL)).arrayBuffer();
+    return new Uint32Array(buf); 
+}
+async function fetchemoji() {
+    try {
+        const buf = await (await fetch(EMOJIURL)).arrayBuffer();
+        EMOJILIST = Array.from(new Uint32Array(buf));
+        EMOJISET = new Set(EMOJILIST);
+    } catch (e) {}
+}
+async function fetchnames() {
+    try {
+        const resp = await fetch(NAMESURL);
+        const stream = resp.body.pipeThrough(new DecompressionStream("gzip"));
+        const text = await new Response(stream).text();
+        const m = new Map();
+        for (const line of text.split("\n")) {
+            const tab = line.indexOf("\t");
+            if (tab > 0) m.set(parseInt(line.slice(0, tab), 16), line.slice(tab + 1));
+        }
+        glyphnames = m;
+    } catch (e) {
+        glyphnames = new Map();
+    }
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+async function init() {
+    status("loading fonts..");
+    try {
+        await Promise.all(FONTS.map(async f => {
+            const face = new FontFace(f.fam, 'url(' + f.url + ') format("woff2")');
+            await face.load(); document.fonts.add(face);
+        }));
+    } catch (e) {
+        status("couldn't load bundled fonts - " + e.message);
+        return;
+    }
+    resultsel.style.fontFamily = renderfont;
+    idbdel("gonoto-v1"); idbdel("scribble-v2");
+    idbdel("scribble-v3"); idbdel("scribble-v4");
+    idbdel("scribble-v5");
+    await Promise.all([fetchnames(), fetchemoji()]);
+
+    const cached = await idbget(IDXKEY);
+    if (cached && cached.v === IDXVER && cached.dim === DIM &&
+        cached.cps && cached.feats && cached.emojicep && cached.unifont) {
+        glyphcep = cached.cps;
+        emojicep = cached.emojicep;
+        emojifeat = cached.emojifeat;
+        emojicolor = cached.emojicolor;
+        emojiuni = cached.emojiunifont;
+        rebuildbtn.disabled = false;
+        status(glyphcep.length + " symbols + " + emojicep.length +
+            " emojis loaded");
+        armworker(cached.feats, glyphcep.length, cached.unifont);
+        return;
+    }
+
+    status("loading character set..");
+    let cps;
+    try {
+        cps = await fetchcps();
+    } catch (e) {
+        status("couldn't load codepoint list?! " + e.message);
+        return;
+    }
+    await buildindex(cps);
+}
+
+rebuildbtn.addEventListener("click", async () => {
+    if (indexing) return;
+    await idbdel(IDXKEY);
+    ready = false;
+    status("loading character set..");
+    try {
+        await buildindex(await fetchcps());
+    } catch (e) {
+        status("rebuild failed - " + e.message);
+        rebuildbtn.disabled = false;
+    }
+});
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+const workerscript = `
+    let feat = null, dim = 0, n = 0, uni = null;
+    onmessage = function (e) {
+        const m = e.data;
+        if (m.type === "index") {feat = m.feat; dim = m.dim; n = m.n; uni = m.uni; return}
+        if (m.type === "match") {
+            const vecs = m.vecs, nv = vecs.length, top = [];
+            const skipuni = m.nouni && uni;
+            let worst = -1e9;
+            for (let g = 0; g < n; g++) {
+                if (skipuni && uni[g]) continue;
+                const base = g * dim;
+                let best = -1e9;
+                for (let k = 0; k < nv; k++) {
+                    const v = vecs[k];
+                    let dot = 0;
+                    for (let i = 0; i < dim; i++) dot += v[i] * feat[base + i];
+                    if (dot > best) best = dot;
+                }
+                if (top.length < 100) {
+                    top.push({idx: g, score: best});
+                    if (top.length === 100) {
+                        top.sort(function (a, b) {return a.score - b.score});
+                        worst = top[0].score;
+                    }
+                } else if (best > worst) {
+                    top[0] = {idx: g, score: best};
+                    top.sort(function (a, b) {return a.score - b.score});
+                    worst = top[0].score;
+                }
+            }
+            top.sort(function (a, b) {return b.score - a.score});
+            postMessage({type: "result", items: top});
+        }
+    };`;
+
+let worker = null;
+let matchpending = false, matchqueued = false;
+
+function armworker(featArr, count, uniArr) {
+    if (!worker) {
+        worker = new Worker(URL.createObjectURL(
+            new Blob([workerscript], {type: "text/javascript"})));
+        worker.onmessage = onworkermsg;
+    }
+    worker.postMessage({type: "index", feat: featArr, dim: DIM, n: count,
+        uni: uniArr}, [featArr.buffer]);
+    ready = true;
+    dirty = true;
+}
+
+function onworkermsg(e) {
+    if (e.data.type !== "result") return;
+    matchpending = false;
+    if (ready && !emojimode) {
+        renderresults(e.data.items.map(it =>
+            ({cp: glyphcep[it.idx], score: it.score / QSCALE})), false);
+    }
+    if (matchqueued) {matchqueued = false; requestmatch()}
+}
+
+let lastmatchtime = 0;
+function requestmatch() {
+    if (!ready || indexing) return;
+    if (!emojimode && matchpending) { matchqueued = true; return; }
+    if (emojimode && performance.now() - lastmatchtime < 55) {dirty = true; return}
+    lastmatchtime = performance.now();
+    const img = dctx.getImageData(0, 0, W, H);
+    const r = feature(img.data, W, 0, 0, W, H, true);
+    drawseen(r);
+    if (!r) {renderresults([], emojimode); return}
+    const vecs = buildvecs(r);
+    if (emojimode) {renderresults(emojimatch(vecs), true); return}
+    if (!worker) return; matchpending = true;
+    worker.postMessage({type: "match", vecs: vecs, nouni: nounifont});
+}
+
+const ROTVARIANTS = [-0.366, -0.244, -0.122, 0.122, 0.244, 0.366];
+let scratch = null;
+function buildvecs(base) {
+    if (!accurate) return [base.vec];
+    if (!scratch) {
+        scratch = document.createElement("canvas");
+        scratch.width = W; scratch.height = H;
+    }
+    const sx = scratch.getContext("2d", {willReadFrequently: true});
+    const vecs = [base.vec];
+    for (let k = 0; k < ROTVARIANTS.length; k++) {
+        sx.clearRect(0, 0, W, H);
+        sx.save();
+        sx.translate(W / 2, H / 2);
+        sx.rotate(ROTVARIANTS[k]);
+        sx.translate(-W / 2, -H / 2);
+        sx.drawImage(dpad, 0, 0);
+        sx.restore();
+        const f = feature(sx.getImageData(0, 0, W, H).data, W, 0, 0, W, H, true);
+        if (f) vecs.push(f.vec);
+    }
+    return vecs;
+}
+
+function emojimatch(vecs) {
+    const pc = hexrgb(pencolor);
+    const n = emojicep.length, top = [];
+    let worst = -1e9;
+    for (let g = 0; g < n; g++) {
+        if (nounifont && emojiuni && emojiuni[g]) continue;
+        const base = g * DIM;
+        let dot = -1e9;
+        for (let k = 0; k < vecs.length; k++) {      // best over all variants
+            const v = vecs[k];
+            let d = 0;
+            for (let i = 0; i < DIM; i++) d += v[i] * emojifeat[base + i];
+            if (d > dot) dot = d;
+        }
+        const shape = dot / QSCALE;
+        const dr = pc[0] - emojicolor[g * 3];
+        const dg = pc[1] - emojicolor[g * 3 + 1];
+        const db = pc[2] - emojicolor[g * 3 + 2];
+        const csim = 1 - Math.sqrt(dr * dr + dg * dg + db * db) / 441.7;
+        const score = shape * (0.55 + 0.45 * csim);
+        if (top.length < 50) {
+            top.push({cp: emojicep[g], score: score});
+            if (top.length === 50) {
+                top.sort((a, b) => a.score - b.score);
+                worst = top[0].score;
+            }
+        } else if (score > worst) {
+            top[0] = {cp: emojicep[g], score: score};
+            top.sort((a, b) => a.score - b.score);
+            worst = top[0].score;
+        }
+    }
+    top.sort((a, b) => b.score - a.score);
+    return top;
+}
+
+function hexrgb(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function glyphcanvas(cp, emoji) {
+    const SZ = 52, BACK = 124;
+    const out = document.createElement("canvas");
+    out.className = "ch";
+    out.width = BACK; out.height = BACK;
+    out.style.width = SZ + "px"; out.style.height = SZ + "px";
+    const o = out.getContext("2d");
+    o.textAlign = "center";
+    o.textBaseline = "middle";
+    o.font = "84px " + (emoji ? emojifont : renderfont);
+    o.fillStyle = "#111";
+    o.fillText(String.fromCodePoint(cp) + (emoji ? "️" : ""),
+        BACK / 2, BACK / 2);
+    return out;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+function renderresults(top, emoji) {
+    resultsel.innerHTML = "";
+    top.forEach(t => {
+        const ch = String.fromCodePoint(t.cp);
+        const card = document.createElement("div");
+        card.className = "res";
+        card.title = "click to copy";
+
+        const cp = document.createElement("span");
+        cp.className = "cp";
+        cp.textContent = "U+" + t.cp.toString(16).toUpperCase().padStart(4, "0");
+        const sc = document.createElement("span");
+        sc.className = "sc";
+        sc.textContent = Math.round(Math.max(0, t.score) * 100) + "%";
+
+        card.append(glyphcanvas(t.cp, emoji));
+        const name = glyphnames && glyphnames.get(t.cp);
+        if (name) {
+            const nm = document.createElement("span");
+            nm.className = "nm";
+            nm.textContent = name.toLowerCase();
+            card.append(nm);
+        }
+        card.append(cp, sc);
+        card.addEventListener("click", () => copychar(ch, card, cp));
+        resultsel.appendChild(card);
+    });
+}
+
+function copychar(ch, card, cp) {
+    navigator.clipboard.writeText(ch)
+}
+
+function drawseen(r) {
+    sctx.fillStyle = "#fff";
+    sctx.fillRect(0, 0, seen.width, seen.height);
+    if (!r) return;
+    const oc = document.createElement("canvas");
+    oc.width = GRID; oc.height = GRID;
+    const octx = oc.getContext("2d");
+    const im = octx.createImageData(GRID, GRID);
+    for (let i = 0; i < DIM; i++) {
+        const val = 255 - Math.min(255, r.grid[i]);
+        im.data[i * 4] = val; im.data[i * 4 + 1] = val;
+        im.data[i * 4 + 2] = val; im.data[i * 4 + 3] = 255;
+    }
+    octx.putImageData(im, 0, 0);
+    sctx.imageSmoothingEnabled = false;
+    sctx.drawImage(oc, 0, 0, seen.width, seen.height);
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+let mode = "draw";
+const pen = 16;                          // fixed pen width
+let drawing = false, lastx = 0, lasty = 0;
+let dirty = false;
+let emojimode = false, pencolor = "#111111", accurate = false, nounifont = false;
+
+function locate(e) {
+    const rc = dpad.getBoundingClientRect();
+    return [(e.clientX - rc.left) * (W / rc.width),
+            (e.clientY - rc.top) * (H / rc.height)];
+}
+function setop() {
+    dctx.globalCompositeOperation = mode === "erase" ? "destination-out" : "source-over";
+}
+function dab(x, y) {
+    setop(); dctx.fillStyle = pencolor;
+    dctx.beginPath(); dctx.arc(x, y, pen / 2, 0, Math.PI * 2);
+    dctx.fill();
+}
+function segment(x0, y0, x1, y1) {
+    setop(); 
+    dctx.strokeStyle = pencolor; dctx.lineWidth = pen;
+    dctx.lineCap = "round"; dctx.lineJoin = "round";
+    dctx.beginPath(); dctx.moveTo(x0, y0); dctx.lineTo(x1, y1);
+    dctx.stroke();
+}
+
+dpad.addEventListener("pointerdown", e => {
+    dpad.setPointerCapture(e.pointerId);
+    drawing = true; [lastx, lasty] = locate(e);
+    dab(lastx, lasty); dirty = true;
+});
+dpad.addEventListener("pointermove", e => {
+    if (!drawing) return; const [x, y] = locate(e);
+    segment(lastx, lasty, x, y);
+    lastx = x; lasty = y; dirty = true;
+});
+window.addEventListener("pointerup", () => {
+    if (!drawing) return;
+    drawing = false; dirty = true;
+});
+
+document.querySelectorAll(".tools button[data-mode]").forEach(btn => {
+    btn.addEventListener("click", () => {
+        mode = btn.dataset.mode;
+        document.querySelectorAll(".tools button[data-mode]")
+        .forEach(b => b.classList.toggle("active", b === btn));
+    });
+});
+document.querySelector(".clearbtn").addEventListener("click", () => {
+    dctx.clearRect(0, 0, W, H);
+    dirty = true;
+});
+document.querySelector(".cropbtn").addEventListener("click", () => {
+    const d = dctx.getImageData(0, 0, W, H).data;
+    let minx = 1e9, miny = 1e9, maxx = -1, maxy = -1;
+    for (let y = 0; y < H; y++) {
+        let base = y * W * 4 + 3;
+        for (let x = 0; x < W; x++) {
+            if (d[base + x * 4] > 16) {
+                if (x < minx) minx = x;
+                if (x > maxx) maxx = x;
+                if (y < miny) miny = y;
+                if (y > maxy) maxy = y;
+            }
+        }
+    }
+    if (maxx < 0) return;
+    const bw = maxx - minx + 1, bh = maxy - miny + 1;
+    const margin = W * (1 - FIT / GRID) / 2;
+    const s = Math.min((W - margin * 2) / bw, (H - margin * 2) / bh);
+    const oc = document.createElement("canvas");
+    oc.width = bw; oc.height = bh;
+    oc.getContext("2d").drawImage(dpad, minx, miny, bw, bh, 0, 0, bw, bh);
+    dctx.clearRect(0, 0, W, H);
+    dctx.globalCompositeOperation = "source-over";
+    dctx.drawImage(oc, (W - bw * s) / 2, (H - bh * s) / 2, bw * s, bh * s);
+    dirty = true;
+});
+
+const penclr = document.querySelector(".penclr");
+const clrwrap = document.querySelector(".clrwrap");
+document.querySelectorAll(".tools button[data-set]").forEach(btn => {
+    btn.addEventListener("click", () => {
+        emojimode = btn.dataset.set === "emoji";
+        document.querySelectorAll(".tools button[data-set]")
+            .forEach(b => b.classList.toggle("active", b === btn));
+        clrwrap.style.display = emojimode ? "" : "none";
+        pencolor = emojimode ? penclr.value : "#111111";
+        dirty = true;
+    });
+});
+penclr.addEventListener("input", () => {
+    if (emojimode) { pencolor = penclr.value; dirty = true; }
+});
+document.querySelector(".accurate").addEventListener("change", e => {
+    accurate = e.target.checked;
+    dirty = true;
+});
+document.querySelector(".nounifont").addEventListener("change", e => {
+    nounifont = e.target.checked;
+    dirty = true;
+});
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+function loop() {
+    if (dirty) {dirty = false; requestmatch()}
+    requestAnimationFrame(loop);
+}
+
+resultsel.style.fontFamily = renderfont;
+renderresults([]); requestAnimationFrame(loop);
+init();

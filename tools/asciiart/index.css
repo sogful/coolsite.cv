@@ -1,0 +1,161 @@
+html, body {
+    height: 100%;
+}
+body {
+    padding: 0.35em 0.6em; box-sizing: border-box;
+    display: flex; flex-direction: column;
+    height: 100vh; overflow: hidden;
+    max-width: none;
+}
+h1, h2 {
+    margin: 0;
+}
+.topbar {
+    flex: none; margin-bottom: 0.3em;
+    display: flex; align-items: baseline;
+    gap: 0.6em;
+}
+.stage {
+    display: flex; gap: 0.6em;
+    flex: 1; min-height: 0;
+}
+.mainwrap {
+    flex: 1 1 0; min-width: 0;
+    min-height: 0; display: flex;
+    flex-direction: column; gap: 0.4em;
+}
+.side {
+    flex: 0 0 21em; min-height: 0;
+    overflow-y: auto; display: flex;
+    flex-direction: column; gap: 0.5em;
+    padding-right: 0.2em;
+}
+textarea.out {
+    flex: 1 1 0; min-height: 0;
+    width: 100%; box-sizing: border-box;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace; font-size: 12px;
+    line-height: 12px; letter-spacing: 0;
+    white-space: pre; overflow: auto;
+    word-break: keep-all; border: 1px solid #d8d8da;
+    background: #fff; color: #111;
+    padding: 0.5em; resize: none;
+    tab-size: 1;
+}
+.toolbar {
+    flex: none; display: flex;
+    align-items: center; gap: 0.45em;
+    flex-wrap: wrap;
+}
+.toolbar .grp {
+    display: flex; align-items: center;
+    gap: 0.3em;
+}
+.progwrap {
+    height: 0.5em; background: #ececef;
+    overflow: hidden; flex: 1 1 6em;
+    min-width: 5em;
+}
+.progbar {
+    height: 100%; width: 0;
+    background: blue; transition: width 0.05s linear;
+}
+.stat {
+    font-size: 0.72em; color: #777;
+    font-variant-numeric: tabular-nums; min-width: 9em;
+}
+.count {
+    color: #999; font-size: 0.72em;
+}
+.card {
+    background: #fff; border: 1px solid #e2e2e2;
+    padding: 0.45em 0.6em; flex: none;
+}
+.card h2 {
+    font-size: 0.82em; margin-bottom: 0.3em;
+    color: #444;
+}
+.row {
+    margin: 0.25em 0; display: flex;
+    align-items: center; gap: 0.4em;
+    flex-wrap: wrap;
+}
+.hint {
+    font-size: 0.72em; color: rgba(0,0,0,0.42);
+}
+label {
+    font-size: 0.85em; gap: 0.35em;
+}
+.minibtn, button {
+    font: inherit; font-size: 0.85em;
+    padding: 0.22em 0.7em; border: 1px solid #cfcfd2;
+    background: #fff; cursor: pointer;
+}
+.minibtn:hover, button:hover {
+    background: #efefef;
+}
+.minibtn:disabled {
+    opacity: 0.4; cursor: default;
+}
+.preset.active {
+    background: #222; color: #fff;
+    border-color: #222;
+}
+input[type="number"] {
+    width: 4em; font: inherit;
+    font-size: 0.85em; padding: 0.1em 0.3em;
+    border: 1px solid #cfcfd2;
+}
+select {
+    font: inherit; font-size: 0.85em;
+    padding: 0.12em 0.3em; border: 1px solid #cfcfd2;
+    background: #fff;
+}
+input[type="text"] {
+    font: inherit; font-size: 0.85em;
+    width: 7em; padding: 0.1em 0.3em;
+    border: 1px solid #cfcfd2;
+}
+input[type="range"] {
+    vertical-align: middle; width: 8em;
+}
+.seg {
+    display: inline-block; min-width: 2.4em;
+    color: #666; font-size: 0.78em;
+}
+.copied {
+    background: #eafaf0; border-color: #9dd8b6;
+}
+body.dark {
+    background: #121214; color: #ddd;
+}
+.dark .hint {
+    color: rgba(255,255,255,0.4);
+}
+.dark .card {
+    background: #1f1f22; border-color: #3a3a40;
+}
+.dark .card h2 {
+    color: #bbb;
+}
+.dark .minibtn, .dark button {
+    background: #2a2a2e; color: #ddd;
+    border-color: #46464c;
+}
+.dark .minibtn:hover, .dark button:hover {
+    background: #34343a;
+}
+.dark .preset.active {
+    background: #eee; color: #111;
+    border-color: #eee;
+}
+.dark input[type="number"], .dark input[type="text"], .dark select {
+    background: #2a2a2e; color: #ddd;
+    border-color: #46464c;
+}
+.dark textarea.out {
+    background: #161618; color: #eee;
+    border-color: #46464c;
+}
+.dark .progwrap {
+    background: #2a2a2e;
+}

@@ -1,0 +1,70 @@
+.page {
+    display: flex; align-items: center;
+    justify-content: center; background: #111111;
+    overflow-x: hidden; overflow-y: auto;
+    margin: 0; padding: 0;
+    min-height: 100svh; width: 100%;
+    max-width: none; font-family: Arial, Tahoma, sans-serif;
+}
+.bg {
+    position: fixed; left: 0;
+    right: 0; top: 50%;
+    transform: translateY(-15%); width: 100vw;
+    height: 100vh; opacity: 0.25;
+    z-index: -1; pointer-events: none;
+    background-image: url("/assets/images/cityscape.png"); background-repeat: repeat-x;
+    background-position: center center; image-rendering: pixelated;
+    mix-blend-mode: lighten;
+}
+h1, h2, h3 {
+    margin: 0;
+}
+.content {
+    display: flex; align-items: center;
+    justify-content: center; max-width: 90vw;
+    min-height: 100svh; box-sizing: border-box;
+    padding: 24px 0;
+}
+:any-link {
+    color: #eee; text-decoration: underline wavy #555;
+}
+.text {
+    display: flex; flex-direction: column;
+    letter-spacing: -0.25px; line-height: 1.25;
+    color: #eeeeee;
+}
+.list {
+    display: grid; grid-template-columns: minmax(0,1fr);
+    gap: 20px 48px; width: min(820px,90vw);
+}
+a {
+    display: inline-block; transform: rotate(1.1deg);
+}
+.credit {
+    font-size: 0.72em; opacity: 0.65;
+}
+.credit .creditlink {
+    transform: none;
+}
+.smaller {
+    font-size: 0.75em;
+}
+sub {
+    font-size: 9px; opacity: 0.5;
+    margin-top: 0.5em;
+}
+.toolitem {
+    display: flex; flex-direction: column;
+    align-items: flex-start; min-width: 0;
+}
+.toolitem .toollogo {
+    max-height: 48px;
+}
+.toolitem:nth-child(even) > a {
+    transform: rotate(-1.1deg);
+}
+@media (min-width: 720px) {
+    .list {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+}

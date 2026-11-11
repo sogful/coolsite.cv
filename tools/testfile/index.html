@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>create placeholder files</title>
+        <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+        <link rel="stylesheet" href="index.css">
+        <link rel="stylesheet" href="../branding.css">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+    <body>
+    <h1 class="toolheading" aria-label="create placeholder files">
+        <img class="toollogo" src="logo.png" alt="create placeholder files" width="407" height="52">
+    </h1>
+
+        <div>
+            <label>file type:</label>
+            <select id="filetype">
+                <option value="png">png</option>
+                <option value="gif">gif</option>
+                <option value="mp4">mp4</option>
+            </select>
+            <div class="row">
+                <label>width (px):</label>
+                <input type="number" id="width" value="512" min="1" max="4096">
+            </div>
+            <div class="row">
+                <label>height (px):</label>
+                <input type="number" id="height" value="512" min="1" max="4096">
+            </div>
+            <div class="row" id="framesordurationdiv">
+                <label id="frameslabel">frame count (gif) / duration (mp4, seconds):</label>
+                <input type="number" id="duration" min="1" value="1">
+            </div>
+            <div class="row">
+                <label>target file size (mb)
+                    <span class="info">(best effort and for mp4/gif only)</span>:</label>
+                <input type="number" id="sizemb" min="0" value="0">
+            </div>
+            <button id="generatebtn">generate file</button>
+            <div id="result"></div>
+        </div>
+
+        <script src="index.js"></script>
+    </body>
+</html>

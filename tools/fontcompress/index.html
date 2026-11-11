@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <title>font compressor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="../base.css">
+
+    <link rel="stylesheet" href="index.css">
+
+    <link rel="stylesheet" href="../branding.css">
+</head>
+<body>
+    <h2 class="toolheading" aria-label="font compressor">
+        <img class="toollogo" src="logo.png" alt="font compressor" width="250" height="83">
+    </h2>
+
+    <form class="compressform" autocomplete="off">
+        <div class="row">
+            <input type="file" class="fontfile" accept=".ttf,.woff,.woff2,font/*">
+            <span class="origsize hint"></span>
+        </div>
+
+        <div class="row">
+            <span class="hint" for="glyphtext">glyphs to keep</span><br>
+            <textarea class="glyphtext" name="glyphtext" rows="3" placeholder="paste any text; every unique character will be kept">ABCDEFGHIJKLMNOPQRSTUVWXYZ
+abcdefghijklmnopqrstuvwxyz
+0123456789 ~!@#$%^&*()_+|<>?-=\</textarea>
+        </div>
+
+        <div class="row presets">
+            <span class="hint">presets</span><br>
+            <button type="button" data-preset="basiclatin">basic latin</button>
+            <button type="button" data-preset="latin1">latin-1 supplement</button>
+            <button type="button" data-preset="latinext">latin extended a/b</button>
+            <button type="button" data-preset="cyrillic">cyrillic</button>
+            <button type="button" data-preset="greek">greek</button>
+            <button type="button" data-preset="hebrew">hebrew</button>
+            <button type="button" data-preset="arabic">arabic</button>
+            <button type="button" data-preset="hiragana">hiragana</button>
+            <button type="button" data-preset="katakana">katakana</button> 
+            <br>
+            <button type="button" data-preset="digits">digits</button>
+            <button type="button" data-preset="punct">punctuation</button>
+            <button type="button" data-preset="symbols">extended symbols</button>
+            <button type="button" data-preset="currency">currency</button>
+            <button type="button" data-preset="arrows">arrows</button>
+            <button type="button" data-preset="math">math</button>
+            <button type="button" data-preset="box">box drawings</button>
+            <button type="button" data-preset="clear" style="background:#fff0f0">clear text</button>
+        </div>
+
+        <div class="row opts">
+            <label>format:
+                <select class="format">
+                    <option value="woff2" selected>woff2</option>
+                    <option value="woff">woff</option>
+                    <option value="ttf">ttf</option>
+                </select>
+            </label>
+            <label>simplify:
+                <select class="simplify">
+                    <option value="1" selected>off</option>
+                    <option value="2">x2 (half precision)</option>
+                    <option value="3">x3</option>
+                    <option value="4">x4 (lossy)</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="row opts">
+            <label><input type="checkbox" class="opt-hinting" checked>strip hint tables</label>
+            <label><input type="checkbox" class="opt-kerning">strip kerning</label>
+            <label><input type="checkbox" class="opt-layout">strip layout/ligatures</label>
+            <label><input type="checkbox" class="opt-names" checked>strip extra name records</label>
+            <label><input type="checkbox" class="opt-meta" checked>strip metadata<sup>(probably violates licenses! be careful)</sup></label>
+        </div>
+
+        <div class="row">
+            <button type="submit" class="runbtn">compress</button>
+            <span class="status hint"></span>
+        </div>
+    </form>
+
+    <div class="err"></div>
+    <div class="output"></div>
+    <div class="preview"></div>
+
+    <script type="module" src="index.js"></script>
+
+</body>
+</html>

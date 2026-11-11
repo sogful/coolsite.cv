@@ -1,0 +1,156 @@
+html, body {
+    height: 100%;
+}
+body {
+    padding: 0.35em 0.6em; box-sizing: border-box;
+    display: flex; flex-direction: column;
+    height: 100vh; overflow: hidden;
+    max-width: none;
+}
+h1, h2 {
+    margin: 0;
+}
+.topbar {
+    flex: none; margin-bottom: 0.3em;
+}
+.hint {
+    font-size: 0.75em; color: rgba(0,0,0,0.4);
+}
+.stage {
+    display: flex; flex-direction: column;
+    gap: 0.4em; flex: 1;
+    min-height: 0;
+}
+.padwrap {
+    flex: 1; min-height: 0;
+    overflow: hidden; display: flex;
+    align-items: flex-start; justify-content: center;
+}
+.controls {
+    flex: none; display: flex;
+    flex-wrap: wrap; gap: 0.55em;
+    align-items: flex-start;
+}
+.toolgroup {
+    flex: 0 0 auto; align-self: flex-start;
+}
+.toolgroup .row {
+    margin: 0.2em 0;
+}
+.cards {
+    flex: 1 1 22em; min-width: 14em;
+    columns: 16em; column-gap: 0.55em;
+}
+.cards .card {
+    width: 100%; margin: 0 0 0.55em 0;
+    display: inline-block; break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+}
+.pad {
+    background: #fff; display: block;
+    border: 1px solid #d8d8da; touch-action: none;
+    cursor: crosshair;
+}
+.tools {
+    display: flex; align-items: center;
+    gap: 0.4em; flex-wrap: wrap;
+}
+.tools button, .minibtn {
+    font: inherit; font-size: 0.85em;
+    padding: 0.2em 0.7em; border: 1px solid #cfcfd2;
+    background: #fff; cursor: pointer;
+}
+.tools button:hover, .minibtn:hover {
+    background: #efefef;
+}
+.tools button.active {
+    background: #222; color: #fff;
+    border-color: #222;
+}
+.tools label {
+    display: inline-flex; align-items: center;
+    gap: 0.35em;
+}
+.minibtn:disabled {
+    opacity: 0.4; cursor: default;
+}
+input[type="number"] {
+    width: 4em; font: inherit;
+    font-size: 0.85em; padding: 0.1em 0.3em;
+    border: 1px solid #cfcfd2;
+}
+select {
+    font: inherit; font-size: 0.85em;
+    padding: 0.12em 0.3em; border: 1px solid #cfcfd2;
+    background: #fff;
+}
+input[type="range"] {
+    vertical-align: middle; width: 8.5em;
+}
+.seg {
+    display: inline-block; min-width: 2.2em;
+    color: #666; font-size: 0.8em;
+}
+.card {
+    border: 1px solid #e2e2e2; padding: 0.4em 0.6em;
+    flex: none;
+}
+.card h2 {
+    font-size: 0.85em; margin-bottom: 0.2em;
+    color: #444;
+}
+.card .row {
+    margin: 0.22em 0; display: flex;
+    align-items: center; gap: 0.4em;
+    flex-wrap: wrap;
+}
+textarea.out {
+    width: 100%; box-sizing: border-box;
+    height: 7.5em; min-height: 3em;
+    font-family: "Segoe UI Symbol", "Segoe UI", "Noto Sans", system-ui, sans-serif; font-size: 12px;
+    line-height: 1.05; letter-spacing: 0;
+    white-space: pre; overflow: auto;
+    border: 1px solid #d8d8da; background: #fff;
+    color: #111; padding: 0.45em;
+    resize: vertical; tab-size: 1;
+}
+.count {
+    color: #999; font-size: 0.75em;
+}
+.copied {
+    background: #eafaf0; border-color: #9dd8b6;
+}
+body.inverted {
+    background: #1a1a1c; color: #ddd;
+}
+.inverted .hint {
+    color: rgba(255,255,255,0.4);
+}
+.inverted .pad {
+    background: #1a1a1c; border-color: #3a3a40;
+}
+.inverted .card {
+    background: #242427; border-color: #3a3a40;
+}
+.inverted .card h2 {
+    color: #bbb;
+}
+.inverted .tools button, .inverted .minibtn {
+    background: #2a2a2e; color: #ddd;
+    border-color: #46464c;
+}
+.inverted .tools button:hover, .inverted .minibtn:hover {
+    background: #34343a;
+}
+.inverted .tools button.active {
+    background: #eee; color: #111;
+    border-color: #eee;
+}
+.inverted input[type="number"], .inverted select {
+    background: #2a2a2e; color: #ddd;
+    border-color: #46464c;
+}
+.inverted textarea.out {
+    background: #1f1f22; color: #eee;
+    border-color: #46464c;
+}

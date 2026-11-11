@@ -4,38 +4,42 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>sticker banner</title>
-    <link rel="stylesheet" href="src/css/theme.css?v=20261111a">
-    <link rel="stylesheet" href="src/css/index.css?v=20261111a">
-    <link rel="stylesheet" href="src/css/editor.css?v=20261111a">
+    <link rel="stylesheet" href="src/css/theme.css">
+    <link rel="stylesheet" href="src/css/index.css">
+    <link rel="stylesheet" href="src/css/editor.css">
     <script src="../../assets/static/js/jszip.js" defer></script>
     <script src="../../assets/static/js/gifski/vendor/mp4box.min.js" defer></script>
-    <script type="module" src="src/js/index.js?v=20261111a"></script>
+    <script type="module" src="src/js/index.js"></script>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="../branding.css">
 </head>
 <body class="app">
     <header class="toolbar">
         <div class="heading">
-            <h1 class="title">sticker banner</h1>
-            <a class="iconbutton download" title="save zip" aria-label="save zip" hidden><svg class="icon" viewBox="0 -960 960 960" aria-hidden="true"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg></a>
+            <h1 class="title toolheading" aria-label="sticker banner">
+                <img class="toollogo" src="logo.png" alt="sticker banner" width="283" height="52">
+            </h1>
+            <a class="iconbutton download" title="save zip" hidden><svg class="icon" viewBox="0 -960 960 960" aria-hidden="true"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg></a>
         </div>
         <form class="settings" novalidate>
-            <input class="source" type="file" accept="video/mp4,video/quicktime,.mp4,.mov,.m4v" aria-label="choose a video" hidden>
+            <input class="source" type="file" accept="video/mp4,video/quicktime,.mp4,.mov,.m4v" hidden>
             <input class="profilewidth" type="hidden" value="384">
             <input class="rowcount" type="hidden" value="2">
-            <button class="btn choosevideo" type="button" aria-label="choose video" title="choose video">
+            <button class="btn choosevideo" type="button" title="choose video">
                 <svg class="icon buttonicon" viewBox="0 -960 960 960" aria-hidden="true"><path d="M240-80q-33 0-56.5-23.5T160-160v-480q0-33 23.5-56.5T240-720h480q33 0 56.5 23.5T800-640v480q0 33-23.5 56.5T720-80H240Zm0-80h480v-480H240v480Zm200-120 200-120-200-120v240ZM80-240v-560q0-33 23.5-56.5T160-880h560v80H160v560H80Z"/></svg>
                 <span class="buttonlabel">choose video</span>
             </button>
             <div class="renderactions">
-                <button class="btn primary generate" type="submit" aria-label="create stickers" title="create stickers">
+                <button class="btn primary generate" type="submit" title="create stickers">
                     <svg class="icon buttonicon" viewBox="0 -960 960 960" aria-hidden="true"><path d="M480-160 380-380 160-480l220-100 100-220 100 220 220 100-220 100-100 220ZM160-640l-50-110L0-800l110-50 50-110 50 110 110 50-110 50-50 110ZM800-40l-50-110-110-50 110-50 50-110 50 110 110 50-110 50-50 110Z"/></svg>
                     <span class="buttonlabel">create stickers</span>
                 </button>
-                <button class="btn stop" type="button" hidden disabled aria-label="stop" title="stop">
+                <button class="btn stop" type="button" hidden disabled title="stop">
                     <svg class="icon buttonicon" viewBox="0 -960 960 960" aria-hidden="true"><path d="M240-240v-480h480v480H240Z"/></svg>
                     <span class="buttonlabel">stop</span>
                 </button>
             </div>
-            <button class="btn publishbar" type="button" disabled aria-label="publish" title="publish">
+            <button class="btn publishbar" type="button" disabled title="publish">
                 <svg class="icon buttonicon" viewBox="0 -960 960 960" aria-hidden="true"><path d="M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
                 <span class="buttonlabel">publish</span>
             </button>
@@ -45,20 +49,20 @@
     </header>
     <main class="workspace">
         <div class="previewframe">
-        <div class="banner" aria-label="sticker grid preview">
-            <canvas class="preview" aria-label="sticker grid preview" width="1152" height="744" hidden></canvas>
-            <div class="grid" aria-label="sticker tiles"></div>
-            <button class="rowhandle" type="button" role="slider" aria-orientation="vertical" title="drag to change rows" aria-label="grid rows" aria-valuemin="1" aria-valuemax="4" aria-valuenow="2" aria-valuetext="3 columns, 2 rows"><svg class="icon" viewBox="0 -960 960 960" aria-hidden="true"><path d="M160-320v-80h640v80H160Zm0-240v-80h640v80H160Z"/></svg></button>
+        <div class="banner">
+            <canvas class="preview" width="1152" height="744" hidden></canvas>
+            <div class="grid"></div>
+            <button class="rowhandle" type="button" role="slider" aria-orientation="vertical" title="drag to change rows" aria-valuemin="1" aria-valuemax="4" aria-valuenow="2" aria-valuetext="3 columns, 2 rows"><svg class="icon" viewBox="0 -960 960 960" aria-hidden="true"><path d="M160-320v-80h640v80H160Zm0-240v-80h640v80H160Z"/></svg></button>
         </div>
         </div>
     </main>
-    <section class="editorcontrols" aria-label="video controls">
+    <section class="editorcontrols">
         <div class="trimbar" hidden>
             <div class="trimtimes"><span class="trimstart">0:00</span><span class="trimlength"></span><span class="trimend"></span></div>
             <div class="trimtrack">
                 <div class="trimselection"></div><div class="trimposition"></div>
-                <button class="trimhandle trimleft" type="button" role="slider" aria-label="trim start" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></button>
-                <button class="trimhandle trimright" type="button" role="slider" aria-label="trim end" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></button>
+                <button class="trimhandle trimleft" type="button" role="slider" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></button>
+                <button class="trimhandle trimright" type="button" role="slider" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></button>
             </div>
         </div>
     </section>
@@ -68,14 +72,14 @@
     </div>
     <div class="videoinfo">
         <p class="metadata"></p>
-        <select class="fit" aria-label="video fit"><option value="contain">whole video</option><option value="cover">fill grid</option></select>
+        <select class="fit"><option value="contain">whole video</option><option value="cover">fill grid</option></select>
     </div>
     <footer class="accountbar">
         <button class="accountbutton" type="button"><svg class="icon" viewBox="0 -960 960 960" aria-hidden="true"><path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Z"/></svg><span class="accountcaption">log in to tiktok</span></button>
-        <button class="iconbutton themebutton" type="button" aria-label="use dark mode" aria-pressed="false"><svg class="icon" viewBox="0 -960 960 960" aria-hidden="true"><path d="M480-80q-167 0-283.5-116.5T80-480q0-150 96-262t244-134q-33 57-44.5 123T364-620q0 117 82 199t199 82q67 0 133-19t122-55q-22 148-134 240T480-80Z"/></svg></button>
+        <button class="iconbutton themebutton" type="button" aria-pressed="false"><svg class="icon" viewBox="0 -960 960 960" aria-hidden="true"><path d="M480-80q-167 0-283.5-116.5T80-480q0-150 96-262t244-134q-33 57-44.5 123T364-620q0 117 82 199t199 82q67 0 133-19t122-55q-22 148-134 240T480-80Z"/></svg></button>
     </footer>
-    <dialog class="publishing" aria-label="tiktok account and publishing">
-        <div class="dialogbar"><h2 class="dialogtitle">log in to tiktok</h2><button class="iconbutton closepublishing" type="button" aria-label="close"><svg class="icon" viewBox="0 -960 960 960" aria-hidden="true"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg></button></div><div class="dialogbody">
+    <dialog class="publishing">
+        <div class="dialogbar"><h2 class="dialogtitle">log in to tiktok</h2><button class="iconbutton closepublishing" type="button"><svg class="icon" viewBox="0 -960 960 960" aria-hidden="true"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg></button></div><div class="dialogbody">
         <p class="flowprogress" aria-live="polite"></p>
         <p class="logintime" hidden></p>
         <p class="sessionstatus" role="status"></p>
@@ -86,7 +90,7 @@
         </div>
         <div class="flowstep" data-stage="device">
             <h4 class="flowtitle">what's your current device?</h4>
-            <select class="flowdevice" aria-label="current device">
+            <select class="flowdevice">
                 <option value="computer">desktop</option>
                 <option value="android">chrome on android</option>
                 <option value="apple">safari on an iphone/ipad</option>
@@ -138,7 +142,7 @@
             <label class="requestlabel">login info <input class="loginrequest" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
         </div>
         <div class="flowsource" hidden>
-            <input class="origin" type="url" aria-label="video link" placeholder="https://www.tiktok.com/@user/video/..." required>
+            <input class="origin" type="url" placeholder="https://www.tiktok.com/@user/video/..." required>
         </div>
         <p class="publishstatus" role="status" aria-live="polite"></p>
         </div>
@@ -153,7 +157,7 @@
             <button class="copysetup" type="button">copy login setup</button>
             <button class="connect" type="button">connect tiktok</button>
             <button class="copyverify" type="button" hidden>copy verification setup</button>
-            <button class="publish" type="button" disabled>publish six stickers</button>
+            <button class="publish" type="button" disabled>publish stickers</button>
         </div>
     </dialog>
 </body>

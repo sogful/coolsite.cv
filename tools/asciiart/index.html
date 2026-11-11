@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <title>ascii art</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="../base.css">
+
+    <link rel="stylesheet" href="index.css">
+
+    <link rel="stylesheet" href="../branding.css">
+</head>
+<body>
+
+    <div class="topbar">
+        <h2 class="toolheading" aria-label="ascii art">
+            <img class="toollogo" src="logo.png" alt="ascii art" width="154" height="41">
+        </h2>
+        <span class="hint">might be a bit slow within a browser</span>
+    </div>
+
+    <div class="stage">
+
+        <div class="mainwrap">
+
+            <textarea class="out" spellcheck="false" wrap="off"></textarea>
+
+            <div class="toolbar">
+                <div class="grp">
+                    <button type="button" class="minibtn preset" data-preset="superfast">superfast</button>
+                    <button type="button" class="minibtn preset active" data-preset="fast">fast</button>
+                    <button type="button" class="minibtn preset" data-preset="slow">slow</button>
+                </div>
+                <div class="grp">
+                    <button type="button" class="minibtn runbtn" disabled>rerun</button>
+                    <button type="button" class="minibtn stopbtn" disabled>stop</button>
+                </div>
+                <div class="progwrap"><div class="progbar"></div></div>
+                <span class="stat statseg"></span>
+                <div class="grp">
+                    <button type="button" class="minibtn copybtn">copy</button>
+                    <button type="button" class="minibtn dlbtn">download</button>
+                    <span class="count countseg"></span>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="side">
+
+            <div class="card">
+                <h2>image</h2>
+                <div class="row"><input type="file" class="imgfile" accept="image/*"></div>
+                <div class="row">
+                    <label>fit
+                        <select class="fit">
+                            <option value="contain" selected>contain</option>
+                            <option value="cover">cover</option>
+                            <option value="stretch">stretch</option>
+                        </select>
+                    </label>
+                    <label><input type="checkbox" class="invert"> invert</label>
+                </div>
+                <div class="row"><label>bright <input type="range" class="bri" min="-100" max="100" value="0"><span class="seg briseg">0</span></label></div>
+                <div class="row"><label>contrast <input type="range" class="con" min="-100" max="100" value="0"><span class="seg conseg">0</span></label></div>
+                <div class="row"><label>gamma <input type="range" class="gam" min="30" max="300" value="100"><span class="seg gamseg">1.00</span></label></div>
+            </div>
+
+            <div class="card">
+                <h2>grid &amp; charset</h2>
+                <div class="row">
+                    <label>cols <input type="number" class="cols" min="8" max="220" value="30"></label>
+                    <label>detail
+                        <select class="detail">
+                            <option value="10">low</option>
+                            <option value="12" selected>med</option>
+                            <option value="16">high</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="row">
+                    <label>set
+                        <select class="charset">
+                            <option value="unicode" selected>bunch of other unicode</option>
+                            <option value="ramp">"classic"</option>
+                            <option value="alnum">letters + digits</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="row">
+                    <label>exclude <input type="text" class="ban" value="`\" spellcheck="false"></label>
+                </div>
+                <div class="hint sizehint"></div>
+            </div>
+
+            <div class="card">
+                <h2>tuning</h2>
+                <div class="row">
+                    <label>rate <input type="range" class="lr" min="2" max="30" value="12"><span class="seg lrseg">0.12</span></label>
+                </div>
+                <div class="row">
+                    <label>diversity <input type="range" class="div" min="0" max="10" value="2"><span class="seg divseg">0.02</span></label>
+                </div>
+                <div class="row">
+                    <label>multiscale <input type="range" class="ms" min="0" max="20" value="0"><span class="seg msseg">0.0</span></label>
+                </div>
+                <div class="row">
+                    <label><input type="checkbox" class="gumbel"> gumbel noise</label>
+                    <label><input type="checkbox" class="dark"> invert</label>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+
+</body>
+</html>

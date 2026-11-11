@@ -1,0 +1,89 @@
+body {
+    font-family: system-ui, sans-serif; color: black;
+    background: white; font-size: 13px;
+    padding: 1em; margin: 0;
+    height: 100vh; width: 100vw;
+}
+*::-webkit-scrollbar {
+    display: none;
+}
+* {
+    overflow-x: hidden; scrollbar-width: none;
+}
+.header {
+    display: flex; align-items: center;
+    height: 50px; gap: 10px;
+    padding-bottom: 10px;
+}
+.header img {
+    height: 50px; vertical-align: middle;
+}
+.header h1 {
+    margin: 0;
+}
+.persistbox label {
+    margin-right: 16px; user-select: none;
+}
+input, textarea {
+    margin-top: 10px;
+}
+textarea.domainfield {
+    width: 200px; max-width: 70vw;
+    min-height: 4.5em; resize: vertical;
+    font-family: inherit; font-size: inherit;
+}
+.progresswrap {
+    display: flex; align-items: flex-start;
+    gap: 10px;
+}
+.progress {
+    white-space: pre-wrap;
+}
+.progressline {
+    margin: 4px 0;
+}
+.progressline button {
+    margin-left: 8px;
+}
+.stopbtn {
+    flex-shrink: 0;
+}
+.outputrow {
+    margin: 18px 0 0 0; background: white;
+    overflow: auto; font-family: monospace;
+    font-size: 9px; line-height: 14px;
+    white-space: normal;
+}
+.notable {
+    padding: 8px; font-style: italic;
+    color: #777;
+}
+table.cdxtable {
+    width: auto; border-collapse: collapse;
+    font-size: 9px; table-layout: auto;
+}
+table.cdxtable th, table.cdxtable td {
+    border: 1px solid #e2e2e2; padding: 2px 4px;
+    overflow: hidden; white-space: nowrap;
+}
+table.cdxtable th {
+    background: #ccc;
+}
+table.cdxtable th:not(.url-col), table.cdxtable td:not(.url-col) {
+    text-align: center;
+}
+table.cdxtable th.url-col, table.cdxtable td.url-col {
+    text-align: left;
+}
+table.cdxtable td.url-col a {
+    display: block; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+}
+table.cdxtable th.url-col, table.cdxtable td.url-col {
+    max-width: 100ch;
+}
+.preview-grid {
+    margin-top: 8px; display: flex;
+    flex-wrap: wrap; gap: 8px;
+    align-items: flex-start;
+}

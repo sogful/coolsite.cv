@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>riv extractor</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="../branding.css">
+</head>
+<body>
+    <h1 class="toolheading" aria-label="riv extractor">
+        <img class="toollogo" src="logo.png" alt="riv extractor" width="288" height="60">
+    </h1>
+    <form>
+      <input type="file" id="rivfile" accept=".riv" onchange="selectfiles(this.files)" multiple><br /><br />
+      <div>
+        export mode:<br />
+        <label><input type="radio" name="exportMode" value="png" checked>static png (first frame)</label><br />
+        <label><input type="radio" name="exportMode" value="gif">animated gif</label>
+      </div>
+      <br>
+    </form>
+    <div id="status"></div>
+
+    <script src="https://unpkg.com/@rive-app/canvas@2.35.4/rive.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js"></script>
+    <script src="/assets/static/js/jszip.js"></script>
+    <script src="/assets/static/js/filesaver.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

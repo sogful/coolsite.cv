@@ -3,7 +3,7 @@
 <head>
 
     <title>tools</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%3E%3Cpath%20fill%3D%22%238899A6%22%20d%3D%22M27.989%2019.977c-.622%200-1.225.078-1.806.213L15.811%209.818c.134-.581.212-1.184.212-1.806C16.023%203.587%2012.436%200%208.012%200%207.11%200%205.91.916%206.909%201.915l2.997%202.997s.999%201.998-.999%203.995-3.996.998-3.996.998L1.915%206.909C.916%205.91%200%207.105%200%208.012c0%204.425%203.587%208.012%208.012%208.012.622%200%201.225-.078%201.806-.212l10.371%2010.371c-.135.581-.213%201.184-.213%201.806%200%204.425%203.588%208.011%208.012%208.011.901%200%202.101-.916%201.102-1.915l-2.997-2.997s-.999-1.998.999-3.995%203.995-.999%203.995-.999l2.997%202.997c1%20.999%201.916-.196%201.916-1.102%200-4.425-3.587-8.012-8.011-8.012z%22%2F%3E%3C%2Fsvg%3E">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,75 +12,11 @@
     <meta name="google" content="notranslate">
 
     <link rel="stylesheet" href="base.css">
-    <style>
-        .page {
-            display: flex; align-items: center;
-            justify-content: center; background: #111111;
-            overflow-x: hidden; overflow-y: auto;
-            margin: 0; padding: 0;
-            min-height: 100svh; width: 100%;
-            max-width: none; font-family: Arial, Tahoma, sans-serif;
-        }
-        .bg {
-            position: fixed;
-            left: 0; right: 0; top: 50%; transform: translateY(-15%);
-            width: 100vw; height: 100vh;
-            opacity: 0.25; z-index: -1; pointer-events: none;
-            background-image: url("/assets/images/cityscape.png");
-            background-repeat: repeat-x;
-            background-position: center center;
-            image-rendering: pixelated;
-            mix-blend-mode: lighten;
-        }
-        h1, h2, h3 {margin: 0}
-
-        /*//////////////////////////////////////////////////////////////////////*/
-
-        .content {
-            display: flex; align-items: center;
-            justify-content: center; max-width: 90vw;
-            min-height: 100svh; box-sizing: border-box;
-            padding: 24px 0;
-        }
-
-        :any-link {
-            color: #eee;
-            text-decoration: underline wavy #555;
-        }
-        .text {
-            display: flex; flex-direction: column; 
-            letter-spacing: -0.25px;
-            line-height: 1.25; color: #eeeeee;
-        }
-        .text .list {
-            display: flex; flex-direction: column; 
-            flex-wrap: wrap; 
-        }
-
-        a {
-            display: inline-block;
-            transform: rotate(1.1deg);
-        }
-        .credit {
-            font-size: 0.72em;
-            opacity: 0.65;
-        }
-        .credit .creditlink {
-            transform: none;
-        }
-        a:nth-of-type(1) {transform: rotate(-1.0deg)} a:nth-of-type(2) {transform: rotate(1.17deg)}
-        a:nth-of-type(3) {transform: rotate(-1.12deg)} a:nth-of-type(4) {transform: rotate(1.1deg)}
-        a:nth-of-type(5) {transform: rotate(-1.1deg)} a:nth-of-type(6) {transform: rotate(1.13deg)}
-        a:nth-of-type(7) {transform: rotate(-1.14deg)} a:nth-of-type(8) {transform: rotate(1.13deg)}
-        a:nth-of-type(9) {transform: rotate(-1.18deg)} a:nth-of-type(10) {transform: rotate(1.1deg)}
-
-        .smaller {font-size: 0.75em}
-        sub {font-size: 9px; opacity: 0.5; margin-top: 0.5em}
-
-    </style>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="branding.css">
 
 </head>
-<body class="page">
+<body class="page darklogo">
 
     <div class="bg"></div>
 
@@ -89,31 +25,93 @@
             <h3>tools</h3>
 
             <div class="list">
-                <a href="cdx.html">cdx downloader</a>
-                <a href="csstrace.html">css tracer</a>
-                <br>
-                <a href="fontcompress.html">font compressor</a>
-                <a href="rive.html">riv extractor</a>
-                <a href="gif/">gif converter</a>
-                <a href="stickerbanner/">sticker banner</a>
-                <a href="audiomix/">sentence mixer</a>
-                <span class="credit">based on <a class="creditlink" href="https://github.com/Firepal/stammer" target="_blank" rel="noreferrer">stammer</a></span>
-                <br>
-                <a href="svgfavicon.html">create favicon</a>
-                <a href="testfile.html">create placeholder files</a>
-                <br>
-                <a href="unicodescribble.html">unicode scribble matcher</a>
-                <a href="unicodeart/">unicode art</a>
-                <a href="brailleart.html">braille art maker</a>
-                <a href="asciiart.html">ascii art maker</a>
-                <span class="credit">based on <a class="creditlink" href="https://github.com/stong/gradscii-art" target="_blank" rel="noreferrer">gradscii-art</a></span>
-                <br>
-                <a href="synthid.html">fake synthid generator</a>
-                <br>
-                <a href="bookmarks/">bookmarks</a>
-                <a href="wifi.html">wigle search</a>
-                <br>
-                <a href="desktopdestroyer/">desktop destroyer</a>
+                <div class="toolitem">
+                    <a href="cdx/" aria-label="cdx downloader">
+                        <img class="toollogo" src="cdx/logo.png" alt="cdx downloader" width="355" height="57">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="csstrace/" aria-label="css tracer">
+                        <img class="toollogo" src="csstrace/logo.png" alt="css tracer" width="249" height="72">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="fontcompress/" aria-label="font compressor">
+                        <img class="toollogo" src="fontcompress/logo.png" alt="font compressor" width="250" height="83">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="rive/" aria-label="riv extractor">
+                        <img class="toollogo" src="rive/logo.png" alt="riv extractor" width="288" height="60">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="gif/" aria-label="gif converter">
+                        <img class="toollogo" src="gif/logo.png" alt="gif converter" width="319" height="90">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="stickerbanner/" aria-label="sticker banner">
+                        <img class="toollogo" src="stickerbanner/logo.png" alt="sticker banner" width="283" height="52">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="audiomix/" aria-label="audio mixer">
+                        <img class="toollogo" src="audiomix/logo.png" alt="audio mixer" width="327" height="58">
+                    </a>
+                    <span class="credit">based on <a class="creditlink" href="https://github.com/Firepal/stammer" target="_blank" rel="noreferrer">stammer</a></span>
+                </div>
+                <div class="toolitem">
+                    <a href="svgfavicon/" aria-label="create favicon">
+                        <img class="toollogo" src="svgfavicon/logo.png" alt="create favicon" width="323" height="56">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="testfile/" aria-label="create placeholder files">
+                        <img class="toollogo" src="testfile/logo.png" alt="create placeholder files" width="407" height="52">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="unicodescribble/" aria-label="unicode scribble matcher">
+                        <img class="toollogo" src="unicodescribble/logo.png" alt="unicode scribble matcher" width="524" height="50">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="unicodeart/" aria-label="unicode art">
+                        <img class="toollogo" src="unicodeart/logo.png" alt="unicode art" width="236" height="45">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="brailleart/" aria-label="braille art">
+                        <img class="toollogo" src="brailleart/logo.png" alt="braille art" width="179" height="55">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="asciiart/" aria-label="ascii art">
+                        <img class="toollogo" src="asciiart/logo.png" alt="ascii art" width="154" height="41">
+                    </a>
+                    <span class="credit">based on <a class="creditlink" href="https://github.com/stong/gradscii-art" target="_blank" rel="noreferrer">gradscii-art</a></span>
+                </div>
+                <div class="toolitem">
+                    <a href="synthid/" aria-label="fake synthid generator">
+                        <img class="toollogo" src="synthid/logo.png" alt="fake synthid generator" width="481" height="58">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="bookmarks/" aria-label="bookmarks">
+                        <img class="toollogo" src="bookmarks/logo.png" alt="bookmarks" width="279" height="69">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="wifi/" aria-label="wigle search">
+                        <img class="toollogo" src="wifi/logo.png" alt="wigle search" width="282" height="54">
+                    </a>
+                </div>
+                <div class="toolitem">
+                    <a href="desktopdestroyer/" aria-label="desktop destroyer">
+                        <img class="toollogo" src="desktopdestroyer/logo.png" alt="desktop destroyer" width="381" height="54">
+                    </a>
+                </div>
             </div>
 
         </div>

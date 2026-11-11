@@ -1,0 +1,667 @@
+const bookmarksurl = "bookmarks.html";
+const foldersvg = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#c7c7c7"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Zm0 0v-480 480Z"/></svg>';
+const globesvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="#c7c7c7" d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20M4 12h4.4q5.2 0 4.5 5.1H9.5v2.5a8 8 0 0 0 10.5-8Q19 13 17 13q-3.2 0-3.2-2.7H10q-.4-4.1 3-4.1 0-1.5.7-2A8 8 0 0 0 4 12"/></svg>';
+const scrollupsvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"><path fill="currentColor" d="M5 9h6L8 6z"/></svg>';
+const scrolldownsvg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"><path fill="currentColor" d="M10 12 6 8h8z"/></svg>';
+const downloadsvg = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#c7c7c7"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>';
+const vppad = 8;
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".download[data-file]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const file = btn.getAttribute("data-file");
+            try {
+                const res = await fetch(file);
+                if (!res.ok) throw new Error("Failed to fetch file");
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement("a");
+                a.href = url; a.download = file;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            } catch (e) {}
+        });
+    });
+});
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+function parsedl(dl) {
+    const out = [];
+    if (!dl) return out;
+    for (const dt of dl.children) {
+        if (dt.tagName !== "DT") continue;
+        const h3 = dt.querySelector(":scope > h3");
+        const a = dt.querySelector(":scope > a");
+        const nested = dt.querySelector(":scope > dl");
+        if (h3) {
+            out.push({type: "folder", title: h3.textContent.trim(), children: parsedl(nested)});
+        } else if (a) {
+            const href = a.getAttribute("href") || "#";
+            const icon = a.getAttribute("ICON") || a.getAttribute("icon");
+            out.push({type: "bookmark", title: a.textContent.trim(), href, icon});
+        }
+    }
+    return out;
+}
+
+function gettoolbaritems(doc) {
+    const h3 = doc.querySelector('h3[personal_toolbar_folder="true"]') || doc.querySelector('h3[PERSONAL_TOOLBAR_FOLDER="true"]');
+    if (!h3) return [];
+    const dt = h3.parentElement;
+    if (!dt || dt.tagName !== "DT") return [];
+    const innerdl = dt.querySelector(":scope > dl");
+    return innerdl ? parsedl(innerdl) : [];
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+function escapeattr(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+}
+function escapetext(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function serializenodes(nodes, indent) {
+    let s = "";
+    for (const n of nodes) {
+        if (n.type === "folder") {
+            s += `${indent}<DT><H3>${escapetext(n.title)}</H3>\n`;
+            s += `${indent}<DL><p>\n`;
+            s += serializenodes(n.children || [], indent + "    ");
+            s += `${indent}</DL><p>\n`;
+        } else if (n.type === "bookmark") {
+            const iconattr = n.icon ? ` ICON="${escapeattr(n.icon)}"` : "";
+            s += `${indent}<DT><A HREF="${escapeattr(n.href)}"${iconattr}>${escapetext(n.title)}</A>\n`;
+        }
+    }
+    return s;
+}
+function exportfolder(node) {
+    const inner = serializenodes(node.children || [], "            ");
+    const body = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Bookmarks</TITLE>
+<H1>Bookmarks</H1>
+<DL><p>
+    <DT><H3 PERSONAL_TOOLBAR_FOLDER="true">Bookmarks bar</H3>
+    <DL><p>
+        <DT><H3>${escapetext(node.title)}</H3>
+        <DL><p>
+${inner}        </DL><p>
+    </DL><p>
+</DL><p>
+`;
+    const blob = new Blob([body], {type: "text/html"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const safe = (node.title || "folder").replace(/[\\/:*?"<>|]+/g, "_").trim() || "folder";
+    a.download = safe + ".html";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 100);
+}
+
+function elfromhtml(html) {
+    const t = document.createElement("template");
+    t.innerHTML = html.trim();
+    return t.content.firstElementChild;
+}
+
+function makeiconwrap(isfolder, icondata, opts) {
+    const w = document.createElement("span");
+    w.className = "iconwrap";
+    if (isfolder) {
+        w.innerHTML = opts && opts.primaryfoldericon ? foldersvg : foldersvg;
+    } else if (icondata) {
+        const img = document.createElement("img");
+        img.src = icondata;
+        img.alt = "";
+        w.appendChild(img);
+    } else {
+        w.innerHTML = globesvg;
+    }
+    if (opts && opts.primaryfoldericon) w.classList.add("primaryfolder");
+    return w;
+}
+
+function makeclickfill() {
+    const s = document.createElement("span");
+    s.className = "clickfill";
+    return s;
+}
+
+class bookmarksui {
+    constructor() {
+        this.header = document.querySelector(".bookmarksheader");
+        this.portal = document.querySelector(".folderportal");
+        this.chain = [];
+        this.opentriggerel = null;
+        this.outsidehandler = this.docpointerdown.bind(this);
+        this.keyhandler = this.keydown.bind(this);
+        this.repositionscheduled = false;
+        this.overlayraf = new WeakMap();
+        this.subhoveropentimeouts = new Map();
+        this.subhoverclosetimeouts = new Map();
+        this.suppresshoveropenuntil = 0;
+    }
+
+    docpointerdown(ev) {
+        if (!this.chain.length) return;
+        const stack = this.portal.querySelector(".folderstack");
+        if (stack && stack.contains(ev.target)) return;
+        if (this.opentriggerel && this.opentriggerel.contains(ev.target)) return;
+        this.closeallfolders();
+    }
+
+    keydown(ev) {
+        if (ev.key === "Escape" && this.chain.length) {
+            ev.preventDefault();
+            this.closeallfolders();
+        }
+    }
+
+    closeallfolders() {
+        const held = this.opentriggerel;
+        this.chain = [];
+        this.renderedchain = null;
+        this.portal.innerHTML = "";
+        this.clearsubhoveropentimeouts();
+        this.clearsubhoverclosetimeouts();
+        document.removeEventListener("pointerdown", this.outsidehandler, true);
+        document.removeEventListener("keydown", this.keyhandler);
+        window.removeEventListener("resize", this.boundreposition);
+        window.removeEventListener("scroll", this.boundreposition, true);
+        if (held && held.classList.contains("folderheld")) {
+            held.classList.remove("folderheld");
+            held.classList.add("folderreleasing");
+            const clear = () => {
+                held.classList.remove("folderreleasing");
+                held.removeEventListener("transitionend", clear);
+            };
+            held.addEventListener("transitionend", clear);
+            setTimeout(clear, 400);
+        }
+        this.opentriggerel = null;
+    }
+
+    clearsubhoverclosetimeouts() {
+        for (const id of this.subhoverclosetimeouts.values()) clearTimeout(id);
+        this.subhoverclosetimeouts.clear();
+    }
+    clearsubhoveropentimeouts() {
+        for (const id of this.subhoveropentimeouts.values()) clearTimeout(id);
+        this.subhoveropentimeouts.clear();
+    }
+    cancelsubhoverclosefrom(depth) {
+        for (const [d, id] of this.subhoverclosetimeouts.entries()) {
+            if (d >= depth) {
+                clearTimeout(id);
+                this.subhoverclosetimeouts.delete(d);
+            }
+        }
+    }
+
+    schedulesubhoverclosefrom(depth) {
+        this.cancelsubhoverclosefrom(depth);
+        const timeoutid = window.setTimeout(() => {
+            this.subhoverclosetimeouts.delete(depth);
+            if (!this.chain.length) return;
+            if (this.chain.length <= depth) return;
+            this.chain = this.chain.slice(0, depth);
+            this.renderfolderstack();
+        }, 1000);
+        this.subhoverclosetimeouts.set(depth, timeoutid);
+    }
+    schedulereposition() {
+        if (this.repositionscheduled) return;
+        this.repositionscheduled = true;
+        requestAnimationFrame(() => {
+            this.repositionscheduled = false;
+            const stack = this.portal.querySelector(".folderstack");
+            if (stack) {
+                [...stack.querySelectorAll(".folderpanel")].forEach(p => {
+                    p.style.left = "";
+                    p.style.top = "";
+                });
+            }
+            this.positionstack();
+        });
+    }
+
+    placefirstpanel(panel, anchorrect, barrect) {
+        panel.style.visibility = "hidden";
+        panel.style.position = "static";
+        const w = panel.offsetWidth;
+        const h = panel.offsetHeight;
+        const vw = window.innerWidth;
+        const spaceright = vw - vppad - anchorrect.left;
+        const spaceleft = anchorrect.right - vppad;
+        const opentoright = w <= spaceright || spaceright >= spaceleft;
+        let left = opentoright ? anchorrect.left : anchorrect.right - w;
+        left = Math.min(Math.max(left, vppad), vw - w - vppad);
+        const top = Math.min(anchorrect.bottom, window.innerHeight - h - vppad);
+        const topclamped = Math.max(vppad, top);
+        panel.style.position = "absolute";
+        panel.style.left = left + "px";
+        panel.style.top = topclamped + "px";
+        panel.style.visibility = "";
+        return {opentoright, left, top: topclamped, width: w};
+    }
+
+    positionstack() {
+        const stack = this.portal.querySelector(".folderstack");
+        if (!stack || !this.chain.length) return;
+        const bar = this.header.getBoundingClientRect();
+        const panels = [...stack.querySelectorAll(".folderpanel")];
+        if (!panels.length) return;
+        const p0 = panels[0];
+        if (!p0.style.left) {
+            const anchor0 = this.chain[0].anchor.getBoundingClientRect();
+            this.placefirstpanel(p0, anchor0, bar);
+        }
+        p0.style.zIndex = 30000;
+        let x = parseFloat(p0.style.left) + p0.offsetWidth;
+        for (let i = 1; i < panels.length; i++) {
+            const p = panels[i];
+            if (p.style.left) {
+                p.style.zIndex = 30000 + i;
+                x = parseFloat(p.style.left) + p.offsetWidth;
+                continue;
+            }
+            const anchorrect = this.chain[i].anchor.getBoundingClientRect();
+            p.style.visibility = "hidden";
+            p.style.position = "absolute";
+            const pw = p.offsetWidth;
+            const ph = p.offsetHeight;
+            const vw = window.innerWidth;
+            const canright = x + pw <= vw - vppad;
+            const canleft = anchorrect.left - pw >= vppad;
+            let left, top;
+            if (canright) {
+                left = x;
+                top = anchorrect.bottom;
+            } else if (canleft) {
+                left = anchorrect.left - pw;
+                top = anchorrect.bottom;
+            } else {
+                const fallbackleft = anchorrect.left;
+                left = Math.min(Math.max(fallbackleft, vppad), vw - pw - vppad);
+                top = anchorrect.bottom;
+            }
+            top = Math.min(Math.max(top, vppad), window.innerHeight - ph - vppad);
+            p.style.left = left + "px";
+            p.style.top = top + "px";
+            p.style.visibility = "";
+            p.style.zIndex = 30000 + i;
+            x = left + pw;
+        }
+    }
+
+    renderlisting(node, opts) {
+        const infolderpanel = !!opts.infolderpanel;
+        const isfolder = node.type === "folder";
+        const row = document.createElement(infolderpanel && !isfolder ? "a" : "button");
+        row.className = "listing" + (infolderpanel ? " folderdimmer" : "");
+        if (row.tagName === "BUTTON") row.type = "button";
+        if (infolderpanel && !isfolder) {
+            row.href = node.href;
+            row.rel = "noopener noreferrer";
+        }
+        if (!infolderpanel) row.appendChild(makeclickfill());
+        row.appendChild(makeiconwrap(isfolder, isfolder ? null : node.icon, {
+            primaryfoldericon: !infolderpanel && isfolder
+        }));
+        const t = document.createElement("span");
+        t.className = "titletext";
+        t.textContent = node.title;
+        row.appendChild(t);
+        if (!isfolder && !infolderpanel) {
+            row.addEventListener("click", ev => {
+                ev.preventDefault();
+                row.classList.remove("clickfading", "clickpressing");
+                row.offsetWidth;
+                row.classList.add("clickpressing");
+                const href = node.href;
+                const endpress = () => {
+                    row.classList.remove("clickpressing");
+                    row.offsetWidth;
+                    row.classList.add("clickfading");
+                    const donefade = () => {
+                        row.classList.remove("clickfading");
+                        row.removeEventListener("transitionend", donefade);
+                    };
+                    row.addEventListener("transitionend", donefade);
+                    setTimeout(donefade, 350);
+                    setTimeout(() => {
+                        window.location.href = href;
+                    }, 500);
+                };
+                setTimeout(endpress, 250);
+            });
+        }
+        return row;
+    }
+
+    openfolderfrom(anchorel, node, replacedepth, opts) {
+        const inbar = anchorel.closest(".bookmarksheader");
+        if (inbar) {
+            const wasfocusmode = this.chain.length > 0;
+            const instantprimaryfill = !!(opts && opts.primaryhover) && wasfocusmode;
+            this.clearsubhoverclosetimeouts();
+            if (this.opentriggerel && this.opentriggerel !== anchorel) {
+                const prev = this.opentriggerel;
+                if (instantprimaryfill) {
+                    prev.classList.remove("folderheld");
+                    prev.classList.add("folderreleasing");
+                    prev.classList.remove("clickpressing", "clickfading");
+                } else {
+                    prev.classList.remove("folderheld", "folderreleasing", "clickpressing", "clickfading");
+                }
+                if (document.activeElement === prev) prev.blur();
+            }
+            this.opentriggerel = anchorel;
+            anchorel.classList.remove("clickfading", "clickpressing");
+            if (instantprimaryfill) {
+                anchorel.classList.remove("folderreleasing");
+                anchorel.classList.add("folderheld");
+            } else {
+                anchorel.classList.add("clickpressing");
+                setTimeout(() => {
+                    if (this.opentriggerel !== anchorel) return;
+                    anchorel.classList.remove("clickpressing");
+                    anchorel.classList.add("folderheld");
+                }, 250);
+            }
+            this.chain = [{
+                node,
+                anchor: anchorel,
+                depth: 0
+            }];
+        } else {
+            if (opts && opts.cause === "click") {
+                this.suppresshoveropenuntil = performance.now() + 1000;
+            }
+            const existingopen = this.subhoveropentimeouts.get(replacedepth);
+            if (existingopen) {
+                clearTimeout(existingopen);
+                this.subhoveropentimeouts.delete(replacedepth);
+            }
+            this.cancelsubhoverclosefrom(replacedepth);
+            this.chain = this.chain.slice(0, replacedepth);
+            this.chain.push({node, anchor: anchorel, depth: replacedepth});
+        }
+        this.renderfolderstack();
+        document.addEventListener("pointerdown", this.outsidehandler, true);
+        document.addEventListener("keydown", this.keyhandler);
+        if (!this.boundreposition) {
+            this.boundreposition = () => this.schedulereposition();
+        }
+        window.addEventListener("resize", this.boundreposition);
+        window.addEventListener("scroll", this.boundreposition, true);
+    }
+
+    buildpanel(entry, depth) {
+        const panel = document.createElement("div");
+        panel.className = "folderpanel";
+        if (depth > 0) {
+            panel.addEventListener("pointerenter", () => {
+                this.cancelsubhoverclosefrom(depth);
+            });
+            panel.addEventListener("pointerleave", () => {
+                this.schedulesubhoverclosefrom(depth);
+            });
+        }
+        const scroller = document.createElement("div");
+        scroller.className = "folderpanelscroll";
+        const inner = document.createElement("div");
+        inner.className = "folderpanelinner";
+        const overlaytop = document.createElement("div");
+        overlaytop.className = "scrolloverlay top";
+        overlaytop.innerHTML = scrollupsvg;
+        const overlaybottom = document.createElement("div");
+        overlaybottom.className = "scrolloverlay bottom";
+        overlaybottom.innerHTML = scrolldownsvg;
+
+        const updatescrolloverlays = () => {
+            const canup = scroller.scrollTop > 0.5;
+            const remaining = scroller.scrollHeight - (scroller.scrollTop + scroller.clientHeight);
+            const candown = remaining > 0.5;
+            overlaytop.classList.toggle("show", canup);
+            overlaybottom.classList.toggle("show", candown);
+        };
+
+        const startscroll = direction => {
+            this.stopoverlay(panel);
+            let frame = 0;
+            const tick = () => {
+                frame++;
+                if (frame >= 10) {
+                    frame = 0;
+                    scroller.scrollBy({top: direction * 28, behavior: "auto"});
+                    updatescrolloverlays();
+                }
+                const id = requestAnimationFrame(tick);
+                this.overlayraf.set(panel, id);
+            };
+            const id = requestAnimationFrame(tick);
+            this.overlayraf.set(panel, id);
+        };
+        const stopscroll = () => this.stopoverlay(panel);
+
+        overlaytop.addEventListener("pointerenter", () => startscroll(-1));
+        overlaytop.addEventListener("pointerleave", stopscroll);
+        overlaytop.addEventListener("pointerdown", () => startscroll(-1));
+        overlaytop.addEventListener("pointerup", stopscroll);
+        overlaytop.addEventListener("pointercancel", stopscroll);
+
+        overlaybottom.addEventListener("pointerenter", () => startscroll(1));
+        overlaybottom.addEventListener("pointerleave", stopscroll);
+        overlaybottom.addEventListener("pointerdown", () => startscroll(1));
+        overlaybottom.addEventListener("pointerup", stopscroll);
+        overlaybottom.addEventListener("pointercancel", stopscroll);
+
+        scroller.addEventListener("scroll", updatescrolloverlays, {passive: true});
+        entry.node.children.forEach(child => {
+            const row = this.renderlisting(child, {infolderpanel: true, depth: depth + 1});
+            if (child.type === "folder") {
+                row.addEventListener("click", ev => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    this.openfolderfrom(row, child, depth + 1, {cause: "click"});
+                });
+                row.addEventListener("pointerenter", () => {
+                    if (!this.chain.length) return;
+                    if (performance.now() < this.suppresshoveropenuntil) return;
+                    const nextdepth = depth + 1;
+                    this.cancelsubhoverclosefrom(nextdepth);
+                    const already = this.chain.length > nextdepth && this.chain[nextdepth].node === child;
+                    if (already) return;
+                    const existingopen = this.subhoveropentimeouts.get(nextdepth);
+                    if (existingopen) clearTimeout(existingopen);
+                    const timeoutid = window.setTimeout(() => {
+                        this.subhoveropentimeouts.delete(nextdepth);
+                        if (!row.isConnected) return;
+                        const alreadynow = this.chain.length > nextdepth && this.chain[nextdepth].node === child;
+                        if (alreadynow) return;
+                        this.openfolderfrom(row, child, nextdepth);
+                    }, 500);
+                    this.subhoveropentimeouts.set(nextdepth, timeoutid);
+                });
+                row.addEventListener("pointerleave", () => {
+                    const id = this.subhoveropentimeouts.get(depth + 1);
+                    if (id) {
+                        clearTimeout(id);
+                        this.subhoveropentimeouts.delete(depth + 1);
+                    }
+                    this.schedulesubhoverclosefrom(depth + 1);
+                });
+            }
+            inner.appendChild(row);
+        });
+        scroller.appendChild(inner);
+        panel.appendChild(scroller);
+        panel.appendChild(overlaytop);
+        panel.appendChild(overlaybottom);
+
+        const dlicon = document.createElement("button");
+        dlicon.type = "button";
+        dlicon.className = "folderdownload";
+        dlicon.title = `download "${entry.node.title}" as a bookmark file!`;
+        dlicon.innerHTML = downloadsvg;
+        dlicon.addEventListener("pointerdown", ev => ev.stopPropagation());
+        dlicon.addEventListener("click", ev => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            exportfolder(entry.node);
+        });
+        panel.appendChild(dlicon);
+
+        requestAnimationFrame(updatescrolloverlays);
+        return panel;
+    }
+
+    renderfolderstack() {
+        const prevchain = this.renderedchain || [];
+        let stack = this.portal.querySelector(".folderstack");
+        if (!stack) {
+            stack = document.createElement("div");
+            stack.className = "folderstack";
+            this.portal.appendChild(stack);
+        }
+
+        let keepdepth = -1;
+        for (let d = 0; d < this.chain.length && d < prevchain.length && d < stack.children.length; d++) {
+            if (prevchain[d] === this.chain[d].node) keepdepth = d;
+            else break;
+        }
+
+        while (stack.children.length > keepdepth + 1) {
+            const last = stack.lastElementChild;
+            this.stopoverlay(last);
+            last.remove();
+        }
+
+        for (let d = keepdepth + 1; d < this.chain.length; d++) {
+            const panel = this.buildpanel(this.chain[d], d);
+            if (d === this.chain.length - 1) panel.classList.add("fadingin");
+            else panel.classList.add("folderpanelshow");
+            stack.appendChild(panel);
+        }
+
+        for (let i = 1; i < this.chain.length; i++) {
+            const a = this.chain[i].anchor;
+            if (a && a.isConnected) continue;
+            const parentchildren = (this.chain[i - 1].node.children) || [];
+            const idx = parentchildren.indexOf(this.chain[i].node);
+            if (idx < 0) continue;
+            const parentpanel = stack.children[i - 1];
+            const inner = parentpanel && parentpanel.querySelector(".folderpanelinner");
+            const freshrow = inner && inner.children[idx];
+            if (freshrow) this.chain[i].anchor = freshrow;
+        }
+
+        this.renderedchain = this.chain.map(e => e.node);
+        requestAnimationFrame(() => {
+            this.positionstack();
+            const panels = [...stack.querySelectorAll(".folderpanel.fadingin")];
+            panels.forEach(p => p.classList.add("folderpanelshow"));
+        });
+    }
+
+    stopoverlay(panel) {
+        const id = this.overlayraf.get(panel);
+        if (id) cancelAnimationFrame(id);
+        this.overlayraf.delete(panel);
+    }
+
+    renderbar(items) {
+        this.header.innerHTML = "";
+        items.forEach(node => {
+            if (node.type === "folder") {
+                const row = this.renderlisting(node, {
+                    infolderpanel: false,
+                    depth: 0
+                });
+                row.addEventListener("click", ev => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    if (this.chain.length && this.chain[0].node === node && this.opentriggerel === row) {
+                        this.closeallfolders();
+                        return;
+                    }
+                    this.openfolderfrom(row, node, 0);
+                });
+                row.addEventListener("pointerenter", () => {
+                    if (!this.chain.length) return;
+                    if (this.chain[0].node === node && this.opentriggerel === row) return;
+                    this.openfolderfrom(row, node, 0, {primaryhover: true});
+                });
+                this.header.appendChild(row);
+            } else {
+                const row = this.renderlisting(node, {
+                    infolderpanel: false,
+                    depth: 0
+                });
+                this.header.appendChild(row);
+            }
+        });
+    }
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+const ui = new bookmarksui();
+
+(async function init() {
+    try {
+        const res = await fetch(bookmarksurl);
+        if (!res.ok) throw new Error(res.statusText);
+        const text = await res.text();
+        const doc = new DOMParser().parseFromString(text, "text/html");
+        const items = gettoolbaritems(doc);
+
+        try {
+            const infocounts = document.querySelector(".bottombar .info a");
+            const dlsize = document.querySelector(`.download[data-file="${bookmarksurl}"] sup`);
+            let folders = 0;
+            let bookmarks = 0;
+            const walk = arr => {
+                for (const n of arr) {
+                    if (!n) continue;
+                    if (n.type === "folder") {
+                        folders++;
+                        walk(n.children || []);
+                    } else if (n.type === "bookmark") {
+                        bookmarks++;
+                    }
+                }
+            };
+            walk(items);
+            if (infocounts)
+                infocounts.textContent = `${bookmarks} bookmarks, ${folders} folders`;
+            if (dlsize) {
+                const bytes = new Blob([text]).size;
+                const mb = bytes / (1024 * 1024);
+                dlsize.textContent = mb >= 0.1 ? `(${mb.toFixed(1)}mb)` : `(${Math.round(bytes / 1024)}kb)`;
+            }
+        } catch (e) {}
+
+        if (!items.length) {
+            ui.header.innerHTML = '<div class="errbanner">no folder found?!</div>';
+            return;
+        }
+        ui.renderbar(items);
+    } catch (e) {}
+})();

@@ -1,0 +1,24 @@
+body {
+    padding-left: 0.25em;
+}
+.output {
+    margin-top: 1em; font-family: monospace;
+    font-size: 0.85em; padding: 0.5em;
+    white-space: pre-wrap; word-break: break-all;
+    background: #fff; border: 1px solid #e2e2e2;
+}
+.preview {
+    padding-top: 0.5em; padding-bottom: 0.5em;
+}
+.previewimage {
+    width: 64px; height: 64px;
+    display: block; border: 1px solid #bbb;
+    border-radius: 10px; background: #eee;
+    box-sizing: border-box;
+}
+.emoji {
+    width: 8em;
+}
+.status {
+    min-height: 1.5em; color: #777;
+}

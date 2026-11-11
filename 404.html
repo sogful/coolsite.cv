@@ -66,8 +66,32 @@
         const movedname = path.replace(/\.html$/, "");
         let movedtarget = null;
 
-        if (Object.prototype.hasOwnProperty.call(movedfiles, movedname)) {
-            movedtarget = "/" + movedfiles[movedname] + (path.endsWith(".html") ? ".html" : "");
+        const toolfolders = [
+            "cdx",
+            "csstrace",
+            "fontcompress",
+            "rive",
+            "gif",
+            "stickerbanner",
+            "audiomix",
+            "svgfavicon",
+            "testfile",
+            "unicodescribble",
+            "unicodeart",
+            "brailleart",
+            "asciiart",
+            "synthid",
+            "bookmarks",
+            "wifi",
+            "desktopdestroyer"
+        ];
+        const canonicaltool = movedname.startsWith("tools/") ? movedname.slice(6) : "";
+
+        if (toolfolders.includes(canonicaltool)) {
+            movedtarget = "/tools/" + canonicaltool + "/";
+        } else if (Object.prototype.hasOwnProperty.call(movedfiles, movedname)) {
+            const current = movedfiles[movedname];
+            movedtarget = "/" + current + (current.startsWith("tools/") ? "/" : path.endsWith(".html") ? ".html" : "");
         } else if (path === "tools/sentencemix.html") {
             movedtarget = "/tools/audiomix/";
         } else {

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>css tracer</title>
+    <link rel="stylesheet" href="../base.css">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="../branding.css">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body>
+    <div class="app appmain">
+        <div class="panel panelmain">
+            <h1 class="toolheading" aria-label="css tracer">
+                <img class="toollogo" src="logo.png" alt="css tracer" width="249" height="72">
+            </h1>
+          
+            <div class="controlsrow">
+                <label>video: <input type="file" class="videoinput" accept="video/*"></label>
+                <label>placeholder (decorative, optional): <input type="file" class="imageinput" accept="image/*"></label>
+                
+            </div>
+            <div class="controlsrow">
+              <label>aspect ratio:
+                <select class="aspectselect">
+                    <option value="16/9">16:9</option>
+                    <option value="1/1">1:1</option>
+                    <option value="9/16">9:16</option>
+                </select>
+            </label>
+            <label>fps:<input type="number" class="fpsinput" min="1" max="60" value="20"></label>
+            </div>
+
+            <div class="transport">
+                <div class="transportleft">
+                    <span>Time</span>
+                    <span class="timelabel timecurrent">00:00.000</span>
+                    <span>/</span>
+                    <span class="timelabel timeduration">00:00.000</span>
+                </div>
+                <div class="transportright">
+                    <button class="resetbtn">reset (hold)</button>
+                    <button class="exportbtn">export</button>
+                </div>
+            </div>
+            <div class="stageouter">
+                <div class="stagescroll">
+                    <div class="canvaswrapper">
+                        <div class="canvasmain">
+                            <div class="aspectbox">
+                                <div class="canvasgrid"></div>
+                                <video class="canvasvideo videomain"></video>
+                                <div class="overelement overselected">
+                                    <img class="overimg" alt="">
+                                    <div class="overlabel">element</div>
+                                    <div class="handle handlexy" data-handle="xy"><svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M2 6 L6 2" /></svg></div>
+                                    <div class="handle handlex" data-handle="x"><svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><line x1="1" y1="4" x2="7" y2="4" /></svg></div>
+                                    <div class="handle handley" data-handle="y"><svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><line x1="4" y1="1" x2="4" y2="7" /></svg></div>
+                                    <div class="handle handlerotate" data-handle="rot"><svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M6 2 A 2.5 2.5 0 0 1 2 6" /></svg></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="trimcontainer">
+                <div class="trimlabelrow">
+                    <div><span>trim video</span></div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span>start:</span>
+                        <span class="timelabel trimstartlabel">00:00.000</span>
+                        <span>end:</span>
+                        <span class="timelabel trimendlabel">00:00.000</span>
+                    </div>
+                </div>
+                <div class="trimtrack">
+                    <div class="trimbg"></div>
+                    <div class="trimwindow"></div>
+                    <div class="trimprogress"></div>
+                    <div class="trimhandle trimhandlestart"></div>
+                    <div class="trimhandle trimhandleend"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="exportoverlay">
+        <div class="exportbox">
+            <div class="exporthead">
+                <div class="exporttitle">exported code:</div>
+                <button class="exportclosebtn">close</button>
+            </div>
+            <div class="codeblock">
+                <pre><code class="codeoutput"></code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>
