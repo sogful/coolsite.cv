@@ -1,3 +1,7 @@
+import {feature,configuration} from "./js/matching/features.js";
+import {load,fingerprint} from "./js/indexing/resources.js";
+import {read,write,remove,clearparts,persistent} from "./js/indexing/storage.js";
+
 const dpad = document.querySelector(".pad");
 const dctx = dpad.getContext("2d", {willReadFrequently: true});
 const W = dpad.width, H = dpad.height;
@@ -9,7 +13,6 @@ const resultsel = document.querySelector(".results");
 const rebuildbtn = document.querySelector(".rebuildbtn");
 
 const GRID = 24, FIT = 22, DIM = GRID * GRID;
-const CELL = 64, COLS = 64, BATCH = 1024;
 
 /*//////////////////////////////////////////////////////////////////////*/
 
@@ -24,7 +27,7 @@ const FONTS = [
 const cpSURL = "/assets/static/scribble/scribble-cps.bin";
 const EMOJIURL = "/assets/static/scribble/scribble-emoji.bin";
 const NAMESURL = "/assets/static/scribble/scribble-names.txt.gz";
-const IDXVER = 6;
+const IDXVER = 8;
 const IDXKEY = "scribble-v" + IDXVER;
 const QSCALE = 300;
 
@@ -51,280 +54,10 @@ function status(t) {statusel.textContent = t}
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-function feature(data, stride, rx, ry, rw, rh, whole) {
-    let minx = 1e9, miny = 1e9, maxx = -1, maxy = -1;
-    for (let y = 0; y < rh; y++) {
-        let base = ((ry + y) * stride + rx) * 4 + 3;
-        for (let x = 0; x < rw; x++) {
-            if (data[base + x * 4] > 16) {
-                if (x < minx) minx = x;
-                if (x > maxx) maxx = x;
-                if (y < miny) miny = y;
-                if (y > maxy) maxy = y;
-            }
-        }
-    }
-    if (maxx < 0) return null;
-    minx += rx; maxx += rx; miny += ry; maxy += ry;
-    if (whole) {minx = rx; miny = ry; maxx = rx + rw - 1; maxy = ry + rh - 1}
-
-    const bw = maxx - minx + 1, bh = maxy - miny + 1;
-    const s = Math.max(bw, bh) / FIT;
-    const offx = (GRID - bw / s) / 2, offy = (GRID - bh / s) / 2;
-
-    const grid = new Float32Array(DIM);
-    for (let oy = 0; oy < GRID; oy++) {
-        let sy0 = miny + (oy - offy) * s;
-        let iy0 = Math.floor(sy0), iy1 = Math.ceil(sy0 + s);
-        if (iy0 < miny) iy0 = miny;
-        if (iy1 > maxy + 1) iy1 = maxy + 1;
-        for (let ox = 0; ox < GRID; ox++) {
-            let sx0 = minx + (ox - offx) * s;
-            let ix0 = Math.floor(sx0), ix1 = Math.ceil(sx0 + s);
-            if (ix0 < minx) ix0 = minx;
-            if (ix1 > maxx + 1) ix1 = maxx + 1;
-            let sum = 0;
-            for (let yy = iy0; yy < iy1; yy++) {
-                let b = (yy * stride) * 4 + 3;
-                for (let xx = ix0; xx < ix1; xx++) sum += data[b + xx * 4];
-            }
-            let v = sum / (s * s);
-            grid[oy * GRID + ox] = v > 255 ? 255 : v;
-        }
-    }
-
-    const blur = boxblur(boxblur(grid));
-    let mean = 0;
-    for (let i = 0; i < DIM; i++) mean += blur[i];
-    mean /= DIM;
-    const vec = new Float32Array(DIM);
-    let norm = 0;
-    for (let i = 0; i < DIM; i++) {
-        const d = blur[i] - mean;
-        vec[i] = d; norm += d * d;
-    }
-    if (norm < 1e-6) return null;
-    norm = Math.sqrt(norm);
-    for (let i = 0; i < DIM; i++) vec[i] /= norm;
-    return {vec: vec, grid: blur};
-}
-
-function boxblur(g) {
-    const o = new Float32Array(DIM);
-    for (let y = 0; y < GRID; y++) {
-        for (let x = 0; x < GRID; x++) {
-            let sum = 0, cnt = 0;
-            for (let dy = -1; dy <= 1; dy++) {
-                const ny = y + dy;
-                if (ny < 0 || ny >= GRID) continue;
-                for (let dx = -1; dx <= 1; dx++) {
-                    const nx = x + dx;
-                    if (nx < 0 || nx >= GRID) continue;
-                    sum += g[ny * GRID + nx]; cnt++;
-                }
-            }
-            o[y * GRID + x] = sum / cnt;
-        }
-    }
-    return o;
-}
-
-// tiny hash that drops twins/identical chars
-function hashfeat(vec) {
-    let h = 2166136261;
-    for (let i = 0; i < DIM; i += 7) {
-        h = (Math.imul(h ^ (((vec[i] * 120) + 128) | 0), 16777619)) >>> 0;
-    }
-    return h;
-}
-
-/*//////////////////////////////////////////////////////////////////////*/
-
-function idbopen() {
-    return new Promise((res, rej) => {
-        const r = indexedDB.open("scribbleidx", 1);
-        r.onupgradeneeded = () => r.result.createObjectStore("idx");
-        r.onsuccess = () => res(r.result);
-        r.onerror = () => rej(r.error);
-    });
-}
-async function idbget(key) {
-    try {
-        const db = await idbopen();
-        return await new Promise((res, rej) => {
-            const q = db.transaction("idx", "readonly").objectStore("idx").get(key);
-            q.onsuccess = () => res(q.result);
-            q.onerror = () => rej(q.error);
-        });
-    } catch (e) {return null}
-}
-async function idbput(key, val) {
-    try {
-        const db = await idbopen();
-        await new Promise((res, rej) => {
-            const q = db.transaction("idx", "readwrite").objectStore("idx").put(val, key);
-            q.onsuccess = () => res();
-            q.onerror = () => rej(q.error);
-        });
-    } catch (e) {}
-}
-async function idbdel(key) {
-    try {
-        const db = await idbopen();
-        await new Promise((res) => {
-            const q = db.transaction("idx", "readwrite").objectStore("idx").delete(key);
-            q.onsuccess = () => res();
-            q.onerror = () => res();
-        });
-    } catch (e) {}
-}
-
-/*//////////////////////////////////////////////////////////////////////*/
-
 let glyphcep = null; let emojicep = null;
 let emojifeat = null; let emojicolor = null; let emojiuni = null;
 let ready = false; let indexing = false;
 
-async function rasterise(codepoints, font, wantcolor, altfont) {
-    const gc = document.createElement("canvas");
-    gc.width = COLS * CELL;
-    const gctx = gc.getContext("2d", {willReadFrequently: true});
-    const feats = [], kept = [], colors = [], unis = [];
-    const seenh = new Set();
-
-    for (let start = 0; start < codepoints.length; start += BATCH) {
-        const batch = codepoints.slice(start, start + BATCH);
-        const rows = Math.ceil(batch.length / COLS);
-        gc.height = rows * CELL;
-
-        gctx.clearRect(0, 0, gc.width, gc.height);
-        gctx.fillStyle = "#000";
-        gctx.textAlign = "center";
-        gctx.textBaseline = "middle";
-        gctx.font = "46px " + font;
-        fillbatch(gctx, batch, wantcolor);
-        const img = gctx.getImageData(0, 0, gc.width, gc.height);
-
-        gctx.clearRect(0, 0, gc.width, gc.height);
-        gctx.font = "46px " + altfont;
-        fillbatch(gctx, batch, wantcolor);
-        const alt = gctx.getImageData(0, 0, gc.width, gc.height);
-
-        for (let i = 0; i < batch.length; i++) {
-            const col = i % COLS, rw = (i / COLS) | 0;
-            const r = feature(img.data, gc.width, col * CELL, rw * CELL, CELL, CELL);
-            if (!r) continue;
-            if (!wantcolor) {
-                const h = hashfeat(r.vec);
-                if (seenh.has(h)) continue;
-                seenh.add(h);
-            }
-            feats.push(quantise(r.vec));
-            kept.push(batch[i]);
-            unis.push(cellsdiffer(img.data, alt.data, gc.width,
-                col * CELL, rw * CELL) ? 1 : 0);
-            if (wantcolor)
-                colors.push(avgcolor(img.data, gc.width, col * CELL, rw * CELL));
-        }
-        status("indexing " + Math.min(start + BATCH, codepoints.length) +
-            "/" + codepoints.length + "..");
-        await new Promise(res => requestAnimationFrame(res));
-    }
-    return {kept: kept, feats: feats, colors: colors, unis: unis};
-}
-
-function fillbatch(gctx, batch, wantcolor) {
-    for (let i = 0; i < batch.length; i++) {
-        const col = i % COLS, rw = (i / COLS) | 0;
-        const ch = String.fromCodePoint(batch[i]) + (wantcolor ? "️" : "");
-        gctx.fillText(ch, col * CELL + CELL / 2, rw * CELL + CELL / 2);
-    }
-}
-
-function cellsdiffer(a, b, stride, rx, ry) {
-    for (let y = 0; y < CELL; y++) {
-        let base = ((ry + y) * stride + rx) * 4 + 3;
-        for (let x = 0; x < CELL; x++)
-            if (a[base + x * 4] !== b[base + x * 4]) return true;
-    }
-    return false;
-}
-
-function avgcolor(data, stride, rx, ry) {
-    let r = 0, g = 0, b = 0, a = 0;
-    for (let y = 0; y < CELL; y++) {
-        let idx = ((ry + y) * stride + rx) * 4;
-        for (let x = 0; x < CELL; x++, idx += 4) {
-            const al = data[idx + 3];
-            if (al > 24) {
-                r += data[idx] * al; g += data[idx + 1] * al;
-                b += data[idx + 2] * al; a += al;
-            }
-        }
-    }
-    if (!a) return [136, 136, 136];
-    return [Math.round(r / a), Math.round(g / a), Math.round(b / a)];
-}
-
-async function buildindex(cps) {
-    indexing = true;
-    rebuildbtn.disabled = true;
-    await document.fonts.ready;
-
-    const sym = await rasterise(cps.filter(c => !EMOJISET.has(c)),
-        renderfont, false, renderfontnouni);
-    const emo = await rasterise(EMOJILIST, emojifont, true, emojifontnouni);
-
-    const cparr = new Int32Array(sym.kept);
-    const farr = new Int8Array(sym.feats.length * DIM);
-    for (let i = 0; i < sym.feats.length; i++) farr.set(sym.feats[i], i * DIM);
-    const uarr = new Uint8Array(sym.unis);
-
-    const ecparr = new Int32Array(emo.kept);
-    const efarr = new Int8Array(emo.feats.length * DIM);
-    for (let i = 0; i < emo.feats.length; i++) efarr.set(emo.feats[i], i * DIM);
-    const euarr = new Uint8Array(emo.unis);
-    const ecolarr = new Uint8Array(emo.colors.length * 3);
-    for (let i = 0; i < emo.colors.length; i++) {
-        ecolarr[i * 3] = emo.colors[i][0];
-        ecolarr[i * 3 + 1] = emo.colors[i][1];
-        ecolarr[i * 3 + 2] = emo.colors[i][2];
-    }
-
-    glyphcep = cparr;
-    emojicep = ecparr; emojifeat = efarr; emojicolor = ecolarr;
-    emojiuni = euarr;
-    indexing = false;
-    rebuildbtn.disabled = false;
-    status(cparr.length + " symbols + " + ecparr.length + " emoji ready");
-    await idbput(IDXKEY, {v: IDXVER, dim: DIM, cps: cparr, feats: farr,
-        unifont: uarr, emojicep: ecparr, emojifeat: efarr,
-        emojicolor: ecolarr, emojiunifont: euarr});
-    armworker(farr, cparr.length, uarr);
-}
-
-function quantise(v) {
-    const q = new Int8Array(DIM);
-    for (let j = 0; j < DIM; j++) {
-        const x = Math.round(v[j] * QSCALE);
-        q[j] = x > 127 ? 127 : x < -127 ? -127 : x;
-    }
-    return q;
-}
-
-/*//////////////////////////////////////////////////////////////////////*/
-
-async function fetchcps() {
-    const buf = await (await fetch(cpSURL)).arrayBuffer();
-    return new Uint32Array(buf); 
-}
-async function fetchemoji() {
-    try {
-        const buf = await (await fetch(EMOJIURL)).arrayBuffer();
-        EMOJILIST = Array.from(new Uint32Array(buf));
-        EMOJISET = new Set(EMOJILIST);
-    } catch (e) {}
-}
 async function fetchnames() {
     try {
         const resp = await fetch(NAMESURL);
@@ -343,107 +76,115 @@ async function fetchnames() {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-async function init() {
-    status("loading fonts..");
-    try {
-        await Promise.all(FONTS.map(async f => {
-            const face = new FontFace(f.fam, 'url(' + f.url + ') format("woff2")');
-            await face.load(); document.fonts.add(face);
-        }));
-    } catch (e) {
-        status("couldn't load bundled fonts - " + e.message);
-        return;
-    }
-    resultsel.style.fontFamily = renderfont;
-    idbdel("gonoto-v1"); idbdel("scribble-v2");
-    idbdel("scribble-v3"); idbdel("scribble-v4");
-    idbdel("scribble-v5");
-    await Promise.all([fetchnames(), fetchemoji()]);
+let resources = null;
+let signature = "";
+let indexworker = null;
+const fonts = [renderfont,renderfontnouni,emojifont,emojifontnouni];
 
-    const cached = await idbget(IDXKEY);
-    if (cached && cached.v === IDXVER && cached.dim === DIM &&
-        cached.cps && cached.feats && cached.emojicep && cached.unifont) {
-        glyphcep = cached.cps;
-        emojicep = cached.emojicep;
-        emojifeat = cached.emojifeat;
-        emojicolor = cached.emojicolor;
-        emojiuni = cached.emojiunifont;
-        rebuildbtn.disabled = false;
-        status(glyphcep.length + " symbols + " + emojicep.length +
-            " emojis loaded");
-        armworker(cached.feats, glyphcep.length, cached.unifont);
-        return;
-    }
-
-    status("loading character set..");
-    let cps;
-    try {
-        cps = await fetchcps();
-    } catch (e) {
-        status("couldn't load codepoint list?! " + e.message);
-        return;
-    }
-    await buildindex(cps);
+function validcache(value) {
+    return value?.v === IDXVER && value.signature === signature && value.dim === DIM && value.cps instanceof Int32Array && value.feats instanceof Int8Array && value.feats.length === value.cps.length * DIM && value.unifont?.length === value.cps.length && value.emojicep instanceof Int32Array && value.emojifeat?.length === value.emojicep.length * DIM && value.emojicolor?.length === value.emojicep.length * 3 && value.emojiunifont?.length === value.emojicep.length;
 }
 
-rebuildbtn.addEventListener("click", async () => {
-    if (indexing) return;
-    await idbdel(IDXKEY);
-    ready = false;
-    status("loading character set..");
+function activate(value,cached,saved = true) {
+    glyphcep = value.cps;
+    emojicep = value.emojicep;
+    emojifeat = value.emojifeat;
+    emojicolor = value.emojicolor;
+    emojiuni = value.emojiunifont;
+    indexing = false;
+    rebuildbtn.disabled = false;
+    document.body.dataset.cache = cached ? "loaded" : saved ? "saved" : "memory";
+    document.body.dataset.resumed = String(value.resumed || 0);
+    status(glyphcep.length + " symbols + " + emojicep.length + " emoji ready" + (saved ? "" : ". couldn't save the index."));
+    armworker(value.feats,glyphcep.length,value.unifont);
+    persistent().then(value => {document.body.dataset.persistent = String(value);});
+}
+
+function progress(value) {
+    document.body.dataset.processed = String(value.done);
+    document.body.dataset.resumed = String(value.resumed);
+    status("indexing " + value.kind + " " + value.done + "/" + value.total);
+}
+
+async function generate() {
+    const settings = {signature,fonts};
+    const output = await new Promise((resolve,reject) => {
+        indexworker = new Worker(new URL("./js/indexing/worker.js",import.meta.url),{type:"module"});
+        indexworker.onmessage = event => {
+            const value = event.data;
+            if (value.type === "progress") {progress(value); return;}
+            indexworker.terminate();indexworker = null;
+            if (value.type === "result") resolve(value.result);
+            else if (value.type === "unsupported") resolve(null);
+            else reject(Error(value.message));
+        };
+        indexworker.onerror = event => {indexworker?.terminate();indexworker = null;reject(Error(event.message || "indexing failed"));};
+        indexworker.postMessage({data:resources,settings});
+    });
+    if (output) return output;
+    const {build} = await import("./js/indexing/build.js");
+    return build(resources,{...settings,progress,canvas:(width,height) => {const canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;return canvas;},yield:() => new Promise(resolve => setTimeout(resolve,0))});
+}
+
+async function buildindex(force = false) {
+    const build = async () => {
+        const existing = force ? null : await read(IDXKEY);
+        if (validcache(existing)) {activate(existing,true);return;}
+        indexing = true;ready = false;rebuildbtn.disabled = true;
+        const started = performance.now();
+        const result = {...await generate(),v:IDXVER,dim:DIM,signature};
+        let saved = true;
+        try {
+            await write(IDXKEY,result);
+        } catch {saved = false;}
+        if (saved) {try {await clearparts();} catch {}}
+        document.body.dataset.buildtime = String(performance.now() - started);
+        activate(result,false,saved);
+    };
+    if (navigator.locks) await navigator.locks.request("scribble-index",build);
+    else await build();
+}
+
+async function init() {
+    const started = performance.now();
+    status("loading fonts");
+    fetchnames().then(() => {if (ready) dirty = true;});
     try {
-        await buildindex(await fetchcps());
-    } catch (e) {
-        status("rebuild failed - " + e.message);
-        rebuildbtn.disabled = false;
+        resources = await load(FONTS,cpSURL,EMOJIURL);
+        EMOJILIST = Array.from(resources.emoji);EMOJISET = new Set(EMOJILIST);
+        resultsel.style.fontFamily = renderfont;
+        signature = await fingerprint(resources,{version:IDXVER,configuration,fonts});
+        document.body.dataset.signature = signature;
+        await buildindex();
+        document.body.dataset.startup = String(performance.now() - started);
+    } catch (error) {
+        indexing = false;rebuildbtn.disabled = false;
+        status("couldn't prepare the index: " + error.message);
+        document.body.dataset.cache = "error";
     }
+}
+
+rebuildbtn.addEventListener("click",async () => {
+    if (indexing) return;
+    try {
+        await remove(IDXKEY);await clearparts(signature);
+        if (!resources) {await init();return;}
+        await buildindex(true);
+    } catch (error) {indexing=false;rebuildbtn.disabled=false;status("rebuild failed: " + error.message);}
+});
+window.addEventListener("pagehide",event => {
+    if (event.persisted) return;
+    indexworker?.terminate();worker?.terminate();
 });
 
 /*//////////////////////////////////////////////////////////////////////*/
-
-const workerscript = `
-    let feat = null, dim = 0, n = 0, uni = null;
-    onmessage = function (e) {
-        const m = e.data;
-        if (m.type === "index") {feat = m.feat; dim = m.dim; n = m.n; uni = m.uni; return}
-        if (m.type === "match") {
-            const vecs = m.vecs, nv = vecs.length, top = [];
-            const skipuni = m.nouni && uni;
-            let worst = -1e9;
-            for (let g = 0; g < n; g++) {
-                if (skipuni && uni[g]) continue;
-                const base = g * dim;
-                let best = -1e9;
-                for (let k = 0; k < nv; k++) {
-                    const v = vecs[k];
-                    let dot = 0;
-                    for (let i = 0; i < dim; i++) dot += v[i] * feat[base + i];
-                    if (dot > best) best = dot;
-                }
-                if (top.length < 100) {
-                    top.push({idx: g, score: best});
-                    if (top.length === 100) {
-                        top.sort(function (a, b) {return a.score - b.score});
-                        worst = top[0].score;
-                    }
-                } else if (best > worst) {
-                    top[0] = {idx: g, score: best};
-                    top.sort(function (a, b) {return a.score - b.score});
-                    worst = top[0].score;
-                }
-            }
-            top.sort(function (a, b) {return b.score - a.score});
-            postMessage({type: "result", items: top});
-        }
-    };`;
 
 let worker = null;
 let matchpending = false, matchqueued = false;
 
 function armworker(featArr, count, uniArr) {
     if (!worker) {
-        worker = new Worker(URL.createObjectURL(
-            new Blob([workerscript], {type: "text/javascript"})));
+        worker = new Worker(new URL("./js/matching/worker.js",import.meta.url),{type:"module"});
         worker.onmessage = onworkermsg;
     }
     worker.postMessage({type: "index", feat: featArr, dim: DIM, n: count,
