@@ -16,28 +16,34 @@ const desktopdestroyer = {
 /*//////////////////////////////////////////////////////////////////////*/
 
 function canvafit() {
-  const dmg = document.querySelector(".damage");
-  const fx = document.querySelector(".fx");
-  const w = window.innerWidth, h = window.innerHeight;
-
-  let keep = null;
-  if (desktopdestroyer.dctx && dmg.width) {
-    keep = document.createElement("canvas");
-    keep.width = dmg.width; keep.height = dmg.height;
-    keep.getContext("2d").drawImage(dmg, 0, 0);
-  }
-  const old = desktopdestroyer.dpr;
-
-  desktopdestroyer.dpr = Math.min(window.devicePixelRatio || 1, 2);
-  desktopdestroyer.W = w; desktopdestroyer.H = h;
-  const dpr = desktopdestroyer.dpr;
-  for (const cv of [dmg, fx]) {cv.width = w * dpr; cv.height = h * dpr}
-
-  desktopdestroyer.dctx = dmg.getContext("2d");
-  desktopdestroyer.fctx = fx.getContext("2d");
-  desktopdestroyer.dctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  desktopdestroyer.fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  if (keep) desktopdestroyer.dctx.drawImage(keep, 0, 0, keep.width / old, keep.height / old);
+    const damage = document.querySelector(".damage");
+    const effects = document.querySelector(".fx");
+    const width = document.documentElement.clientWidth;
+    const height = document.documentElement.clientHeight;
+    const previouswidth = desktopdestroyer.W;
+    const previousheight = desktopdestroyer.H;
+    let previous = null;
+    if (desktopdestroyer.dctx && damage.width) {
+        previous = document.createElement("canvas");
+        previous.width = damage.width;
+        previous.height = damage.height;
+        previous.getContext("2d").drawImage(damage,0,0);
+    }
+    desktopdestroyer.dpr = Math.min(window.devicePixelRatio || 1,2);
+    desktopdestroyer.W = width;
+    desktopdestroyer.H = height;
+    for (const canvas of [damage,effects]) {
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+        canvas.width = Math.round(width * desktopdestroyer.dpr);
+        canvas.height = Math.round(height * desktopdestroyer.dpr);
+    }
+    desktopdestroyer.dctx = damage.getContext("2d");
+    desktopdestroyer.fctx = effects.getContext("2d");
+    for (const context of [desktopdestroyer.dctx,desktopdestroyer.fctx]) {
+        context.setTransform(damage.width / width,0,0,damage.height / height,0,0);
+    }
+    if (previous) desktopdestroyer.dctx.drawImage(previous,0,0,previous.width,previous.height,0,0,previouswidth,previousheight);
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
@@ -305,12 +311,12 @@ function step() {
 
 async function boot() {
   canvafit();
+  window.addEventListener("resize", canvafit);
   await loadassets();
   desktopdestroyer.sound = makesound();
   await desktopdestroyer.sound.load();
   selectweapon(0);
   bindinput();
-  window.addEventListener("resize", canvafit);
   requestAnimationFrame(frame);
 }
 boot();
