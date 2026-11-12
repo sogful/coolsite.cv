@@ -35,10 +35,10 @@ h1, h2, h3 {
 }
 .list {
     display: grid; grid-template-columns: minmax(0,1fr);
-    gap: 20px 48px; width: min(820px,90vw);
+    gap: 6px 18px; width: min(560px,90vw);
 }
 a {
-    display: inline-block; transform: rotate(1.1deg);
+    display: inline-block; transform: none;
 }
 .credit {
     font-size: 0.72em; opacity: 0.65;
@@ -58,10 +58,10 @@ sub {
     align-items: flex-start; min-width: 0;
 }
 .toolitem .toollogo {
-    max-height: 48px;
+    max-height: 28px;
 }
 .toolitem:nth-child(even) > a {
-    transform: rotate(-1.1deg);
+    transform: none;
 }
 @media (min-width: 720px) {
     .list {

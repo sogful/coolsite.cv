@@ -2,7 +2,7 @@
     display: block; width: auto;
     max-width: 100%; height: auto;
     max-height: 72px; object-fit: contain;
-    object-position: left center;
+    object-position: left center; image-rendering: pixelated;
 }
 .toolheading {
     margin: 0 0 16px; line-height: 1;
