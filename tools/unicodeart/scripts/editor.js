@@ -167,6 +167,22 @@ export function editor(change) {
         } else if (event.target.value === "wave") {
             ctx.moveTo(-75, 0);
             for (let x = -75; x <= 75; x++) ctx.lineTo(x, Math.sin(x / 8) * 10);
+        } else if (event.target.value === "heart") {
+            ctx.moveTo(0, 12);
+            ctx.bezierCurveTo(-30, -3, -12, -23, 0, -8);
+            ctx.bezierCurveTo(12, -23, 30, -3, 0, 12);
+        } else if (event.target.value === "flower") {
+            for (let index = 0; index < 5; index++) {
+                const angle = index * Math.PI * 2 / 5 - Math.PI / 2;
+                const x = Math.cos(angle) * 6;
+                const y = Math.sin(angle) * 6 - 4;
+                ctx.moveTo(x + 4, y);
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+            }
+            ctx.moveTo(3, -4); ctx.arc(0, -4, 3, 0, Math.PI * 2);
+            ctx.moveTo(0, 4); ctx.lineTo(0, 15);
+            ctx.moveTo(0, 12); ctx.quadraticCurveTo(-10, 3, -11, 8);
+            ctx.quadraticCurveTo(-7, 15, 0, 12);
         } else {
             ctx.arc(0, 0, 13, 0, Math.PI * 2);
             ctx.moveTo(-5, -4); ctx.lineTo(-5, -2);

@@ -1,9 +1,9 @@
-import {profiles, loadfonts} from "./profiles.js";
-import {drawing} from "./atlas.js?v=6";
+import {profiles, loadfonts} from "./profiles.js?v=20261112b";
+import {drawing} from "./atlas.js?v=7";
 import {context, render, loss} from "./raster.js";
-import {field, search, refine, spacing} from "./fit.js?v=4";
+import {field, search, refine, spacing} from "./fit.js?v=5";
 import {sampler} from "./sampling.js";
-import {components, recognize} from "./recognition.js";
+import {components, recognize} from "./recognition.js?v=20261112b";
 
 const ready = loadfonts(self.fonts);
 let serial = 0;
@@ -64,7 +64,8 @@ async function solve(request) {
             whole = spacing(measure, 5 + (inkleft - left) * horizontal) + whole;
         }
         const available = bounds.height;
-        const scale = available / (bottom - top);
+        const scale = recognized ? available / (bottom - top) : Math.min(available / (bottom - top),(request.width - 10) / (right - left));
+        if (!recognized) horizontal = scale;
         let width = Math.ceil((right - left) * horizontal + 10);
         let ctx = context(width, height, profile);
         let target = sample(width, height, left, top, scale, bounds.top, horizontal);

@@ -1,7 +1,7 @@
 export const profiles = {
     youtube: {name: "YouTube", family: "unicodeyoutube, Arial, sans-serif", sourcefamily: "Roboto, Arial, sans-serif", size: 14, height: 20, baseline: 14, weight: 400, background: "#0f0f0f", color: "#f1f1f1"},
     discord: {name: "Discord", family: 'unicodediscord, unicodenoto, "Helvetica Neue", Helvetica, Arial, sans-serif', sourcefamily: '"gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif', size: 16, height: 22, baseline: 16, weight: 400, background: "#323339", color: "#f3f3f4"},
-    twitter: {name: "twitter", family: 'unicodetwitter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', sourcefamily: 'TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', size: 15, height: 20, baseline: 15, weight: 400, background: "#000000", color: "#e7e9ea"}
+    twitter: {name: "twitter", family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', sourcefamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', size: 15, height: 20, baseline: 15, weight: 400, background: "#000000", color: "#e7e9ea"}
 };
 
 /*//////////////////////////////////////////////////////////////////////*/
