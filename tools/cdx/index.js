@@ -1,4 +1,4 @@
-const persistkeys = ['format', 'limittype', 'limitval', 'limitenabled', 'matchtype', 'dedupechk', 'skip404chk',
+const persistkeys = ['format', 'limitval', 'limitenabled', 'matchtype', 'dedupechk', 'skip404chk',
     'datefrom', 'dateto', 'mimefilter', 'statusfilter'];
 
 function element(cls) {return document.querySelector('.' + cls)}
@@ -12,7 +12,7 @@ function savesettings() {
         else val = element(k).value;
         o[k] = val;
     });
-    localStorage.setItem("iadl_settings", JSON.stringify(o));
+    try {localStorage.setItem("iadl_settings",JSON.stringify(o));} catch {}
 }
 
 function loadsettings() {
@@ -39,7 +39,9 @@ function savelastrun(entries) {
             return;
         }
         localStorage.setItem("iadl_domaintext", element('domainfield').value);
-        localStorage.setItem("iadl_lastrun", JSON.stringify(entries));
+        const stored = JSON.stringify(entries);
+        if (stored.length > 2000000) localStorage.removeItem("iadl_lastrun");
+        else localStorage.setItem("iadl_lastrun",stored);
     } catch { }
 }
 
@@ -50,23 +52,25 @@ function loadlastrun() {
 
     let entries = null;
     try { entries = JSON.parse(localStorage.getItem("iadl_lastrun") || "null"); } catch { }
-    if (!entries || !entries.length) return;
+    if (!Array.isArray(entries) || !entries.length || entries.some(entry => typeof entry?.domain !== "string" || !Array.isArray(entry.data) || entry.data.some(row => !Array.isArray(row) || row.length < 5 || row.some(value => typeof value !== "string")))) return;
 
-    const progressRoot = element('progress');
+    const progressroot = element('progress');
     const output = element('outputrow');
-    progressRoot.replaceChildren();
+    progressroot.replaceChildren();
     if (entries.length === 1) {
         const row = document.createElement('div');
         row.className = 'progressline';
-        filldonerow(row, entries[0].domain, entries[0].data, false);
-        progressRoot.appendChild(row);
+        if (entries[0].partial) fillpartialrow(row,entries[0].domain,entries[0].data,false,entries[0].partial === "stopped");
+        else filldonerow(row, entries[0].domain, entries[0].data, false);
+        progressroot.appendChild(row);
         showpreviewtable(entries[0].data, output);
     } else {
         entries.forEach(e => {
             const line = document.createElement('div');
             line.className = 'progressline';
-            filldonerow(line, e.domain, e.data, true);
-            progressRoot.appendChild(line);
+            if (e.partial) fillpartialrow(line,e.domain,e.data,true,e.partial === "stopped");
+            else filldonerow(line, e.domain, e.data, true);
+            progressroot.appendChild(line);
         });
     }
 }
@@ -121,7 +125,6 @@ function parseurllist(text) {
 
 function updatelimitcontrols() {
     const enabled = element('limitenabled').checked;
-    element('limittype').disabled = !enabled;
     element('limitval').disabled = !enabled;
 }
 
@@ -179,15 +182,9 @@ function buildcdxurl(domain) {
         url += "&filter=" + encodedurl("statuscode:(" + pattern + ")");
     }
 
-    let limittype = element('limittype').value;
-    let limit = parseInt(element('limitval').value) || 5000;
-    if (element('limitenabled').checked) {
-        if (limittype === "slow") {
-            url += "&limit=" + limit;
-        } else if (limittype === "fast") {
-            url += "&fastLatest=" + limit;
-        }
-    }
+    if (element("skip404chk").checked) url += "&filter=" + encodedurl("!statuscode:(404|410)");
+    const limit = Math.max(1,Math.floor(Number(element("limitval").value) || 5000));
+    if (element("limitenabled").checked) url += "&limit=" + limit;
     return url;
 }
 
@@ -220,148 +217,10 @@ function parsedatarows(lines) {
     return data;
 }
 
-function sleep(ms) {return new Promise(r => setTimeout(r, ms))}
-
-const cdxroutes = [
-    {key: "direct", build: u => u},
-    {key: "proxy", build: u => "https://cors.coolsite.cv/?url=" + encodeURIComponent(u)},
-    {key: "codetabs", build: u => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u)}
-];
-
 function waybackurl(parts) {
     let date = parts[0], origurl = parts[1], mimetype = parts[2];
     let prefix = mimetype === "text/html" ? "if_" : "im_";
     return "https://web.archive.org/web/" + date + prefix + "/" + origurl;
-}
-
-async function fetchcdxrowsstream(baseurl, progress, control) {
-    const retriesperroute = 1;
-    const sweeps = 5;
-    const responsetimeout = 25000;
-    const streamtimeout = 1200000;
-    const dedupeenabled = element('dedupechk').checked;
-    const hardlimit = element('limitenabled').checked ? (parseInt(element('limitval').value) || 5000) : Infinity;
-    let lasterror = null;
-
-    for (let sweep = 0; sweep < sweeps; sweep++) {
-      for (let a = 0; a < cdxroutes.length; a++) {
-        const route = cdxroutes[a].key;
-        const target = cdxroutes[a].build(baseurl);
-
-        for (let attempt = 0; attempt <= retriesperroute; attempt++) {
-            if (control && control.stopped) throw Object.assign(new Error("stopped"), {stopped: true, partial: []});
-            const controller = new AbortController();
-            let timeout = setTimeout(() => controller.abort(), responsetimeout);
-            try {
-                setprogress(progress, "trying via " + route + (attempt ? " (retry " + attempt + ")" : "")
-                    + (sweep ? " [pass " + (sweep + 1) + "]" : "") + "..");
-                const resp = await fetch(target, {method: "GET", cache: "no-store", signal: controller.signal});
-                clearTimeout(timeout);
-                if (!resp.ok) {
-                    const e = new Error(route + " HTTP " + resp.status);
-                    e.status = resp.status;
-                    throw e;
-                }
-                timeout = setTimeout(() => controller.abort(), streamtimeout);
-                setprogress(progress, "beginning to stream data, this might take a while..");
-                if (!resp.body) {
-                    const fallbacktxt = await resp.text();
-                    return parsedatarows((fallbacktxt || "").replace(/\r/g, "").split("\n"));
-                }
-
-                const totalbytes = parseInt(resp.headers.get("content-length") || "0", 10) || 0;
-                const reader = resp.body.getReader();
-                const decoder = new TextDecoder();
-                let processedbytes = 0;
-                let carry = "";
-                let data = [];
-                let dedupemap = dedupeenabled ? new Map() : null;
-                let stop = false;
-
-                while (!stop) {
-                    if (control && control.stopped) {
-                        stop = true;
-                        try { await reader.cancel(); } catch { }
-                        break;
-                    }
-                    const {done, value} = await reader.read();
-                    if (done) break;
-                    processedbytes += value.byteLength;
-                    carry += decoder.decode(value, {stream: true});
-                    const lines = carry.split(/\r?\n/);
-                    carry = lines.pop() || "";
-
-                    for (let i = 0; i < lines.length; i++) {
-                        const line = lines[i].trim();
-                        if (!line) continue;
-                        const parts = line.split(/\s+/);
-                        if (parts.length < 5) continue;
-                        const original = parts[1];
-                        if (gottaskipbadpages(parts[3])) continue;
-
-                        if (dedupeenabled) {
-                            const timestamp = parts[0];
-                            const norm = normalizededupe(original);
-                            const prev = dedupemap.get(norm);
-                            if (!prev || prev[0] < timestamp) dedupemap.set(norm, parts);
-                        } else {
-                            data.push(parts);
-                            if (data.length >= hardlimit) {
-                                stop = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    const mbdone = (processedbytes / (1024 * 1024)).toFixed(1);
-                    const rowcount = dedupeenabled ? dedupemap.size : data.length;
-                    if (totalbytes > 0) {
-                        const mbtotal = (totalbytes / (1024 * 1024)).toFixed(1);
-                        setprogress(progress, `streaming ${mbdone}/${mbtotal} MB.. (${rowcount} rows)`);
-                    } else {
-                        setprogress(progress, `streaming ${mbdone} MB.. (${rowcount} rows)`);
-                    }
-                }
-
-                if (carry && !stop) {
-                    const line = carry.trim();
-                    if (line) {
-                        const parts = line.split(/\s+/);
-                        if (parts.length >= 5) {
-                            const original = parts[1];
-                            if (!gottaskipbadpages(parts[3])) {
-                                if (dedupeenabled) {
-                                    const timestamp = parts[0];
-                                    const norm = normalizededupe(original);
-                                    const prev = dedupemap.get(norm);
-                                    if (!prev || prev[0] < timestamp) dedupemap.set(norm, parts);
-                                } else if (data.length < hardlimit) {
-                                    data.push(parts);
-                                }
-                            }
-                        }
-                    }
-                }
-                if (dedupeenabled) {
-                    data = Array.from(dedupemap.values());
-                    if (Number.isFinite(hardlimit) && data.length > hardlimit) data = data.slice(0, hardlimit);
-                }
-                return data;
-            } catch (e) {
-                lasterror = e;
-                if (attempt < retriesperroute) {
-                    await sleep(300 + Math.floor(Math.random() * 250));
-                }
-            } finally {clearTimeout(timeout)}
-        }
-      }
-      if (sweep < sweeps - 1) {
-          const wait = 3000 * (sweep + 1) + Math.floor(Math.random() * 1000);
-          setprogress(progress, "every route is down or throttled right now, waiting " + Math.round(wait / 1000) + "s before trying everything again..");
-          await sleep(wait);
-      }
-    }
-    throw lasterror || new Error("all routes failed");
 }
 
 function exportbuilder(data, domain) {
@@ -411,6 +270,11 @@ function filldonerow(rowEl, domain, data, withUrlPrefix) {
         btn.addEventListener("click", () => downloadBlob(exp.content, exp.filename, exp.mime));
         rowEl.appendChild(btn);
     }
+}
+
+function fillpartialrow(row,domain,data,prefix,stopped) {
+    filldonerow(row,domain,data,prefix);
+    row.firstChild.textContent = (prefix ? "(" + domain + ") " : "") + (stopped ? "stopped" : "connection interrupted") + " (" + data.length + " results) ";
 }
 
 function showpreviewtable(data, output) {
@@ -501,7 +365,7 @@ element('domainfield').addEventListener('keydown', (e) => {
 });
 
 function bettererrorformat(msg) {
-    if (/failed to fetch|cors|networkerror/i.test(msg)) return "all routes failed :( ie has been basically non-functional for some people, try running this page in incognito!";
+    if (/failed to fetch|cors|networkerror/i.test(msg)) return "could not reach the archive. check your connection and try again.";
     return "error: " + msg;
 }
 
@@ -512,6 +376,7 @@ function armstopbtn(control) {
     btn.style.display = "";
     const handler = () => {
         control.stopped = true;
+        control.abort?.();
         btn.disabled = true;
         btn.textContent = "stopping..";
     };
@@ -522,83 +387,90 @@ function armstopbtn(control) {
     };
 }
 
+let cdxrunning = false;
+
 document.querySelector('.domaininputrow').addEventListener('submit', async (ev) => {
     ev.preventDefault();
-    const progressRoot = element('progress');
+    if (cdxrunning) return;
+    const progressroot = element('progress');
     const output = element('outputrow');
-    progressRoot.replaceChildren();
+    progressroot.replaceChildren();
     output.innerHTML = "";
 
     const urls = parseurllist(element('domainfield').value);
     if (urls.length === 0) {
-        progressRoot.textContent = "paste the links above, dummy";
+        progressroot.textContent = "paste the links above, dummy";
         return;
     }
 
     const runresults = [];
+    cdxrunning = true;
+    element("runbtn").disabled = true;
+    try {
 
-    if (urls.length === 1) {
-        const domain = urls[0];
-        const cdxUrl = buildcdxurl(domain);
-        const control = {stopped: false};
-        const disarm = armstopbtn(control);
-        try {
-            const data = await fetchcdxrowsstream(cdxUrl, progressRoot, control);
-            disarm();
-            progressRoot.replaceChildren();
-            const row = document.createElement('div');
-            row.className = 'progressline';
-            filldonerow(row, domain, data, false);
-            progressRoot.appendChild(row);
-            showpreviewtable(data, output);
-            runresults.push({domain, data});
-        } catch (e) {
-            disarm();
-            if (e && e.stopped) {
-                const data = e.partial || [];
-                progressRoot.replaceChildren();
-                const row = document.createElement('div');
-                row.className = 'progressline';
-                filldonerow(row, domain, data, false);
-                progressRoot.appendChild(row);
-                showpreviewtable(data, output);
-                runresults.push({domain, data});
-            } else {
-                const msg = (e && e.message) ? e.message : String(e);
-                progressRoot.textContent = bettererrorformat(msg);
-                showpreviewtable([], output);
-            }
-        }
-    } else {
-        for (let i = 0; i < urls.length; i++) {
-            const domain = urls[i];
-            const line = document.createElement('div');
-            line.className = 'progressline';
-            progressRoot.appendChild(line);
-            const cdxUrl = buildcdxurl(domain);
+        if (urls.length === 1) {
+            const domain = urls[0];
+            const cdxurl = buildcdxurl(domain);
             const control = {stopped: false};
             const disarm = armstopbtn(control);
             try {
-                const data = await fetchcdxrowsstream(cdxUrl, (m) => {
-                    line.textContent = '(' + domain + ') ' + m;
-                }, control);
+                const data = await fetchcdxrowsstream(cdxurl, progressroot, control);
                 disarm();
-                filldonerow(line, domain, data, true);
+                progressroot.replaceChildren();
+                const row = document.createElement('div');
+                row.className = 'progressline';
+                filldonerow(row, domain, data, false);
+                progressroot.appendChild(row);
+                showpreviewtable(data, output);
                 runresults.push({domain, data});
             } catch (e) {
                 disarm();
-                if (e && e.stopped) {
+                if (e && (e.stopped || e.partial?.length)) {
                     const data = e.partial || [];
-                    filldonerow(line, domain, data, true);
-                    runresults.push({domain, data});
-                    break;
+                    progressroot.replaceChildren();
+                    const row = document.createElement('div');
+                    row.className = 'progressline';
+                    fillpartialrow(row,domain,data,false,e.stopped);
+                    progressroot.appendChild(row);
+                    showpreviewtable(data, output);
+                    runresults.push({domain,data,partial:e.stopped ? "stopped" : "interrupted"});
                 } else {
                     const msg = (e && e.message) ? e.message : String(e);
-                    line.textContent = '(' + domain + ') ' + bettererrorformat(msg);
+                    progressroot.textContent = bettererrorformat(msg);
+                    showpreviewtable([], output);
+                }
+            }
+        } else {
+            for (let i = 0; i < urls.length; i++) {
+                const domain = urls[i];
+                const line = document.createElement('div');
+                line.className = 'progressline';
+                progressroot.appendChild(line);
+                const cdxurl = buildcdxurl(domain);
+                const control = {stopped: false};
+                const disarm = armstopbtn(control);
+                try {
+                    const data = await fetchcdxrowsstream(cdxurl, (m) => {
+                        line.textContent = '(' + domain + ') ' + m;
+                    }, control);
+                    disarm();
+                    filldonerow(line, domain, data, true);
+                    runresults.push({domain, data});
+                } catch (e) {
+                    disarm();
+                    if (e && (e.stopped || e.partial?.length)) {
+                        const data = e.partial || [];
+                        fillpartialrow(line,domain,data,true,e.stopped);
+                        runresults.push({domain,data,partial:e.stopped ? "stopped" : "interrupted"});
+                        if (e.stopped) break;
+                    } else {
+                        const msg = (e && e.message) ? e.message : String(e);
+                        line.textContent = '(' + domain + ') ' + bettererrorformat(msg);
+                    }
                 }
             }
         }
-    }
-    if (runresults.length) savelastrun(runresults);
-    alldone();
+        if (runresults.length) savelastrun(runresults);
+        alldone();
+    } finally {cdxrunning = false; element("runbtn").disabled = false;}
 });
