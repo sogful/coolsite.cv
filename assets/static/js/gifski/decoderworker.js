@@ -54,7 +54,7 @@ async function decodevideo({file, settings}) {
     const context = canvas.getContext("2d", {alpha: false, willReadFrequently: true});
     const framebytes = settings.width * settings.height * 4;
     const framecount = Math.max(2, Math.round(settings.duration * settings.fps));
-    const batchsize = Math.max(12, Math.round(settings.fps * 2));
+    const batchsize = Math.min(12,Math.max(2,Math.ceil(framecount / 2)));
     let batch = new Uint8Array(Math.min(batchsize, framecount) * framebytes);
     let count = 0;
     let batchstart = 0;
@@ -128,7 +128,7 @@ async function decodevideo({file, settings}) {
             while (count < framecount && (settings.start + count / settings.fps) * 1000000 < end) capture(previous);
         }
         if (count !== framecount) throw new Error(`the video decoder returned ${count} of ${framecount} requested frames`);
-        if (framecount > settings.fps * 2 && signatures.size < 2) throw new Error("the video decoder returned only one repeated image. No GIF was saved.");
+        if (!settings.sticker && framecount > settings.fps * 2 && signatures.size < 2) throw new Error("the video decoder returned only one repeated image. no gif was saved.");
         self.postMessage({type: "decoded", count, distinct: signatures.size});
     } finally {
         if (previous) previous.close();

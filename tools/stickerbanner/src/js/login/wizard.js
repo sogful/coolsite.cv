@@ -28,6 +28,11 @@ export function createwizard() {
 
     function refresh() {
         const phone = device.value !== "computer";
+        const desktopinstruction = document.querySelector(".desktopinstruction");
+        desktopinstruction.hidden = !phone;
+        desktopinstruction.textContent = device.value === "apple"
+            ? " turn on \"request desktop website\" in your browser's menu."
+            : " turn on \"desktop site\" in your browser's menu.";
         if (stage === "approve") {
             document.querySelector(".approvalinstructions").hidden = Boolean(approval);
             if (!approval) {
@@ -61,8 +66,9 @@ export function createwizard() {
         switch (stage) {
             case "device":
                 if (device.value === "computer") show("save");
-                else action(".copylauncher");
+                else show("mobilesave");
                 break;
+            case "mobilesave": action(".copylauncher"); break;
             case "save": case "edit": case "retry": action(".copylogin"); break;
             case "run": case "verifyrun": action(".connect"); break;
             case "approve": if (approval === "verification") action(".copyverify"); break;

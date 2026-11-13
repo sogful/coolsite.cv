@@ -1,14 +1,14 @@
-import {convertvideo} from "../../../../assets/static/js/gifski/conversion.js?v=20261108";
+import {convertvideo,createconverter} from "../../../../assets/static/js/gifski/conversion.js?v=20261113perf";
 import {geometry, positions as gridpositions, tilecrop as layoutcrop} from "./editor/geometry.js";
-import {launcher, setuprequest} from "./login/launcher.js?v=20261109d";
-import {createtransport, readrequest, verification} from "./tiktok/transport.js?v=20261109d";
-import {tiktok} from "./tiktok/tiktok.js?v=20261109d";
-import {publishbanner} from "./tiktok/publisher.js?v=20261109d";
-import {createwizard} from "./login/wizard.js?v=20261109g";
-import {savesession, loadsession, forgetsession} from "./login/session.js?v=20261109d";
-import {plans, nextplan} from "./editor/automatic.js?v=20261109d";
-import {createplayback} from "./editor/playback.js?v=20261109d";
-import {createworkspace} from "./editor/workspace.js?v=20261109d";
+import {launcher, setuprequest} from "./login/launcher.js";
+import {createtransport, readrequest, verification} from "./tiktok/transport.js?v=20261113mobile";
+import {tiktok} from "./tiktok/tiktok.js?v=20261113perf";
+import {publishbanner} from "./tiktok/publisher.js?v=20261113perf";
+import {createwizard} from "./login/wizard.js?v=20261113mobile";
+import {savesession, loadsession, forgetsession} from "./login/session.js";
+import {plans, nextplan} from "./editor/automatic.js";
+import {createplayback} from "./editor/playback.js?v=20261113perf";
+import {createworkspace} from "./editor/workspace.js";
 import qrcode from "../../../../assets/static/js/qrcode/index.js";
 
 const form = document.querySelector(".settings");
@@ -26,6 +26,7 @@ const flow = createwizard();
 const sessionstatus = document.querySelector(".sessionstatus");
 let positions = gridpositions(2);
 const urls = [];
+
 let video = null;
 let controller = null;
 let archive = null;
@@ -44,13 +45,23 @@ let restoring = false;
 let deferredclipboard = true;
 let sessionrevision = 0;
 let sessionqueue = Promise.resolve();
+
 const profilewidth = document.querySelector(".profilewidth");
 const banner = document.querySelector(".banner");
 if (matchMedia("(pointer:coarse), (max-width:600px)").matches) profilewidth.value = Math.max(240,Math.min(1600,document.documentElement.clientWidth));
 const workspace = createworkspace(flow);
 const player = createplayback(drawpreview,reset);
+let previewunit = 1;
+let previewcolor = getComputedStyle(document.body).backgroundColor;
+const previewsizing = new ResizeObserver(entries => {
+    const layout = geometry(profilewidth.value,Number(document.querySelector(".rowcount").value));
+    previewunit = Math.min(3,Math.max(1,entries[0].contentRect.width * (devicePixelRatio || 1)) / layout.profile);
+    if (!archive) drawpreview();
+});
+previewsizing.observe(preview);
+addEventListener("pagehide",() => previewsizing.disconnect());
 reset();
-document.addEventListener("bannertheme",() => {if (!archive) drawpreview();});
+document.addEventListener("bannertheme",() => {previewcolor = getComputedStyle(document.body).backgroundColor; if (!archive) drawpreview();});
 
 /*//////////////////////////////////////////////////////////////////////*/
 
@@ -77,7 +88,8 @@ source.addEventListener("change", async ()=>{
         if (!track) throw Error("choose a supported mp4 video");
         const duration = track.duration / track.timescale;
         video = {videoWidth: track.video.width, videoHeight: track.video.height, duration, frame: null};
-        const fps = track.nb_samples * track.timescale / track.duration;
+        const durations = parser.getTrackSamplesInfo(track.id).map(sample => sample.duration).filter(value => value > 0).sort((left,right) => left - right);
+        const fps = durations.length ? track.timescale / durations[Math.floor(durations.length / 2)] : track.nb_samples * track.timescale / track.duration;
         video.fps = fps;
         document.querySelector(".start").value = 0;
         document.querySelector(".end").value = Math.floor(duration * 1000) / 1000;
@@ -120,7 +132,9 @@ form.addEventListener("submit", async event=>{
     setbusy(true);
     progress.hidden = false;
     grid.classList.add("processing");
+    let converter;
     try {
+        converter = createconverter();
         let tiles = null;
         let chosen = null;
         const candidates = plans(end - start,video.fps,rows);
@@ -147,7 +161,7 @@ form.addEventListener("submit", async event=>{
                         timer = setTimeout(() => timeout.abort(),120000);
                     }
                     progress.value = ((order - 1) * 100 + value) / count;
-                },AbortSignal.any([controller.signal,timeout.signal])).catch(error => {
+                },AbortSignal.any([controller.signal,timeout.signal]),converter).catch(error => {
                     if (timeout.signal.aborted && !controller.signal.aborted) throw Error("the encoder stopped responding. try a shorter trim range.");
                     throw error;
                 }).finally(() => clearTimeout(timer));
@@ -198,7 +212,7 @@ form.addEventListener("submit", async event=>{
     } catch (error) {
         reset();
         status.textContent = controller.signal.aborted ? "stopped" : error.message.toLowerCase();
-    } finally {controller = null; grid.classList.remove("processing"); for (const tile of grid.children) tile.classList.remove("current"); setbusy(false);}
+    } finally {converter?.close(); controller = null; grid.classList.remove("processing"); for (const tile of grid.children) tile.classList.remove("current"); setbusy(false);}
 });
 
 /*//////////////////////////////////////////////////////////////////////*/
@@ -213,21 +227,23 @@ function drawpreview() {
     grid.hidden = false;
     const rows = Number(document.querySelector(".rowcount").value);
     const layout = geometry(profilewidth.value,rows);
-    const unit = 3;
+    const unit = previewunit;
     const width = Math.round(layout.profile * unit);
     const height = Math.round((layout.tile * rows + 8 * (rows - 1) + 16) * unit);
     if (preview.width !== width) preview.width = width;
     if (preview.height !== height) preview.height = height;
     const context = preview.getContext("2d");
-    context.fillStyle = getComputedStyle(document.body).backgroundColor;
+    context.fillStyle = previewcolor;
     context.fillRect(0, 0, preview.width, preview.height);
     for (let index = 0; index < positions.length; index += 1) {
+
         const crop = tilecrop(index);
         const scale = video.frame.videoWidth / video.videoWidth;
         const scaleheight = video.frame.videoHeight / video.videoHeight;
         const left = (16 + index % 3 * (layout.tile + 8)) * unit;
         const top = (8 + Math.floor(index / 3) * (layout.tile + 8)) * unit;
         const size = layout.tile * unit;
+
         context.save();
         context.beginPath();
         context.roundRect(left,top,size,size,4 * unit);

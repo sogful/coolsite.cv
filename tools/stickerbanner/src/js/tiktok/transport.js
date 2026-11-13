@@ -41,6 +41,7 @@ export async function createtransport(relay) {
     };
     address.hostname = hosts[address.hostname] || address.hostname;
     if (address.protocol !== "wss:" && !(address.protocol === "ws:" && ["127.0.0.1","localhost"].includes(address.hostname))) throw Error("the relay must use a secure websocket");
+    await checkrelay(address.href);
     if (!loading) loading = import("../../../../../assets/static/js/epoxy/index.js").then(async library => {
         await library.default({module_or_path:new URL("../../../../../assets/static/js/epoxy/index.wasm",import.meta.url)});
         module = library;
@@ -58,6 +59,46 @@ export async function createtransport(relay) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
+function checkrelay(address) {
+    return new Promise((resolve,reject) => {
+        const socket = new WebSocket(address);
+        const timer = setTimeout(() => finish(false),10000);
+        function finish(connected) {
+            clearTimeout(timer);
+            socket.onopen = null;socket.onerror = null;socket.onclose = null;
+            socket.close();
+            if (connected) resolve();
+            else reject(Error("couldn't reach the login relay. check your connection and retry"));
+        }
+        socket.onopen = () => finish(true);
+        socket.onerror = () => finish(false);
+        socket.onclose = () => finish(false);
+    });
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+function waitvisible(signal) {
+    signal.throwIfAborted();
+    if (!document.hidden) return Promise.resolve(false);
+    return new Promise((resolve,reject) => {
+        function cleanup() {
+            document.removeEventListener("visibilitychange",visible);
+            signal.removeEventListener("abort",cancel);
+        }
+        function visible() {
+            if (document.hidden) return;
+            cleanup();
+            resolve(true);
+        }
+        function cancel() {cleanup(); reject(signal.reason);}
+        document.addEventListener("visibilitychange",visible);
+        signal.addEventListener("abort",cancel,{once:true});
+    });
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
 class transport {
     constructor(factory, relay = "") {
         this.factory = factory;
@@ -70,12 +111,14 @@ class transport {
         this.reconnect = false;
         this.used = Date.now();
         this.closed = false;
+        this.pending = new Map();
+        this.retired = new Set();
     }
 
     async request(url, options = {}) {
         const address = new URL(url);
         if (address.protocol !== "https:" || address.username || address.password || address.port || !trustedhost(address.hostname)) throw Error("unexpected tiktok request destination");
-        const {session = false, signal, retry = true, ...settings} = options;
+        const {session = false, signal, retry = true, timeout = 120000, ...settings} = options;
         if (this.closed) throw Error("the tiktok connection is closed");
         signal?.throwIfAborted();
         const headers = {"User-Agent":this.agent, ...settings.headers};
@@ -87,17 +130,17 @@ class transport {
             let abort;
             try {
                 if (this.reconnect || Date.now() - this.used > 20000) {
-                    this.client.free();
+                    this.retire(this.client);
                     this.client = this.factory();
                     this.reconnect = false;
                 }
                 this.used = Date.now();
-                const deadline = new Promise((resolve,reject) => {timer = setTimeout(() => reject(Error("connection timed out")),120000);});
+                const deadline = new Promise((resolve,reject) => {timer = setTimeout(() => reject(Error("connection timed out")),timeout);});
                 const cancelled = new Promise((resolve,reject) => {
                     abort = () => reject(signal.reason);
                     signal?.addEventListener("abort",abort,{once:true});
                 });
-                response = await Promise.race([this.client.fetch(address.href,{...settings,headers,redirect:"manual"}),deadline,cancelled]);
+                response = await Promise.race([this.fetch(this.client,address.href,{...settings,headers,redirect:"manual"}),deadline,cancelled]);
                 this.used = Date.now();
                 break;
             } catch {
@@ -110,6 +153,31 @@ class transport {
         return response;
     }
 
+    fetch(client,url,options) {
+        const pending = this.pending.get(client) || new Set();
+        this.pending.set(client,pending);
+        const request = Promise.resolve().then(() => client.fetch(url,options));
+        pending.add(request);
+        const settled = () => {
+            pending.delete(request);
+            if (!pending.size) {
+                this.pending.delete(client);
+                if (this.retired.delete(client)) this.dispose(client);
+            }
+        };
+        request.then(settled,settled);
+        return request;
+    }
+
+    retire(client) {
+        if (this.pending.has(client)) this.retired.add(client);
+        else this.dispose(client);
+    }
+
+    dispose(client) {
+        try {client.free();} catch {}
+    }
+
     async authenticate(job, signal, update) {
         this.agent = job.agent;
         this.cookies.clear();
@@ -118,10 +186,35 @@ class transport {
         const deadline = performance.now() + 180000;
         while (performance.now() < deadline) {
             signal.throwIfAborted();
+            if (await waitvisible(signal)) this.reconnect = true;
             const address = new URL(job.url);
             address.hostname = "login-row.www.tiktok.com";
-            const response = await this.request(address.href,{signal,retry:false,headers:{Origin:"https://www.tiktok.com",Referer:"https://www.tiktok.com/",...(job.ticket ? {"x-tt-passport-ticket":job.ticket} : {})}});
-            const data = await response.json();
+            const controller = new AbortController();
+            let paused = false;
+            let response;
+            let data;
+            const cancel = () => controller.abort(signal.reason);
+            const pause = () => {
+                if (!document.hidden) return;
+                paused = true;
+                this.reconnect = true;
+                controller.abort();
+            };
+            signal.addEventListener("abort",cancel,{once:true});
+            document.addEventListener("visibilitychange",pause);
+            try {
+                response = await this.request(address.href,{signal:controller.signal,timeout:10000,headers:{Origin:"https://www.tiktok.com",Referer:"https://www.tiktok.com/",...(job.ticket ? {"x-tt-passport-ticket":job.ticket} : {})}});
+                data = await response.json();
+                signal.throwIfAborted();
+                if (paused) continue;
+            } catch (error) {
+                signal.throwIfAborted();
+                if (paused || document.hidden) {this.reconnect = true; continue;}
+                throw error;
+            } finally {
+                signal.removeEventListener("abort",cancel);
+                document.removeEventListener("visibilitychange",pause);
+            }
             const state = data.data || {};
             if (state.error_code === 2135) {
                 const decision = response.headers.get("x-tt-verify-idv-decision-conf");
@@ -190,7 +283,7 @@ class transport {
         this.cookies.clear();
         this.expires.clear();
         this.changed = null;
-        this.client.free();
+        this.retire(this.client);
     }
 }
 

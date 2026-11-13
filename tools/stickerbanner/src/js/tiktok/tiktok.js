@@ -10,6 +10,7 @@ export class tiktok {
         this.transport = transport;
         this.device = device;
         this.user = null;
+        this.sources = new Map();
     }
 
     async request(path, parameters = {}, method = "GET") {
@@ -47,6 +48,9 @@ export class tiktok {
 
     async source(value) {
         let url = new URL(value);
+        const key = url.href;
+        if (this.sources.has(key)) return this.sources.get(key);
+        let retried = false;
         for (let attempt = 0; attempt < 6; attempt += 1) {
             if (url.protocol !== "https:" || !["www.tiktok.com","tiktok.com","vt.tiktok.com","vm.tiktok.com","m.tiktok.com"].includes(url.hostname) || url.username || url.password || url.port) throw Error("enter a tiktok video url");
             const response = await this.transport.request(url.href,{session:["www.tiktok.com","tiktok.com"].includes(url.hostname)});
@@ -55,8 +59,13 @@ export class tiktok {
             let item;
             try {item = JSON.parse(document.querySelector("script[type='application/json'][id='__UNIVERSAL_DATA_FOR_REHYDRATION__']")?.textContent || "{}").__DEFAULT_SCOPE__?.["webapp.video-detail"]?.itemInfo?.itemStruct;}
             catch {}
-            if (!item?.id || !item.author?.secUid) throw Error("tiktok source video unavailable. try its full www.tiktok.com video url");
-            return {id:String(item.id),secuid:item.author.secUid,url:url.href,author:item.author.uniqueId};
+            if (!item?.id || !item.author?.secUid) {
+                if (!retried) {retried = true; await new Promise(resolve => setTimeout(resolve,600)); continue;}
+                throw Error("tiktok source video unavailable. try its full www.tiktok.com video url");
+            }
+            const source = {id:String(item.id),secuid:item.author.secUid,url:url.href,author:item.author.uniqueId};
+            this.sources.set(key,source);
+            return source;
         }
         throw Error("tiktok source link redirected too many times");
     }

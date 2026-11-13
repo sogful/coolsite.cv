@@ -1,5 +1,5 @@
 import {digest} from "./imageupload.js?v=20261109d";
-import {rejected} from "./tiktok.js?v=20261109d";
+import {rejected} from "./tiktok.js?v=20261113perf";
 
 import {positions as gridpositions} from "../editor/geometry.js";
 
@@ -60,5 +60,5 @@ export async function publishbanner(client, archive, sourceurl, expected, update
         }
         await new Promise(resolve => setTimeout(resolve,1200));
     }
-    throw Error(`${count} stickers created, but profile order is not yet confirmed. do not start another banner`);
+    throw Error(`${count} stickers created, but profile order is not yet confirmed.. do not start another banner`);
 }

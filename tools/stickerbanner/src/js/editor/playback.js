@@ -1,4 +1,4 @@
-import {createanimation} from "./animation.js?v=20261109d";
+import {createanimation} from "./animation.js?v=20261113perf";
 
 export function createplayback(draw, changed) {
     const media = document.createElement("video");
@@ -10,13 +10,18 @@ export function createplayback(draw, changed) {
     const bar = document.querySelector(".trimbar");
     const grid = document.querySelector(".grid");
     const banner = document.querySelector(".banner");
+    const startlabel = document.querySelector(".trimstart");
+    const endlabel = document.querySelector(".trimend");
+    const lengthlabel = document.querySelector(".trimlength");
     media.className = "sourcevideo";
+
     media.muted = true;
     media.defaultMuted = true;
     media.playsInline = true;
     media.preload = "auto";
     media.setAttribute("playsinline","");
     document.body.append(media);
+
     let url = "";
     let request = 0;
     let fps = 30;
@@ -24,6 +29,9 @@ export function createplayback(draw, changed) {
     let frozen = false;
     let last = -1;
     let animation = null;
+    let range = "";
+    let position = -1;
+    const callbacks = typeof media.requestVideoFrameCallback === "function";
 
     function time(value) {
         const minutes = Math.floor(value / 60);
@@ -32,27 +40,46 @@ export function createplayback(draw, changed) {
 
     function refresh() {
         if (!Number.isFinite(media.duration) || !media.duration) return;
-        track.style.setProperty("--start",Number(start.value) / media.duration * 100 + "%");
-        track.style.setProperty("--end",Number(end.value) / media.duration * 100 + "%");
-        track.style.setProperty("--position",media.currentTime / media.duration * 100 + "%");
-        document.querySelector(".trimstart").textContent = time(Number(start.value));
-        document.querySelector(".trimend").textContent = time(Number(end.value));
-        document.querySelector(".trimlength").textContent = (Number(end.value) - Number(start.value)).toFixed(2) + " s";
-        for (const [handle,input] of [[left,start],[right,end]]) {
-            handle.setAttribute("aria-valuemax",String(media.duration));
-            handle.setAttribute("aria-valuenow",input.value);
-            handle.setAttribute("aria-valuetext",time(Number(input.value)));
+        const current = [media.duration,start.value,end.value].join(":");
+        if (range !== current) {
+            range = current;
+            track.style.setProperty("--start",Number(start.value) / media.duration * 100 + "%");
+            track.style.setProperty("--end",Number(end.value) / media.duration * 100 + "%");
+            startlabel.textContent = time(Number(start.value));
+            endlabel.textContent = time(Number(end.value));
+            lengthlabel.textContent = (Number(end.value) - Number(start.value)).toFixed(2) + " s";
+            for (const [handle,input] of [[left,start],[right,end]]) {
+                handle.setAttribute("aria-valuemax",String(media.duration));
+                handle.setAttribute("aria-valuenow",input.value);
+                handle.setAttribute("aria-valuetext",time(Number(input.value)));
+            }
+        }
+        if (position !== media.currentTime) {
+            position = media.currentTime;
+            track.style.setProperty("--position",position / media.duration * 100 + "%");
         }
     }
 
-    function tick() {
+    function cancel() {
+        if (callbacks) media.cancelVideoFrameCallback(request);
+        else cancelAnimationFrame(request);
+        request = 0;
+    }
+
+    function schedule() {
+        if (request || media.paused || document.hidden) return;
+        request = callbacks ? media.requestVideoFrameCallback(tick) : requestAnimationFrame(tick);
+    }
+
+    function tick(now, metadata) {
+        request = 0;
         if (!media.paused && !dragging) {
             if (media.ended || media.currentTime >= Number(end.value) - 0.001 || media.currentTime < Number(start.value)) media.currentTime = Number(start.value);
-            const frame = Math.floor(media.currentTime * fps);
+            const frame = metadata ? Math.round(metadata.mediaTime * fps) : Math.floor(media.currentTime * fps);
             if (frame !== last) {last = frame; draw();}
+            refresh();
         }
-        refresh();
-        request = requestAnimationFrame(tick);
+        schedule();
     }
 
     function unfreeze() {
@@ -133,10 +160,12 @@ export function createplayback(draw, changed) {
         event.preventDefault();
         toggle();
     });
-    media.addEventListener("seeked",() => {draw(); refresh();});
+    media.addEventListener("play",schedule);
+    media.addEventListener("pause",() => {cancel(); refresh();});
+    media.addEventListener("seeked",() => {last = -1; draw(); refresh(); schedule();});
     media.addEventListener("ended",() => {if (!dragging) {media.currentTime = Number(start.value); media.play().catch(() => {});}});
-    request = requestAnimationFrame(tick);
-    addEventListener("pagehide",() => {cancelAnimationFrame(request); media.pause(); animation?.close(); if (url) URL.revokeObjectURL(url);});
+    document.addEventListener("visibilitychange",() => {if (document.hidden) cancel(); else schedule();});
+    addEventListener("pagehide",() => {cancel(); media.pause(); animation?.close(); if (url) URL.revokeObjectURL(url);});
 
     return {
         media,

@@ -1,11 +1,34 @@
 import {joingifs, inspectgif} from "./gifformat.js?v=20261108";
 
-export function convertvideo(file, settings, onprogress, signal) {
+export function createconverter() {
+    const decoder = new Worker(new URL("./decoderworker.js?v=20261113perf",import.meta.url));
+    return {
+        decoder,
+        pool:Array.from({length:Math.min(2,Math.max(1,(navigator.hardwareConcurrency || 2) - 1))},() => ({worker:null,ready:false,busy:false})),
+        workers:[decoder],job:crypto.randomUUID(),busy:false,closed:false,stop:null,
+        close() {
+            if (this.closed) return;
+            this.closed = true;
+            this.stop?.();
+            this.stop = null;
+            for (const worker of this.workers) worker.terminate();
+        }
+    };
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+export function convertvideo(file, settings, onprogress, signal, session = null) {
     return new Promise((resolve, reject)=>{
-        const job = crypto.randomUUID();
-        const decoder = new Worker(new URL("./decoderworker.js?v=20261107", import.meta.url));
-        const pool = Array.from({length: Math.min(2, Math.max(1, (navigator.hardwareConcurrency || 2) - 1))}, ()=>({worker: null, ready: false, busy: false}));
-        const workers = [decoder];
+        const owner = session || createconverter();
+        if (owner.closed || owner.busy) {reject(Error("the converter is unavailable")); return;}
+        owner.busy = true;
+        const {decoder,pool,workers,job} = owner;
+        const listeners = [];
+        const listen = (target,name,handler) => {
+            target.addEventListener(name,handler);
+            listeners.push([target,name,handler]);
+        };
         const queue = [];
         const parts = new Map();
         const cached = [];
@@ -19,12 +42,16 @@ export function convertvideo(file, settings, onprogress, signal) {
             if (ended) return;
             ended = true;
             signal?.removeEventListener("abort", cancel);
-            for (const worker of workers) worker.terminate();
+            for (const [target,name,handler] of listeners) target.removeEventListener(name,handler);
+            owner.busy = false;
+            owner.stop = null;
+            if (!session || error) owner.close();
             cached.length = 0;
             if (error) reject(error);
             else resolve(output);
         };
         const cancel = ()=>finish(new Error("stopped"));
+        owner.stop = cancel;
         if (signal?.aborted) return cancel();
         signal?.addEventListener("abort", cancel, {once: true});
         const next = ()=>{
@@ -54,7 +81,7 @@ export function convertvideo(file, settings, onprogress, signal) {
                 finish(null, output);
             } catch (error) {finish(error);}
         };
-        decoder.addEventListener("message", event=>{
+        listen(decoder,"message", event=>{
             if (ended) return;
             const reply = event.data;
             if (reply.error) return finish(new Error(reply.error));
@@ -66,23 +93,25 @@ export function convertvideo(file, settings, onprogress, signal) {
             next();
         });
         const watchworker = worker=>{
-            worker.addEventListener("error", event=>finish(new Error(event.message || "video conversion failed")));
-            worker.addEventListener("messageerror", ()=>finish(new Error("video frame transfer failed")));
+            listen(worker,"error", event=>finish(new Error(event.message || "video conversion failed")));
+            listen(worker,"messageerror", ()=>finish(new Error("video frame transfer failed")));
         };
         const startworker = index=>{
             const item = pool[index];
             try {
-                item.worker = new Worker(new URL(`./gifskiworker.js?v=20261107&job=${job}&worker=${index}`, import.meta.url), {type: "module"});
+                if (!item.worker) {
+                    item.worker = new Worker(new URL(`./gifskiworker.js?v=20261107&job=${job}&worker=${index}`, import.meta.url), {type: "module"});
+                    workers.push(item.worker);
+                }
             } catch (error) {finish(error); return;}
-            workers.push(item.worker);
             watchworker(item.worker);
-            item.worker.addEventListener("message", event=>{
+            listen(item.worker,"message", event=>{
                 if (ended) return;
                 const reply = event.data;
                 if (reply.error) return finish(new Error(reply.error));
                 if (reply.type === "ready") {
                     item.ready = true;
-                    if (index + 1 < pool.length) startworker(index + 1);
+                    if (index + 1 < pool.length && !pool[index + 1].worker) startworker(index + 1);
                     next();
                     return;
                 }
@@ -104,6 +133,7 @@ export function convertvideo(file, settings, onprogress, signal) {
                     next();
                 } catch (error) {finish(error);}
             });
+            if (item.ready && index + 1 < pool.length) startworker(index + 1);
         };
         watchworker(decoder);
         startworker(0);
