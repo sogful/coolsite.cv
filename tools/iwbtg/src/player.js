@@ -54,7 +54,7 @@ export async function play(game, status) {
     const controller = new AbortController();
     const options = {signal: controller.signal};
     const pausebutton = document.querySelector(".pause");
-    const touchmode = document.querySelector(".touchmode");
+    const touchquery = matchMedia("(any-pointer: coarse)");
     const report = document.querySelector(".diagnostics");
     const dialog = document.querySelector(".prompt");
     const warnings = new Set([...(manifest.warnings || []), ...(pkg.analysis.unsupported_features || [])]);
@@ -65,10 +65,22 @@ export async function play(game, status) {
     let timer = 0;
     let pending = false;
     document.querySelector(".gamename").textContent = game.name;
-    player.hidden = false;
     savelabel.textContent = "saves are kept separately for this game";
-    touchmode.checked = matchMedia("(pointer: coarse)").matches;
-    document.querySelector(".touch").hidden = !touchmode.checked;
+    function touchlayout() {
+        player.classList.toggle("touchdevice", touchquery.matches || navigator.maxTouchPoints > 0);
+        input.clear();
+    }
+    touchlayout();
+    touchquery.addEventListener("change", touchlayout, options);
+    window.addEventListener("resize", touchlayout, options);
+
+    function pausestate() {
+        const label = paused ? "resume" : "pause";
+        pausebutton.setAttribute("aria-label", label);
+        pausebutton.setAttribute("aria-pressed", String(paused));
+        pausebutton.title = label;
+        document.querySelector(".pausedlabel").hidden = !paused;
+    }
 
     function reportstate() {
         for (const line of snapshot.diagnostics || []) {if (warnings.size < 200) {warnings.add(line);}}
@@ -77,7 +89,11 @@ export async function play(game, status) {
 
     function fatal(error) {
         paused = true;
-        pausebutton.textContent = "resume";
+        pausestate();
+        document.querySelector(".pausedlabel").hidden = true;
+        const message = document.querySelector(".playerstatus");
+        message.textContent = "game stopped: " + (error.message || error);
+        message.hidden = false;
         input.clear();
         audio.stopAllSounds();
         status("game stopped: " + (error.message || error));
@@ -135,10 +151,10 @@ export async function play(game, status) {
         if (!stopped) {timer = requestAnimationFrame(tick);}
     }
 
-    pausebutton.textContent = "pause";
+    pausestate();
     pausebutton.addEventListener("click", () => {
         paused = !paused;
-        pausebutton.textContent = paused ? "resume" : "pause";
+        pausestate();
         input.clear();
         if (paused) {void context.suspend();} else {void context.resume();}
     }, options);
@@ -150,12 +166,19 @@ export async function play(game, status) {
         try {snapshot = await bridge.reset(); await draw(); paused = waspaused;}
         catch (error) {fatal(error);}
     }, options);
-    touchmode.addEventListener("change", () => {
+    const settings = document.querySelector(".settings");
+    const panel = document.querySelector(".gameoptions");
+    panel.hidden = true;
+    settings.setAttribute("aria-expanded", "false");
+    settings.addEventListener("click", () => {
         input.clear();
-        document.querySelector(".touch").hidden = !touchmode.checked;
+        panel.hidden = !panel.hidden;
+        settings.setAttribute("aria-expanded", String(!panel.hidden));
     }, options);
-    document.querySelector(".fullscreen").addEventListener("click", () => {
-        document.querySelector(".stage").requestFullscreen?.().catch(error => status(error.message));
+    const fullscreen = document.querySelector(".fullscreen");
+    fullscreen.hidden = !player.requestFullscreen;
+    fullscreen.addEventListener("click", () => {
+        player.requestFullscreen?.().catch(error => status(error.message));
     }, options);
     dialog.addEventListener("cancel", event => event.preventDefault(), options);
     dialog.addEventListener("close", async () => {
@@ -172,7 +195,7 @@ export async function play(game, status) {
         player.addEventListener(type, () => {if (!paused) {void context.resume();}}, options);
     }
     try {await draw();}
-    catch (error) {input.dispose(); controller.abort(); audio.stopAllSounds(); await context.close(); throw error;}
+    catch (error) {input.dispose(); controller.abort(); audio.stopAllSounds(); await context.close(); for (const url of urls.values()) {URL.revokeObjectURL(url);} throw error;}
     status("running - experimental compatibility");
     timer = requestAnimationFrame(tick);
     return {
@@ -184,6 +207,7 @@ export async function play(game, status) {
             controller.abort();
             input.dispose();
             if (dialog.open) {dialog.close();}
+            if (document.fullscreenElement === player) {await document.exitFullscreen().catch(() => {});}
             audio.stopAllSounds();
             await context.close();
             for (const url of urls.values()) {URL.revokeObjectURL(url);}

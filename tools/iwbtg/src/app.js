@@ -9,6 +9,7 @@ let timeout;
 let active;
 let current;
 let busy = false;
+let generation = 0;
 const status = text => {document.querySelector(".status").textContent = text;};
 const fileinput = document.querySelector(".gamefile");
 const selection = document.querySelector(".selection");
@@ -47,17 +48,55 @@ async function showlibrary() {
     } catch (error) {status("browser storage unavailable: " + error.message);}
 }
 
+function hidescreen() {
+    const player = document.querySelector(".player");
+    player.hidden = true;
+    player.setAttribute("aria-busy", "false");
+    document.body.classList.remove("playing");
+    document.querySelector(".gameoptions").hidden = true;
+    document.querySelector(".playerstatus").hidden = true;
+    document.querySelector(".pausedlabel").hidden = true;
+}
+
+async function closegame() {
+    generation++;
+    const running = active;
+    active = null;
+    current = null;
+    hidescreen();
+    status("game closed");
+    if (running) {await running.dispose();}
+}
+
 async function launch(game) {
     if (busy) {return;}
     busy = true;
+    const serial = ++generation;
+    const player = document.querySelector(".player");
+    const message = document.querySelector(".playerstatus");
     status("loading game...");
+    player.hidden = false;
+    player.setAttribute("aria-busy", "true");
+    document.body.classList.add("playing");
+    document.querySelector(".gameoptions").hidden = true;
+    document.querySelector(".pausedlabel").hidden = true;
+    message.textContent = "loading game...";
+    message.hidden = false;
     try {
-        if (!game.files) {game = await getgame(game.id);}
-        if (!game) {throw new Error("This game is no longer stored in the browser.");}
         if (active) {await active.dispose(); active = null;}
-        document.querySelector(".player").hidden = true;
-        active = await play(game, status);
+        const canvas = document.querySelector(".gamecanvas");
+        canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+        if (!game.files) {game = await getgame(game.id);}
+        if (serial !== generation) {return;}
+        if (!game) {throw new Error("This game is no longer stored in the browser.");}
+        const running = await play(game, text => {if (serial === generation) {status(text);}});
+        if (serial !== generation) {await running.dispose(); return;}
+        active = running;
         current = game;
+        player.setAttribute("aria-busy", "false");
+        message.hidden = true;
+    } catch (error) {
+        if (serial === generation) {hidescreen(); throw error;}
     } finally {busy = false;}
 }
 
@@ -118,6 +157,8 @@ fileinput.addEventListener("change", async () => {
     } catch (error) {cancel(); status(error.message);}
 });
 
+document.querySelector(".exitgame").addEventListener("click", () => {void closegame().catch(error => status(error.message));});
+
 document.querySelector(".convert").addEventListener("click", () => begin(document.querySelector(".executables").value));
 cancelbutton.addEventListener("click", () => {cancel(); status("conversion cancelled");});
 document.querySelector(".exportsave").addEventListener("click", () => {
@@ -138,7 +179,10 @@ document.querySelector(".importsave").addEventListener("change", async event => 
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-const assets = ["index.css", "src/app.js", "src/player.js", "src/storage.js", "src/controls.js"];
+const assets = [
+    "index.css", "src/app.js", "src/player.js", "src/storage.js", "src/controls.js",
+    ...["left", "right", "pause", "reset", "settings", "shoot", "jump", "close"].map(name => "assets/controls/" + name + ".png")
+];
 
 document.querySelector(".exportgame").addEventListener("click", async event => {
     if (!current) {return;}

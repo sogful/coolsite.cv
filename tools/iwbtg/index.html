@@ -19,43 +19,47 @@
             </div>
             <button class="cancel" type="button" hidden>cancel</button>
         </div>
-        <p class="status" role="status" aria-live="polite">choose a fangame zip or exe. files stay in this browser.</p>
-        <p class="hint">experimental GameMaker 8 / 8.1 support. use the zip to include music and other game files.</p>
+        <p class="status" role="status" aria-live="polite">choose a fangame zip or exe!</p>
+        <p class="hint">gamemaker 8/8.1 supported</p>
         <section class="player" aria-label="game" hidden>
-            <h2 class="gamename"></h2>
-            <div class="toolbar">
-                <button class="pause" type="button">pause</button>
-                <button class="restart" type="button">restart game</button>
-                <button class="fullscreen" type="button">fullscreen</button>
-                <label><input class="touchmode" type="checkbox">touch controls</label>
-            </div>
             <div class="stage">
                 <canvas class="gamecanvas" tabindex="0" aria-label="game screen"></canvas>
-                <div class="touch" hidden>
+                <div class="touch" aria-label="touch controls">
                     <div class="directions">
-                        <button class="touchbutton" type="button" data-key="38" aria-label="up">up</button>
-                        <div class="horizontal">
-                            <button class="touchbutton" type="button" data-key="37" aria-label="left">left</button>
-                            <button class="touchbutton" type="button" data-key="40" aria-label="down">down</button>
-                            <button class="touchbutton" type="button" data-key="39" aria-label="right">right</button>
-                        </div>
+                        <button class="touchbutton" type="button" data-key="37" aria-label="left"><img class="buttonimage" src="assets/controls/left.png" alt="" draggable="false"></button>
+                        <button class="touchbutton" type="button" data-key="39" aria-label="right"><img class="buttonimage" src="assets/controls/right.png" alt="" draggable="false"></button>
                     </div>
                     <div class="actions">
-                        <button class="touchbutton" type="button" data-key="82">retry</button>
-                        <button class="touchbutton" type="button" data-key="90">shoot</button>
-                        <button class="touchbutton" type="button" data-key="16">jump</button>
-                        <button class="touchbutton" type="button" data-key="13">enter</button>
+                        <button class="touchbutton shoot" type="button" data-key="90" aria-label="shoot"><img class="buttonimage" src="assets/controls/shoot.png" alt="" draggable="false"></button>
+                        <button class="touchbutton jump" type="button" data-key="16" aria-label="jump"><img class="buttonimage" src="assets/controls/jump.png" alt="" draggable="false"></button>
                     </div>
                 </div>
             </div>
-            <p class="hint">arrows: move / shift: jump / z: shoot / r: retry / enter: confirm</p>
-            <p class="savestatus" role="status"></p>
-            <div class="toolbar">
-                <button class="exportsave" type="button">export saves</button>
-                <label>import saves <input class="importsave" type="file" accept=".json"></label>
-                <button class="exportgame" type="button">download web version</button>
+            <div class="gamebuttons">
+                <button class="imagebutton pause" type="button" aria-label="pause" title="pause" aria-pressed="false"><img class="buttonimage" src="assets/controls/pause.png" alt="" draggable="false"></button>
+                <button class="imagebutton retry" type="button" data-key="82" aria-label="retry" title="retry"><img class="buttonimage" src="assets/controls/reset.png" alt="" draggable="false"></button>
+                <button class="imagebutton settings" type="button" aria-label="settings" title="settings" aria-expanded="false"><img class="buttonimage" src="assets/controls/settings.png" alt="" draggable="false"></button>
             </div>
-            <details class="report"><summary>conversion report</summary><pre class="diagnostics"></pre></details>
+            <button class="imagebutton exitgame" type="button" aria-label="exit game" title="exit game"><img class="buttonimage closeimage" src="assets/controls/close.png" alt="" draggable="false"></button>
+            <p class="playerstatus" role="status" aria-live="polite" hidden></p>
+            <p class="pausedlabel" hidden>paused</p>
+            <section class="gameoptions" aria-label="game settings" hidden>
+                <h2 class="gamename"></h2>
+                <div class="toolbar menukeys" aria-label="menu controls">
+                    <button class="menukey" type="button" data-key="38">up</button>
+                    <button class="menukey" type="button" data-key="40">down</button>
+                    <button class="menukey" type="button" data-key="13">enter</button>
+                </div>
+                <p class="savestatus" role="status"></p>
+                <div class="toolbar">
+                    <button class="exportsave" type="button">export saves</button>
+                    <label>import saves <input class="importsave" type="file" accept=".json"></label>
+                    <button class="exportgame" type="button">download web version</button>
+                    <button class="restart" type="button">restart game</button>
+                    <button class="fullscreen" type="button">fullscreen</button>
+                </div>
+                <details class="report"><summary>conversion report</summary><pre class="diagnostics"></pre></details>
+            </section>
             <dialog class="prompt">
                 <p class="prompttext"></p>
                 <form method="dialog" class="promptbuttons"></form>
@@ -65,7 +69,6 @@
             <h2>saved games</h2>
             <div class="games"></div>
         </section>
-        <p><a href="../">tools</a> / <a href="vendor/licenses.txt">licenses</a> / <a href="vendor/source.zip">source</a></p>
     </main>
     <script type="module" src="src/app.js"></script>
 </body>

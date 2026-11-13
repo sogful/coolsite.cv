@@ -23,7 +23,7 @@ export function controls(canvas, update) {
 
     function clear() {keyboard.clear(); pointers.clear(); publish();}
     window.addEventListener("keydown", event => {
-        if (event.target instanceof Element && event.target.closest("input, select, textarea, dialog, .toolbar button, summary, a")) {return;}
+        if (event.target instanceof Element && event.target.closest("input, select, textarea, dialog, .toolbar button, .imagebutton, summary, a")) {return;}
         if (!gamekeys.has(event.keyCode) && !/^(Key|Digit)/.test(event.code)) {return;}
         const key = keys.get(event.code) ?? event.keyCode;
         keyboard.add(key);
@@ -47,6 +47,13 @@ export function controls(canvas, update) {
         for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) {
             button.addEventListener(type, event => {pointers.delete(event.pointerId); publish();}, options);
         }
+        button.addEventListener("click", event => {
+            if (event.detail !== 0) {return;}
+            pointers.set("keyboard", Number(button.dataset.key));
+            publish();
+            pointers.delete("keyboard");
+            publish();
+        }, options);
         button.addEventListener("contextmenu", event => event.preventDefault(), options);
     }
     return {clear, dispose() {if (!disposed) {clear(); controller.abort(); disposed = true;}}};

@@ -1,39 +1,101 @@
+.playing {overflow: hidden}
+.player {
+    position: fixed; inset: 0;
+    z-index: 1000; background: #000;
+    color: #fff; overscroll-behavior: none;
+}
+.player[hidden] {display: none}
+.stage {
+    position: absolute; inset: 0;
+    display: flex; align-items: center;
+    justify-content: center; overflow: hidden;
+    background: #000;
+}
+.gamecanvas {
+    display: block; width: 100%;
+    height: 100%; object-fit: contain;
+    image-rendering: pixelated; touch-action: none;
+    outline: none;
+}
+.gamebuttons {
+    position: absolute; top: max(10px,env(safe-area-inset-top));
+    left: max(10px,env(safe-area-inset-left)); display: flex;
+    gap: 8px; z-index: 2;
+}
+.imagebutton {
+    display: block; width: 48px;
+    height: 48px; padding: 0;
+    border: 0; background: none;
+    cursor: pointer; touch-action: manipulation;
+}
+.buttonimage {
+    display: block; width: 100%;
+    height: 100%; object-fit: contain;
+    pointer-events: none; user-select: none;
+}
+.exitgame {
+    position: absolute; top: max(10px,env(safe-area-inset-top));
+    right: max(10px,env(safe-area-inset-right)); z-index: 3;
+    padding: 8px;
+}
+.closeimage {filter: invert(1)}
+.touch {
+    display: none; position: absolute;
+    inset: 0; pointer-events: none;
+    user-select: none;
+}
+.touchdevice .touch {display: block}
+.directions, .actions {
+    position: absolute; bottom: max(16px,env(safe-area-inset-bottom));
+    display: flex; gap: clamp(8px,2vmin,18px);
+    align-items: end;
+}
+.directions {left: max(16px,env(safe-area-inset-left))}
+.actions {right: max(16px,env(safe-area-inset-right))}
+.touchbutton {
+    width: clamp(56px,12vmin,96px); height: clamp(56px,12vmin,96px);
+    padding: 0; border: 0;
+    background: none; touch-action: none;
+    pointer-events: auto; cursor: pointer;
+}
+.shoot {margin-bottom: clamp(28px,6vmin,48px)}
+.held {filter: brightness(0.7)}
+.imagebutton:focus-visible, .touchbutton:focus-visible {
+    outline: 2px solid #fff; outline-offset: 3px;
+    border-radius: 50%;
+}
+.imagebutton:active {filter: brightness(0.7)}
+.pause[aria-pressed="true"] {filter: brightness(0.65)}
+.playerstatus, .pausedlabel {
+    position: absolute; top: 50%;
+    left: 50%; transform: translate(-50%,-50%);
+    margin: 0; padding: 0.75em;
+    max-width: 80%; text-align: center;
+    color: #fff; background: rgba(0,0,0,0.8);
+    overflow-wrap: anywhere; pointer-events: none;
+}
+.gameoptions {
+    position: absolute; top: calc(max(10px,env(safe-area-inset-top)) + 60px);
+    left: max(10px,env(safe-area-inset-left)); z-index: 4;
+    width: min(440px,calc(100% - 44px)); max-height: calc(100dvh - 110px);
+    overflow: auto; padding: 12px;
+    background: #fff; color: #222;
+    border: 1px solid #999;
+}
+.gameoptions[hidden] {display: none}
+.gameoptions label {
+    max-width: 100%; flex-wrap: wrap;
+}
+.importsave {max-width: 100%}
 .toolbar {
     display: flex; flex-wrap: wrap;
     gap: 0.5em; align-items: center;
     margin: 0.6em 0;
 }
-.stage {
-    background: #000; position: relative;
-    max-width: 100%; overflow: hidden;
+.menukey {
+    min-width: 48px; min-height: 48px;
+    touch-action: none;
 }
-.gamecanvas {
-    display: block; width: 100%;
-    height: auto; image-rendering: pixelated;
-    outline-offset: -3px; touch-action: none;
-}
-.touch {
-    display: flex; justify-content: space-between;
-    gap: 0.5em; padding: 0.5em;
-    background: #eee; color: #222;
-    user-select: none; touch-action: none;
-}
-.directions {
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: end;
-}
-.horizontal {
-    display: flex; gap: 0.2em;
-}
-.actions {
-    display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
-    gap: 0.2em; align-items: end;
-}
-.touchbutton {
-    min-height: 48px; min-width: 48px;
-    touch-action: none; padding: 0.5em;
-}
-.held {background: #aaa}
 .games {
     display: grid; gap: 0.5em;
 }
@@ -53,16 +115,11 @@
 .promptbuttons {
     display: flex; gap: 0.5em;
 }
-.stage:fullscreen {
-    display: flex; flex-direction: column;
-    justify-content: center; height: 100%;
-}
-.stage:fullscreen .gamecanvas {
-    max-height: 80dvh; object-fit: contain;
-}
-.touch[hidden] {display: none}
-@media (max-width: 500px) {
-    .toolbar {font-size: 0.9em}
-    .touch {font-size: 0.8em}
-    .actions {align-self: end}
+@media (max-height: 400px) {
+    .imagebutton {
+        width: 40px; height: 40px;
+    }
+    .gameoptions {
+        top: 58px; max-height: calc(100dvh - 90px);
+    }
 }
