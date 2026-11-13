@@ -40,14 +40,14 @@ export async function loginrequest(seed, skin) {
             if (url) break;
             await new Promise(resolve => setTimeout(resolve,100));
         }
-        if (!url) throw Error("tiktok's login signer is not ready. reload tiktok and try again");
+        if (!url) throw Error("tiktok's login signer is not ready! reload tiktok and try again");
         const job = {version:1,url,index:data.index,qr:data.qr,agent:navigator.userAgent,device:seed.device,account:scope?.user?.uniqueId || "",expires:data.expires};
         const bytes = new TextEncoder().encode(JSON.stringify(job));
-        const text = "// this is your account data, do NOT share it outside coolsite.cv/tools/stickerbanner!\n" + btoa(Array.from(bytes, value => String.fromCharCode(value)).join(""));
+        const text = "// this is your actual account data, do NOT share it outside coolsite.cv!\n" + btoa(Array.from(bytes, value => String.fromCharCode(value)).join(""));
         message.textContent = "copy this request into the sticker banner page, then approve the login in tiktok.";
         button.disabled = false;
         button.onclick = async () => {
-            try {await navigator.clipboard.writeText(text); message.textContent = "copied. return to the sticker banner page.";}
+            try {await navigator.clipboard.writeText(text); message.textContent = "copied! return to the sticker banner page.";}
             catch {
                 const field = document.createElement("textarea");
                 field.value = text;

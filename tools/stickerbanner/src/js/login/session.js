@@ -58,7 +58,7 @@ export async function loadsession() {
         const value = JSON.parse(new TextDecoder().decode(plaintext));
         validate(value);
         return value;
-    } catch {throw Error("the saved login could not be opened. sign in again.");}
+    } catch {throw Error("the saved login could not be opened! it might have gotten corrupted, expired or something similar. you can try signing in again.");}
 }
 
 export async function forgetsession() {

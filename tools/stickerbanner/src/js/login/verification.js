@@ -107,11 +107,11 @@ export async function verifyrequest(seed, skin) {
         if (closed) return;
         const job = {...seed.job,ticket};
         const bytes = new TextEncoder().encode(JSON.stringify(job));
-        const text = "// this is your account data, do NOT share it outside coolsite.cv/tools/stickerbanner!\n" + btoa(Array.from(bytes,value => String.fromCharCode(value)).join(""));
+        const text = "// this is your account data, do NOT share it outside coolsite.cv!\n" + btoa(Array.from(bytes,value => String.fromCharCode(value)).join(""));
         button.disabled = false;
-        message.textContent = "verified. copy this request into the sticker banner page and connect again.";
+        message.textContent = "verified! copy this request into the sticker banner page and connect again.";
         button.onclick = async () => {
-            try {await navigator.clipboard.writeText(text); message.textContent = "copied. return to the sticker banner page.";}
+            try {await navigator.clipboard.writeText(text); message.textContent = "copied! return to the sticker banner page.";}
             catch {
                 const field = document.createElement("textarea");
                 field.value = text;

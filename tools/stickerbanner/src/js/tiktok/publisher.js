@@ -1,5 +1,5 @@
-import {digest} from "./imageupload.js?v=20261109d";
-import {rejected} from "./tiktok.js?v=20261113perf";
+import {digest} from "./imageupload.js";
+import {rejected} from "./tiktok.js";
 
 import {positions as gridpositions} from "../editor/geometry.js";
 
@@ -39,7 +39,7 @@ export async function publishbanner(client, archive, sourceurl, expected, update
         if (!entry.uri) {entry.uri = await client.upload(contents[index]); save();}
         const existing = profile.find(sticker => sticker.animated_urls?.uri === entry.uri);
         if (existing) {entry.id = String(existing.id); delete entry.pending; save(); continue;}
-        if (entry.id) throw Error("a previously published tile is absent. stopped to avoid duplicates");
+        if (entry.id) throw Error("a previously published tile is absent! stopped to avoid duplicates");
         if (entry.pending) throw Error("a previous creation request has an uncertain result. check the tiktok profile before retrying");
         update(`${index + 1}/${count} ${positions[index]}: creating sticker`);
         entry.pending = true;
