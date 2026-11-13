@@ -1,0 +1,18 @@
+[package]
+name = "fangameconverter"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-2.0-only"
+
+[[bin]]
+name = "converter"
+path = "converter.rs"
+
+[dependencies]
+iwm-parser = { path = "../../../.claude/iwbtg/enginesource/crates/iwm-parser" }
+iwm-runtime-model = { path = "../../../.claude/iwbtg/enginesource/crates/iwm-runtime-model" }
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true

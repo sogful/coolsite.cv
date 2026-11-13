@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title>fangame player</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../base.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <main>
+        <h1>fangame player</h1>
+        <div class="upload">
+            <p><label>game <input class="gamefile" type="file" accept=".zip,.exe"></label></p>
+            <div class="selection" hidden>
+                <label>executable <select class="executables"></select></label>
+                <button class="convert" type="button">convert</button>
+            </div>
+            <button class="cancel" type="button" hidden>cancel</button>
+        </div>
+        <p class="status" role="status" aria-live="polite">choose a fangame zip or exe. files stay in this browser.</p>
+        <p class="hint">experimental GameMaker 8 / 8.1 support. use the zip to include music and other game files.</p>
+        <section class="player" aria-label="game" hidden>
+            <h2 class="gamename"></h2>
+            <div class="toolbar">
+                <button class="pause" type="button">pause</button>
+                <button class="restart" type="button">restart game</button>
+                <button class="fullscreen" type="button">fullscreen</button>
+                <label><input class="touchmode" type="checkbox">touch controls</label>
+            </div>
+            <div class="stage">
+                <canvas class="gamecanvas" tabindex="0" aria-label="game screen"></canvas>
+                <div class="touch" hidden>
+                    <div class="directions">
+                        <button class="touchbutton" type="button" data-key="38" aria-label="up">up</button>
+                        <div class="horizontal">
+                            <button class="touchbutton" type="button" data-key="37" aria-label="left">left</button>
+                            <button class="touchbutton" type="button" data-key="40" aria-label="down">down</button>
+                            <button class="touchbutton" type="button" data-key="39" aria-label="right">right</button>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="touchbutton" type="button" data-key="82">retry</button>
+                        <button class="touchbutton" type="button" data-key="90">shoot</button>
+                        <button class="touchbutton" type="button" data-key="16">jump</button>
+                        <button class="touchbutton" type="button" data-key="13">enter</button>
+                    </div>
+                </div>
+            </div>
+            <p class="hint">arrows: move / shift: jump / z: shoot / r: retry / enter: confirm</p>
+            <p class="savestatus" role="status"></p>
+            <div class="toolbar">
+                <button class="exportsave" type="button">export saves</button>
+                <label>import saves <input class="importsave" type="file" accept=".json"></label>
+                <button class="exportgame" type="button">download web version</button>
+            </div>
+            <details class="report"><summary>conversion report</summary><pre class="diagnostics"></pre></details>
+            <dialog class="prompt">
+                <p class="prompttext"></p>
+                <form method="dialog" class="promptbuttons"></form>
+            </dialog>
+        </section>
+        <section class="library" hidden>
+            <h2>saved games</h2>
+            <div class="games"></div>
+        </section>
+        <p><a href="../">tools</a> / <a href="vendor/licenses.txt">licenses</a> / <a href="vendor/source.zip">source</a></p>
+    </main>
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>
