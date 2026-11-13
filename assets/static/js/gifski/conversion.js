@@ -1,11 +1,11 @@
-import {joingifs, inspectgif} from "./gifformat.js?v=20261108";
+import {joingifs, inspectgif} from "./gifformat.js";
 
 export function createconverter() {
-    const decoder = new Worker(new URL("./decoderworker.js?v=20261113perf",import.meta.url));
+    const decoder = new Worker(new URL("./decoderworker.js",import.meta.url));
     return {
         decoder,
         pool:Array.from({length:Math.min(2,Math.max(1,(navigator.hardwareConcurrency || 2) - 1))},() => ({worker:null,ready:false,busy:false})),
-        workers:[decoder],job:crypto.randomUUID(),busy:false,closed:false,stop:null,
+        workers:[decoder],busy:false,closed:false,stop:null,
         close() {
             if (this.closed) return;
             this.closed = true;
@@ -23,7 +23,7 @@ export function convertvideo(file, settings, onprogress, signal, session = null)
         const owner = session || createconverter();
         if (owner.closed || owner.busy) {reject(Error("the converter is unavailable")); return;}
         owner.busy = true;
-        const {decoder,pool,workers,job} = owner;
+        const {decoder,pool,workers} = owner;
         const listeners = [];
         const listen = (target,name,handler) => {
             target.addEventListener(name,handler);
@@ -100,7 +100,7 @@ export function convertvideo(file, settings, onprogress, signal, session = null)
             const item = pool[index];
             try {
                 if (!item.worker) {
-                    item.worker = new Worker(new URL(`./gifskiworker.js?v=20261107&job=${job}&worker=${index}`, import.meta.url), {type: "module"});
+                    item.worker = new Worker(new URL("./gifskiworker.js", import.meta.url), {type: "module"});
                     workers.push(item.worker);
                 }
             } catch (error) {finish(error); return;}

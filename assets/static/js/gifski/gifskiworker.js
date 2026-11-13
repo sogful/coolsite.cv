@@ -1,6 +1,6 @@
 import initgifski, {encode as encodegifski} from "./gifski_wasm.js";
 import {inspectgif} from "./gifformat.js";
-import {encodepalette} from "./paletteencoder.js?v=20261107";
+import {encodepalette} from "./paletteencoder.js";
 
 let ready = null;
 self.addEventListener("message", async event=>{

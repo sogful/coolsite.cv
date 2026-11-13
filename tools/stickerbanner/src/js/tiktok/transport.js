@@ -36,14 +36,15 @@ export function readrequest(value) {
 export async function createtransport(relay) {
     const address = new URL(relay);
     const hosts = {
+        // hey, don't look!
         "stickerrelay.cvowot.workers.dev":"stickers.coolsite.cv",
         "stickerrelay-dev.cvowot.workers.dev":"stickers-preview.coolsite.cv"
     };
     address.hostname = hosts[address.hostname] || address.hostname;
     if (address.protocol !== "wss:" && !(address.protocol === "ws:" && ["127.0.0.1","localhost"].includes(address.hostname))) throw Error("the relay must use a secure websocket");
     await checkrelay(address.href);
-    if (!loading) loading = import("../../../../../assets/static/js/epoxy/index.js").then(async library => {
-        await library.default({module_or_path:new URL("../../../../../assets/static/js/epoxy/index.wasm",import.meta.url)});
+    if (!loading) loading = import("/assets/static/js/epoxy/index.js").then(async library => {
+        await library.default({module_or_path:new URL("/assets/static/js/epoxy/index.wasm",import.meta.url)});
         module = library;
     }).catch(error => {loading = null; throw error;});
     await loading;
@@ -224,12 +225,12 @@ class transport {
             if (state.status === "confirmed" && state.client_secret !== secret) throw Error("tiktok login verification failed");
             if (state.status === "confirmed") this.store(response);
             if (state.status === "confirmed" && this.cookies.has("sessionid")) return;
-            if (state.status === "expired") throw Error("tiktok expired this qr login. create fresh login setup");
+            if (state.status === "expired") throw Error("tiktok expired this qr login! create fresh login setup");
             if (!["new","scanned"].includes(state.status)) throw Error(state.description || `tiktok login ${state.error_code || state.status || "failed"}. create fresh login setup`);
             update(state.status === "scanned" ? "approve the login in tiktok, then return here" : "open tiktok and approve the login, then return here");
             await new Promise(resolve => setTimeout(resolve,1200));
         }
-        throw Error("timed out waiting for tiktok login. prepare a new login to try again.");
+        throw Error("timed out waiting for tiktok login.. prepare a new login to try again.");
     }
 
     store(response) {

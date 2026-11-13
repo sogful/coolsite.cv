@@ -1,5 +1,5 @@
-import {profiles, loadfonts, encode, count} from "./profiles.js?v=20261112b";
-import {editor} from "./editor.js?v=20261112a";
+import {profiles, loadfonts, encode, count} from "./profiles.js";
+import {editor} from "./editor.js";
 
 const results = {};
 const texts = {};
@@ -68,7 +68,7 @@ function run() {
     loading.hidden = false;
     error.hidden = true;
     app.dataset.state = "matching";
-    worker ||= new Worker(new URL("matcher.js?v=5", import.meta.url), {type: "module"});
+    worker ||= new Worker(new URL("matcher.js", import.meta.url), {type: "module"});
     worker.onmessage = event => {
         const data = event.data;
         if (data.id !== serial) return;

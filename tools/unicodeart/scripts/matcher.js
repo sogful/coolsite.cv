@@ -1,9 +1,9 @@
-import {profiles, loadfonts} from "./profiles.js?v=20261112b";
-import {drawing} from "./atlas.js?v=7";
+import {profiles, loadfonts} from "./profiles.js";
+import {drawing} from "./atlas.js";
 import {context, render, loss} from "./raster.js";
-import {field, search, refine, spacing} from "./fit.js?v=5";
+import {field, search, refine, spacing} from "./fit.js";
 import {sampler} from "./sampling.js";
-import {components, recognize} from "./recognition.js?v=20261112b";
+import {components, recognize} from "./recognition.js";
 
 const ready = loadfonts(self.fonts);
 let serial = 0;

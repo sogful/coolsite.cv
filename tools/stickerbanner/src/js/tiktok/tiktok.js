@@ -1,4 +1,4 @@
-import {uploadimage} from "./imageupload.js?v=20261109d";
+import {uploadimage} from "./imageupload.js";
 
 const host = "https://api16-normal-c-alisg.tiktokv.com";
 const agent = "com.zhiliaoapp.musically/2023700040 (Linux; U; Android 14; en_US; Pixel 7; Build/UP1A; Cronet/TTNetVersion:5f9640e5 2023-09-14)";

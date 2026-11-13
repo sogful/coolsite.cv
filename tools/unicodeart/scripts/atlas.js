@@ -1,6 +1,6 @@
-import {profiles} from "./profiles.js?v=20261112b";
+import {profiles} from "./profiles.js";
 import {context, alpha} from "./raster.js";
-import {fontcheck} from "./support.js?v=3";
+import {fontcheck} from "./support.js";
 
 const atlases = new Map();
 const variants = new Map();

@@ -1,4 +1,4 @@
-import {combinations} from "./atlas.js?v=7";
+import {combinations} from "./atlas.js";
 import {context, render, loss} from "./raster.js";
 
 const measurements = new WeakMap();

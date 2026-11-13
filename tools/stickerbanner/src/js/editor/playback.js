@@ -1,4 +1,4 @@
-import {createanimation} from "./animation.js?v=20261113perf";
+import {createanimation} from "./animation.js";
 
 export function createplayback(draw, changed) {
     const media = document.createElement("video");

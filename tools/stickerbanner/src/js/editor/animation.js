@@ -1,4 +1,4 @@
-import {inspectgif} from "../../../../../assets/static/js/gifski/gifformat.js?v=20261108";
+import {inspectgif} from "/assets/static/js/gifski/gifformat.js";
 
 export async function createanimation(files, grid) {
     if (typeof ImageDecoder !== "function" || !await ImageDecoder.isTypeSupported("image/gif")) return null;

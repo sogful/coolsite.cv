@@ -1,4 +1,4 @@
-import {convertvideo} from "../../assets/static/js/gifski/conversion.js?v=20261107";
+import {convertvideo} from "/assets/static/js/gifski/conversion.js";
 
 const videofile = document.querySelector("#videofile");
 const filesize = document.querySelector("#filesize");

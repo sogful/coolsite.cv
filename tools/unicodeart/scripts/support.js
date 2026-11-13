@@ -1,4 +1,4 @@
-import {profiles} from "./profiles.js?v=20261112b";
+import {profiles} from "./profiles.js";
 import {context} from "./raster.js";
 
 const checks = new Map();

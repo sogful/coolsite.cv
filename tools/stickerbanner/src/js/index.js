@@ -1,15 +1,15 @@
-import {convertvideo,createconverter} from "../../../../assets/static/js/gifski/conversion.js?v=20261113perf";
+import {convertvideo,createconverter} from "/assets/static/js/gifski/conversion.js";
 import {geometry, positions as gridpositions, tilecrop as layoutcrop} from "./editor/geometry.js";
 import {launcher, setuprequest} from "./login/launcher.js";
-import {createtransport, readrequest, verification} from "./tiktok/transport.js?v=20261113mobile";
-import {tiktok} from "./tiktok/tiktok.js?v=20261113perf";
-import {publishbanner} from "./tiktok/publisher.js?v=20261113perf";
-import {createwizard} from "./login/wizard.js?v=20261113mobile";
+import {createtransport, readrequest, verification} from "./tiktok/transport.js";
+import {tiktok} from "./tiktok/tiktok.js";
+import {publishbanner} from "./tiktok/publisher.js";
+import {createwizard} from "./login/wizard.js";
 import {savesession, loadsession, forgetsession} from "./login/session.js";
 import {plans, nextplan} from "./editor/automatic.js";
-import {createplayback} from "./editor/playback.js?v=20261113perf";
+import {createplayback} from "./editor/playback.js";
 import {createworkspace} from "./editor/workspace.js";
-import qrcode from "../../../../assets/static/js/qrcode/index.js";
+import qrcode from "/assets/static/js/qrcode/index.js";
 
 const form = document.querySelector(".settings");
 const source = document.querySelector(".source");

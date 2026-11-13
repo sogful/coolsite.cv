@@ -1,6 +1,6 @@
-import {skin,asksetup,notice} from "./helpers.js?v=20261109d";
-import {loginrequest} from "./bookmarklet.js?v=20261109d";
-import {verifyrequest} from "./verification.js?v=20261109d";
+import {skin,asksetup,notice} from "./helpers.js";
+import {loginrequest} from "./bookmarklet.js";
+import {verifyrequest} from "./verification.js";
 
 export function setuprequest(mode, data) {
     const bytes = new TextEncoder().encode(JSON.stringify({version:2,mode,data}));
