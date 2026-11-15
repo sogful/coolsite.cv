@@ -1,3 +1,28 @@
+.textlogo {
+    display: block; max-width: 100%;
+    font-size: 24px; line-height: 1.2;
+}
+.stickerwordmark {
+    font-family: "tiktokdisplay",Arial,sans-serif; font-weight: 700;
+}
+.desktopwordmark {
+    font-family: aclonica,serif; font-weight: 400;
+}
+.toolheading .textlogo {font-size: 32px}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+@font-face {
+    font-family: aclonica; src: url("/assets/fonts/aclonica.woff2") format("woff2");
+    font-weight: 400; font-display: swap;
+}
+@font-face {
+    font-family: "tiktokdisplay"; src: url("/assets/fonts/tiktok/display.woff2") format("woff2");
+    font-weight: 700; font-display: swap;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
 .toollogo {
     display: block; width: auto;
     max-width: 100%; height: auto;
