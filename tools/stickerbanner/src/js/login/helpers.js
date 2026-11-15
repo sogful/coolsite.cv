@@ -51,10 +51,11 @@ export function skin(panel) {
         document.head.append(style);
     }
     panel.classList.add("stickerpanel");
+    const scale = Math.max(1,1 / (visualViewport?.scale || 1));
     Object.assign(panel.style,{
         position:"fixed",inset:"0",margin:"auto",
-        width:panel.classList.contains("stickerverificationpanel") ? "min(720px,calc(100vw - 32px))" : "min(480px,calc(100vw - 32px))",
-        height:"auto",maxWidth:"none",maxHeight:"calc(100dvh - 32px)",
+        width:Math.min(panel.classList.contains("stickerverificationpanel") ? 720 : 480,(visualViewport?.width || innerWidth) / scale - 32) + "px",
+        height:"auto",maxWidth:"none",maxHeight:((visualViewport?.height || innerHeight) / scale - 32) + "px",zoom:scale,
         padding:"32px",border:"0",borderRadius:"8px",overflow:"auto",
         fontFamily:"TikTokFont,Arial,Tahoma,PingFangSC,sans-serif",fontSize:"16px",
         color:"var(--tux-colorTextPrimary,#161823)",background:"var(--tux-colorBGPrimary,#ffffff)"
@@ -68,63 +69,4 @@ export function skin(panel) {
             button.innerHTML = `<svg class="stickericon" viewBox="0 -960 960 960" aria-hidden="true"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>`;
         } else button.classList.add("stickeraction");
     }
-}
-
-/*//////////////////////////////////////////////////////////////////////*/
-
-export async function asksetup(skin) {
-    try {
-        const text = await navigator.clipboard.readText();
-        if (text.startsWith("sticker banner setup\n") && text.length <= 100000) return text;
-    } catch {}
-    return new Promise(resolve => {
-        document.querySelector(".stickersetuppanel")?.remove();
-        const panel = document.createElement("dialog");
-        panel.className = "stickersetuppanel";
-        const title = document.createElement("h2");
-        title.className = "stickertitle";
-        title.textContent = "connect your tiktok";
-        const message = document.createElement("p");
-        message.textContent = "paste the setup from your clipboard to continue.";
-        const field = document.createElement("input");
-        field.type = "password";
-        field.autocomplete = "off";
-        field.maxLength = 100000;
-        field.setAttribute("aria-label","login setup");
-        const next = document.createElement("button");
-        next.textContent = "continue";
-        const close = document.createElement("button");
-        close.textContent = "close";
-        function finish(value) {panel.close(); panel.remove(); resolve(value);}
-        next.onclick = () => finish(field.value);
-        close.onclick = () => finish(null);
-        panel.addEventListener("cancel",event => {event.preventDefault(); finish(null);});
-        for (const name of ["keydown","keypress","keyup"]) panel.addEventListener(name,event => {
-            event.stopPropagation();
-            if (name === "keydown" && event.key === "Enter") {event.preventDefault(); finish(field.value);}
-        });
-        panel.append(title,message,field,next,close);
-        document.body.append(panel);
-        skin(panel);
-        panel.showModal();
-    });
-}
-
-/*//////////////////////////////////////////////////////////////////////*/
-
-export function notice(skin, message) {
-    const panel = document.createElement("dialog");
-    const title = document.createElement("h2");
-    title.className = "stickertitle";
-    title.textContent = "tiktok login";
-    const text = document.createElement("p");
-    text.textContent = message;
-    const close = document.createElement("button");
-    close.textContent = "close";
-    close.onclick = () => {panel.close(); panel.remove();};
-    panel.append(title,text,close);
-    document.body.append(panel);
-    skin(panel);
-    panel.showModal();
-    panel.addEventListener("cancel",event => {event.preventDefault(); close.click();});
 }

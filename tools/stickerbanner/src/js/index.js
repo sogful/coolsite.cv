@@ -347,8 +347,8 @@ async function copylogin() {
             const relay = new URLSearchParams(location.search).get("relay") || (await (await fetch(new URL("../relay.json",import.meta.url))).json()).url;
             if (!relay) throw Error("the browser relay is not configured");
             browsertransport = await createtransport(relay);
-            await prepareqr();
-        } else if (logindeadline - performance.now() < 10000) await prepareqr();
+            preparelogin();
+        } else preparelogin();
         return new Blob([loginsetup],{type:"text/plain"});
     })();
     content.catch(() => {});
@@ -390,7 +390,8 @@ document.querySelector(".connect").addEventListener("click", async () => {
         if (!ticket || ticket !== job.ticket) {publishstatus.textContent = "paste the verified request from this login."; flow.notify("error"); return;}
         job.qr ||= pendingverification.job.qr;
     }
-    if (!browsertransport || browsertransport.challenge !== new URL(job.url).searchParams.get("token")) {
+    const secret = new URL(new URL(job.index).searchParams.get("next_url")).searchParams.get("client_secret");
+    if (!browsertransport || browsertransport.challenge?.secret !== secret || browsertransport.challenge.device !== job.device) {
         publishstatus.textContent = "this login is no longer available. prepare a new login.";
         flow.notify("expired");
         return;
@@ -411,7 +412,12 @@ document.querySelector(".connect").addEventListener("click", async () => {
         const approve = document.querySelector(".approve");
         approve.href = "snssdk1233://webview?hide_nav_bar=1&use_spark=1&url=" + encodeURIComponent(job.index);
         approve.hidden = false;
-        document.querySelector(".loginqr").src = "data:image/png;base64," + job.qr;
+        document.querySelector(".loginqr").src = loginimage(job.index);
+        loginexpires = job.expires;
+        logindeadline = performance.now() + Math.max(0,job.expires * 1000 - Date.now());
+        clearInterval(logintimer);
+        logintimer = setInterval(showlogintime,1000);
+        showlogintime();
         document.querySelector(".qrpanel").hidden = false;
         flow.notify("authstarted");
         await browsertransport.authenticate(job,current.signal,message => {publishstatus.textContent = message;});
@@ -533,24 +539,18 @@ function promisedclipboard() {
     return deferredclipboard && typeof ClipboardItem === "function" && typeof navigator.clipboard?.write === "function";
 }
 
-async function prepareqr() {
+function preparelogin() {
     const device = crypto.getRandomValues(new BigUint64Array(1))[0].toString();
-    const query = new URLSearchParams({aid:"1459",account_sdk_source:"web",app_name:"tiktok_web",device_platform:"web_pc",did:device,next:"https://www.tiktok.com"});
-    const started = performance.now();
-    const response = await browsertransport.request("https://login-row.www.tiktok.com/passport/web/get_qrcode/?" + query,{session:true});
-    const result = await response.json();
-    if (result.message !== "success" || !result.data?.token) throw Error(result.data?.description || "tiktok did not prepare the login");
-    const data = result.data;
-    browsertransport.challenge = data.token;
-    const index = new URL(data.qrcode_index_url);
-    const next = new URL(index.searchParams.get("next_url"));
     const secret = Array.from(crypto.getRandomValues(new Uint8Array(8)),value => "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[value % 36]).join("");
-    next.searchParams.set("client_secret",secret);
-    index.searchParams.set("next_url",next.href);
-    index.searchParams.set("app_type","");
-    data.qrcode_index_url = index.href;
+    browsertransport.challenge = {device,secret};
+    loginexpires = 0;
+    showlogintime();
+    loginsetup = setuprequest("login",{device,secret});
+}
+
+function loginimage(index) {
     const code = qrcode(0,"M");
-    code.addData(index.href);
+    code.addData(index);
     code.make();
     const count = code.getModuleCount();
     const canvas = document.createElement("canvas");
@@ -562,16 +562,7 @@ async function prepareqr() {
     for (let row = 0; row < count; row += 1) for (let column = 0; column < count; column += 1) {
         if (code.isDark(row,column)) context.fillRect((column + 4) * 4,(row + 4) * 4,4,4);
     }
-    data.qrcode = canvas.toDataURL("image/png").split(",")[1];
-    const seed = {token:data.token,index:data.qrcode_index_url,qr:data.qrcode,expires:data.expire_time,device};
-    loginexpires = seed.expires;
-    const serverdate = Date.parse(response.headers.get("date"));
-    const lifetime = loginexpires * 1000 - (Number.isFinite(serverdate) ? serverdate : Date.now());
-    logindeadline = started + Math.max(0,lifetime);
-    clearInterval(logintimer);
-    logintimer = setInterval(showlogintime,1000);
-    showlogintime();
-    loginsetup = setuprequest("login",seed);
+    return canvas.toDataURL("image/png");
 }
 
 /*//////////////////////////////////////////////////////////////////////*/

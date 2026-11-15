@@ -10,7 +10,7 @@ export class verification extends Error {
 
 export function readrequest(value) {
     if (value.trim().startsWith("sticker banner setup")) throw Error("run the tiktok helper on tiktok with this setup, then copy its login request");
-    const encoded = value.trim().replace(/^\/\/ this is your account data, do NOT share it outside coolsite\.cv\/tools\/stickerbanner!\s*/, "").trim();
+    const encoded = value.trim().replace(/^\/\/ this is your (?:actual )?account data, do NOT share it outside coolsite\.cv(?:\/tools\/stickerbanner)?!\s*/, "").trim();
     if (!encoded || encoded.length > 40000) throw Error("paste a fresh login request from tiktok");
     let job;
     try {job = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(encoded), item => item.charCodeAt(0))));}
@@ -25,8 +25,9 @@ export function readrequest(value) {
     const destination = callback.origin === url.origin && callback.pathname === "/passport/web/scan_qrcode/" && /^[A-Z0-9]{8}$/.test(callback.searchParams.get("client_secret") || "");
     const identity = typeof job.device === "string" && /^[0-9]+$/.test(job.device) && typeof job.account === "string" && /^(?:[\w.]{1,32})?$/.test(job.account);
     const agent = typeof job.agent === "string" && !/[\r\n]/.test(job.agent) && job.agent.length > 0 && job.agent.length <= 512;
-    if (job.version !== 1 || !signed || !matching || !destination || !identity || !agent || !Number.isFinite(job.expires)) throw Error("invalid tiktok login request");
-    if (!(job.ticket && job.qr === "") && (typeof job.qr !== "string" || !/^[a-z0-9+/=]+$/i.test(job.qr) || job.qr.length > 20000)) throw Error("invalid tiktok login image");
+    if (![1,2].includes(job.version) || !signed || !matching || !destination || !identity || !agent || !Number.isFinite(job.expires)) throw Error("invalid tiktok login request");
+    const image = job.version === 2 ? job.qr === "" : job.ticket && job.qr === "" || typeof job.qr === "string" && /^[a-z0-9+/=]+$/i.test(job.qr) && job.qr.length <= 20000;
+    if (!image) throw Error("invalid tiktok login image");
     if (job.ticket !== undefined && (typeof job.ticket !== "string" || !job.ticket || job.ticket.length > 20000 || /[\r\n]/.test(job.ticket) || url.searchParams.has("passport_ticket") && url.searchParams.get("passport_ticket") !== job.ticket)) throw Error("invalid tiktok verification result");
     return job;
 }

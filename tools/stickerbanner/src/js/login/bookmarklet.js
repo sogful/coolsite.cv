@@ -25,11 +25,25 @@ export async function loginrequest(seed, skin) {
         const entries = [];
         observer = new PerformanceObserver(list => entries.push(...list.getEntries().map(item => item.name)));
         observer.observe({type:"resource"});
-        if (!seed?.token || !Number.isFinite(seed.expires)) throw Error("create fresh login setup on the sticker banner page");
+        if (!/^[0-9]+$/.test(seed?.device || "") || !/^[A-Z0-9]{8}$/.test(seed?.secret || "")) throw Error("create fresh login setup on the sticker banner page");
         const query = {aid:"1459",account_sdk_source:"web",app_name:"tiktok_web",device_platform:"web_pc",did:seed.device,next:"https://www.tiktok.com"};
-        const data = seed;
+        const started = performance.now();
+        const qrresponse = await fetch("/passport/web/get_qrcode/?" + new URLSearchParams(query),{credentials:"omit",signal:AbortSignal.timeout(12000)});
+        const result = await qrresponse.json();
+        if (result.message !== "success" || !result.data?.token) throw Error(result.data?.description || "tiktok did not prepare the login");
+        const data = result.data;
+        const index = new URL(data.qrcode_index_url);
+        const callback = new URL(index.searchParams.get("next_url"));
+        callback.searchParams.set("client_secret",seed.secret);
+        index.searchParams.set("next_url",callback.href);
+        index.searchParams.set("app_type","");
+        const serverdate = Date.parse(qrresponse.headers.get("date"));
+        const lifetime = data.expire_time * 1000 - (Number.isFinite(serverdate) ? serverdate : Date.now());
+        if (!Number.isFinite(lifetime) || lifetime <= 0) throw Error("tiktok did not return a fresh login. run tiktok helper again");
+        const expires = (Date.now() + lifetime - (performance.now() - started)) / 1000;
         const response = await fetch("/passport/web/check_qrconnect/?" + new URLSearchParams({...query,token:data.token}), {credentials:"omit"});
         const check = await response.json();
+        if (check.data?.status === "expired") throw Error("this login expired. paste the setup into tiktok helper again");
         if (check.message !== "success" || !["new","scanned"].includes(check.data?.status)) throw Error(check.data?.description || "tiktok rejected the login request");
         let url;
         for (let attempt = 0; attempt < 30; attempt += 1) {
@@ -41,9 +55,9 @@ export async function loginrequest(seed, skin) {
             await new Promise(resolve => setTimeout(resolve,100));
         }
         if (!url) throw Error("tiktok's login signer is not ready! reload tiktok and try again");
-        const job = {version:1,url,index:data.index,qr:data.qr,agent:navigator.userAgent,device:seed.device,account:scope?.user?.uniqueId || "",expires:data.expires};
+        const job = {version:2,url,index:index.href,qr:"",agent:navigator.userAgent,device:seed.device,account:scope?.user?.uniqueId || "",expires};
         const bytes = new TextEncoder().encode(JSON.stringify(job));
-        const text = "// this is your actual account data, do NOT share it outside coolsite.cv!\n" + btoa(Array.from(bytes, value => String.fromCharCode(value)).join(""));
+        const text = "// this is your account data, do NOT share it outside coolsite.cv/tools/stickerbanner!\n" + btoa(Array.from(bytes, value => String.fromCharCode(value)).join(""));
         message.textContent = "copy this request into the sticker banner page, then approve the login in tiktok.";
         button.disabled = false;
         button.onclick = async () => {

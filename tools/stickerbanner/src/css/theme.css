@@ -126,6 +126,7 @@
 .publishstatus {
     white-space: pre-wrap; line-height: 1.4;
 }
+.loginrequest {-webkit-text-security: disc}
 .loginqr {
     display: block; width: 220px;
     max-width: 100%; margin: 16px auto;

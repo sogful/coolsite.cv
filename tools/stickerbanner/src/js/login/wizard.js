@@ -33,6 +33,9 @@ export function createwizard() {
         desktopinstruction.textContent = device.value === "apple"
             ? " turn on \"request desktop website\" in your browser's menu."
             : " turn on \"desktop site\" in your browser's menu.";
+        for (const instruction of document.querySelectorAll(".bookmarkinstruction")) instruction.textContent = device.value === "android"
+            ? "tap chrome's address bar and type tiktok helper. scroll to the bookmark with a star icon and tap it."
+            : "run the tiktok helper bookmark.";
         if (stage === "approve") {
             document.querySelector(".approvalinstructions").hidden = Boolean(approval);
             if (!approval) {
@@ -101,7 +104,9 @@ export function createwizard() {
                 case "loginfailed": case "expired": history.length = 0; show("retry",false); status.textContent = message; break;
                 case "disconnected": history.length = 0; show("device",false); break;
                 case "published": history.length = 0; show("done",false); break;
-                default: refresh();
+                default:
+                    refresh();
+                    if (event === "error") status.scrollIntoView({block:"nearest"});
             }
         }
     };
