@@ -1,3 +1,9 @@
+body {background-color: black}
+.toolheading .fangamelogo {max-height: 104px}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+a, p, ul, li, h1, h2, h3, h4, h5, h6, sup, sub {color: white} 
 .playing {overflow: hidden}
 .player {
     position: fixed; inset: 0;

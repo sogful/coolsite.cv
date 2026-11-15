@@ -60,6 +60,9 @@ sub {
 .toolitem .toollogo {
     max-height: 28px;
 }
+.darklogo .toolitem .fangamelogo {
+    max-height: 56px; filter: none;
+}
 .toolitem:nth-child(even) > a {
     transform: none;
 }

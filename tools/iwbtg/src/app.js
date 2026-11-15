@@ -183,6 +183,7 @@ document.querySelector(".importsave").addEventListener("change", async event => 
 /*//////////////////////////////////////////////////////////////////////*/
 
 const assets = [
+    "logo.webp",
     "src/classic/binary.js", "src/classic/resources.js", "src/classic/convert.js",
     "isolation.js", "src/isolation.js", "src/opengmk.js", "src/upx.js", "index.css", "src/app.js", "src/player.js", "src/storage.js", "src/controls.js", "src/compatibility.js", "src/archive.js", "src/converter.js", "src/studio.js", "runtime/studio.html", "runtime/studioframe.js",
     ...["left", "right", "pause", "reset", "settings", "shoot", "jump", "close"].map(name => "assets/controls/" + name + ".png")
@@ -205,10 +206,13 @@ document.querySelector(".exportgame").addEventListener("click", async event => {
         const response = await fetch(new URL("../index.html", import.meta.url));
         if (!response.ok) {throw new Error("Could not load the player page.");}
         let html = await response.text();
-        html = html.replace('<body>', '<body data-package="webgame.zip">').replace('href="../base.css"', 'href="base.css"').replace('href="../favicon.svg"', 'href="favicon.svg"').replace('<a href="../">tools</a>', '');
+        html = html.replace('<body>', '<body data-package="webgame.zip">').replace('href="../base.css"', 'href="base.css"').replace('href="../branding.css"', 'href="branding.css"').replace('href="../favicon.svg"', 'href="favicon.svg"').replace('<a href="../">tools</a>', '');
         output["index.html"] = new TextEncoder().encode(html);
         const base = await fetch(new URL("../../base.css", import.meta.url));
         output["base.css"] = new Uint8Array(await base.arrayBuffer());
+        const branding = await fetch(new URL("../../branding.css", import.meta.url));
+        if (!branding.ok) {throw new Error("Could not load the logo styles.");}
+        output["branding.css"] = new Uint8Array(await branding.arrayBuffer());
         const favicon = await fetch(new URL("../../favicon.svg", import.meta.url));
         output["favicon.svg"] = new Uint8Array(await favicon.arrayBuffer());
         output["webgame.zip"] = zipSync(Object.fromEntries(game.files), {level: 1});
