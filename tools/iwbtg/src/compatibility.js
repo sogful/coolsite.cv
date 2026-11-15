@@ -7,7 +7,7 @@ export function nativeactions(pkg) {
         let cursor = 0;
         function visit(value) {
             if (!value || typeof value !== "object") {return value;}
-            if (value.kind === "raw" && /^action_message\(/.test(value.source || "") && messages[cursor]) {
+            if (((value.kind === "raw" && /^action_message\(/.test(value.source || "")) || (value.kind === "function-call" && value.name === "show_message" && (events.get(entry.block_id) || []).length === 1)) && messages[cursor]) {
                 const text = messages[cursor++].args[0] || "";
                 return {kind: "function-call", name: "show_message", args: [{kind: "literal-text", value: text}]};
             }
