@@ -183,6 +183,7 @@ document.querySelector(".importsave").addEventListener("change", async event => 
 /*//////////////////////////////////////////////////////////////////////*/
 
 const assets = [
+    "src/classic/binary.js", "src/classic/resources.js", "src/classic/convert.js",
     "isolation.js", "src/isolation.js", "src/opengmk.js", "src/upx.js", "index.css", "src/app.js", "src/player.js", "src/storage.js", "src/controls.js", "src/compatibility.js", "src/archive.js", "src/converter.js", "src/studio.js", "runtime/studio.html", "runtime/studioframe.js",
     ...["left", "right", "pause", "reset", "settings", "shoot", "jump", "close"].map(name => "assets/controls/" + name + ".png")
 ];

@@ -1,3 +1,4 @@
+import {classicversion, convertclassic} from "./classic/convert.js";
 import {packed, unpackexe} from "./upx.js";
 import {archivepayload, openarchive} from "./archive.js";
 import {unzipSync} from "../vendor/zip.js";
@@ -86,9 +87,20 @@ async function convert(path) {
         self.postMessage({type: "progress", text: "unpacking executable..."});
         files.set(path, await unpackexe(bytes));
     }
+    const classic = classicversion(files.get(path));
+    if (classic) {
+        self.postMessage({type: "progress", text: "converting GameMaker " + classic.version + " resources..."});
+        const converted = await convertclassic(files.get(path), classic);
+        files.set(path, converted.bytes);
+        for (const [name, data] of converted.files) {
+            const target = parent + normalize(name);
+            if (![...files.keys()].some(existing => existing.toLowerCase() === target.toLowerCase())) {files.set(target, data);}
+        }
+        if (files.size > 4096 || [...files.values()].reduce((total, data) => total + data.length, 0) > limit * 4) {throw new Error("The expanded game package is too large.");}
+    }
     const entry = path.slice(parent.length);
     const converted = [...files].filter(([name]) => name.startsWith(parent) && name.slice(parent.length) !== "manifest.json").map(([name, data]) => [name.slice(parent.length), data]);
-    converted.push(["manifest.json", new TextEncoder().encode(JSON.stringify({format_version: 1, engine_family: "opengmk", source_hash: hash, entry}))]);
+    converted.push(["manifest.json", new TextEncoder().encode(JSON.stringify({format_version: 1, engine_family: "opengmk", source_hash: hash, entry, source_version: classic?.version}))]);
     self.postMessage({type: "ready", files: converted, name: entry.replace(/\.(exe|gmk|gm81)$/i, "")}, [...new Set(converted.map(([, data]) => data.buffer))]);
 }
 
