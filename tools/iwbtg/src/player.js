@@ -18,6 +18,10 @@ export async function play(game, status, restart) {
         const {playstudio} = await import("./studio.js");
         return playstudio(game, status, restart);
     }
+    if (manifest.engine_family === "opengmk") {
+        const {playopengmk} = await import("./opengmk.js");
+        return playopengmk(game, status, restart);
+    }
     const pkg = {
         manifest, rooms: json("rooms.json"), objects: json("objects.json"), scripts: json("scripts.ir.json"),
         rawLogic: json("logic.raw.json"), loweredLogic: json("logic.lowered.json"),

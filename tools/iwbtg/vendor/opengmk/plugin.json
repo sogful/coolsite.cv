@@ -1,0 +1,68 @@
+{
+  "id": "opengmk",
+  "version": "0.2.3",
+  "apiVersion": 5,
+  "entry": "host.js",
+  "name": "OpenGMK",
+  "formats": [
+    "gm8"
+  ],
+  "description": "Runs GameMaker 8 games in the browser, on a WebAssembly build of OpenGMK, a GameMaker 8 emulator in Rust.",
+  "author": "Dapper Mink",
+  "updates": "https://gemmified-opengmk.dappermink.me/latest.json",
+  "assets": [
+    {
+      "path": "GeneralUser-GS.sf2",
+      "bytes": 32319396,
+      "url": "https://gemmified-opengmk.dappermink.me/0.2.3/GeneralUser-GS.sf2",
+      "optional": true
+    }
+  ],
+  "credits": [
+    {
+      "name": "OpenGMK",
+      "license": "GPL-2.0-only",
+      "url": "https://github.com/QuentinJanuel/Gemmified-OpenGMK",
+      "copyright": "Copyright (C) The OpenGMK Project",
+      "upstream": "https://github.com/OpenGMK/OpenGMK"
+    }
+  ],
+  "capabilities": {
+    "settings": [
+      {
+        "kind": "flag",
+        "key": "audio.lazy",
+        "default": false,
+        "limited": true
+      },
+      {
+        "kind": "number",
+        "key": "audio.shortCompressedBytes",
+        "default": 262144,
+        "min": 0,
+        "unit": "bytes"
+      },
+      {
+        "kind": "number",
+        "key": "audio.shortDurationSecs",
+        "default": 5,
+        "min": 0,
+        "unit": "seconds"
+      },
+      {
+        "kind": "number",
+        "key": "audio.musicBudgetBytes",
+        "default": 201326592,
+        "min": 0,
+        "unit": "bytes"
+      },
+      {
+        "kind": "number",
+        "key": "audio.midiSampleRate",
+        "default": 22050,
+        "min": 8000,
+        "unit": "hertz"
+      }
+    ]
+  }
+}

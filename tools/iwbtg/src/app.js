@@ -1,8 +1,11 @@
+import {isolate} from "./isolation.js";
 import {play} from "./player.js";
 import {library, getgame, remember, download} from "./storage.js";
 import {zipSync} from "../vendor/zip.js";
 
 /*//////////////////////////////////////////////////////////////////////*/
+
+await isolate();
 
 let worker;
 let timeout;
@@ -114,7 +117,7 @@ fileinput.addEventListener("change", async () => {
     if (!file || busy) {return;}
     cancel();
     if (file.size > 128 * 1024 * 1024) {status("choose a file smaller than 128 MB."); return;}
-    if (!/\.(zip|exe|rar|7z|cab)$/i.test(file.name)) {status("choose a zip, rar, 7z, cab or exe file."); return;}
+    if (!/\.(zip|exe|rar|7z|cab|gmk|gm81)$/i.test(file.name)) {status("choose a game archive, exe, gmk or gm81 file."); return;}
     busy = true;
     fileinput.disabled = true;
     cancelbutton.hidden = false;
@@ -136,7 +139,7 @@ fileinput.addEventListener("change", async () => {
                 select.append(option);
             }
             if (message.executables.length === 1) {begin(message.executables[0]);}
-            else {selection.hidden = false; status("choose the game executable");}
+            else {selection.hidden = false; status("choose the game");}
         }
         if (message.type === "ready") {
             cancel();
@@ -180,7 +183,7 @@ document.querySelector(".importsave").addEventListener("change", async event => 
 /*//////////////////////////////////////////////////////////////////////*/
 
 const assets = [
-    "index.css", "src/app.js", "src/player.js", "src/storage.js", "src/controls.js", "src/compatibility.js", "src/archive.js", "src/converter.js", "src/studio.js", "runtime/studio.html", "runtime/studioframe.js",
+    "isolation.js", "src/isolation.js", "src/opengmk.js", "src/upx.js", "index.css", "src/app.js", "src/player.js", "src/storage.js", "src/controls.js", "src/compatibility.js", "src/archive.js", "src/converter.js", "src/studio.js", "runtime/studio.html", "runtime/studioframe.js",
     ...["left", "right", "pause", "reset", "settings", "shoot", "jump", "close"].map(name => "assets/controls/" + name + ".png")
 ];
 

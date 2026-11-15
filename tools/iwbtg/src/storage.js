@@ -87,6 +87,13 @@ export function savehost(id, files, changed) {
         }
         if (JSON.stringify(data).length > 4 * 1024 * 1024) {throw new Error("The save backup is too large.");}
         const normalized = {version: 1, id, files: {}, deleted: data.deleted.map(pathkey)};
+        if (data.replica && (typeof data.replica !== "object" || Array.isArray(data.replica))) {throw new Error("Invalid save data.");}
+        if (data.replica) {normalized.replica = {};}
+        for (const [key, value] of Object.entries(data.replica || {})) {
+            if (!key.startsWith("gems:file:" + id + ":") && !key.startsWith("gems:gone:" + id + ":") && !key.startsWith("gems:dir:" + id + ":")) {throw new Error("These saves belong to another game.");}
+            if (typeof value !== "string") {throw new Error("Invalid save data.");}
+            normalized.replica[key] = value;
+        }
         for (const [path, value] of Object.entries(data.files)) {
             if (typeof value !== "string") {throw new Error("Invalid save data.");}
             decode(value);
@@ -96,12 +103,29 @@ export function savehost(id, files, changed) {
     }
 
     function persist(next) {
-        localStorage.setItem(key, JSON.stringify(next));
         state = next;
-        changed("saves stored in this browser");
+        try {localStorage.setItem(key, JSON.stringify(next)); changed("saves stored in this browser");}
+        catch (error) {changed("could not store saves: " + error.message); throw error;}
     }
 
     return {
+        replica: {
+            seed() {
+                if (state.replica) {return {...state.replica};}
+                const entries = {};
+                for (const [path, value] of Object.entries(state.files)) {
+                    const key = "gems:file:" + id + ":game:" + path.split("/").map(encodeURIComponent).join("/");
+                    if (!Object.hasOwn(entries, key)) {entries[key] = value;}
+                }
+                for (const path of state.deleted) {entries["gems:gone:" + id + ":game:" + path.split("/").map(encodeURIComponent).join("/")] = "1";}
+                state = {...state, replica: entries};
+                return {...entries};
+            },
+            set(key, value) {persist({...state, replica: {...state.replica, [key]: value}});},
+            remove(key) {const replica = {...state.replica}; delete replica[key]; persist({...state, replica});},
+            watch() {},
+            save() {changed("saves stored in this browser");}
+        },
         readFile(path) {
             const name = pathkey(path);
             if (state.deleted.includes(name)) {return null;}

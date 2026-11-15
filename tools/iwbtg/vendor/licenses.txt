@@ -4,6 +4,15 @@ The Studio runtime uses AGPL-3.0. Its license and corresponding source are in st
 
 Archive support uses 7-Zip under LGPL-2.1-or-later with the unRAR restriction. Its license and corresponding source are in archive/license.txt and archive/source.zip.
 
+OpenGMK 0.2.3 browser runner. https://github.com/QuentinJanuel/Gemmified-OpenGMK
+Copyright (C) The OpenGMK Project. GPL-2.0-only. Full license: opengmk/copying.txt. Corresponding source: opengmk/source.zip
+MIDI instrument bank license: opengmk/LICENSE.txt
+
+Static executable decompression. https://github.com/dzim2/clam_upx_test
+GPL-2.0. Copyright Cisco Systems, Sourcefire and ClamAV contributors. Full license: upx/license.txt. Corresponding source: upx/source.zip
+LZMA SDK decoder by Igor Pavlov is public domain.
+UPX CTO filter format reference: https://github.com/upx/upx/blob/devel/src/filter/cto.h
+
 iwanna-gm8-web-engine 7b73aaa609afb82ff6dc530504b12fcf3d5e7597
 MIT License
 

@@ -1,4 +1,4 @@
-import {WASI, File, Directory, OpenFile, ConsoleStdout, PreopenDirectory} from "../vendor/wasi.js";
+import {packed, unpackexe} from "./upx.js";
 import {archivepayload, openarchive} from "./archive.js";
 import {unzipSync} from "../vendor/zip.js";
 
@@ -6,6 +6,7 @@ import {unzipSync} from "../vendor/zip.js";
 
 const limit = 128 * 1024 * 1024;
 let files = new Map();
+let nesting = 0;
 
 function normalize(path) {
     const normalized = path.replaceAll("\\", "/");
@@ -17,6 +18,7 @@ function normalize(path) {
 
 async function unpack(bytes, name, depth = 0) {
     if (bytes.length > limit) {throw new Error("Choose a file smaller than 128 MB.");}
+    if (/\.(gmk|gm81)$/i.test(name)) {return new Map([[normalize(name), bytes]]);}
     if (name.toLowerCase().endsWith(".exe")) {
         const embedded = archivepayload(bytes);
         return embedded ? openarchive(embedded, normalize) : new Map([[name, bytes]]);
@@ -37,42 +39,34 @@ async function unpack(bytes, name, depth = 0) {
         return !entry.name.endsWith("/");
     }});
     const entriesmap = new Map(Object.entries(result).map(([path, data]) => [normalize(path), data]));
-    if (depth < 2 && ![...entriesmap.keys()].some(path => /\.(exe|win)$/i.test(path))) {
+    if (depth < 2 && ![...entriesmap.keys()].some(path => /\.(exe|win|gmk|gm81)$/i.test(path))) {
         const nested = [...entriesmap].filter(([path]) => /\.(zip|rar|7z|cab)$/i.test(path));
         if (nested.length === 1) {return unpack(nested[0][1], nested[0][0], depth + 1);}
     }
     return entriesmap;
 }
 
-function mount(entries) {
-    const root = new Directory(new Map());
-    for (const [path, bytes] of entries) {
-        const parts = path.split("/");
-        const name = parts.pop();
-        let directory = root;
-        for (const part of parts) {
-            if (!directory.contents.has(part)) {directory.contents.set(part, new Directory(new Map()));}
-            directory = directory.contents.get(part);
-            if (!(directory instanceof Directory)) {throw new Error("Conflicting zip file paths.");}
-        }
-        directory.contents.set(name, new File(bytes));
-    }
-    return root;
-}
-
-function flatten(directory, prefix = "") {
-    const result = [];
-    for (const [name, entry] of directory.contents) {
-        const path = prefix + name;
-        if (entry instanceof Directory) {result.push(...flatten(entry, path + "/"));}
-        else {result.push([path, entry.data]);}
-    }
-    return result;
-}
-
-/*//////////////////////////////////////////////////////////////////////*/
-
 async function convert(path) {
+    const embedded = archivepayload(files.get(path));
+    if (embedded) {
+        if (++nesting > 4) {throw new Error("Too many nested game packages.");}
+        self.postMessage({type: "progress", text: "extracting game files..."});
+        const extracted = await openarchive(embedded, normalize);
+        const parent = path.includes("/") ? path.slice(0, path.lastIndexOf("/") + 1) : "";
+        const merged = new Map([...files].filter(([name]) => name.startsWith(parent) && name !== path).map(([name, bytes]) => [name.slice(parent.length), bytes]));
+        for (const [name, bytes] of extracted) {
+            for (const existing of merged.keys()) {if (existing.toLowerCase() === name.toLowerCase()) {merged.delete(existing);}}
+            merged.set(name, bytes);
+        }
+        if (merged.size > 4096 || [...merged.values()].reduce((total, bytes) => total + bytes.length, 0) > limit * 4) {throw new Error("The expanded game package is too large.");}
+        files = merged;
+        const executables = [...extracted.keys()].filter(name => /\.exe$/i.test(name));
+        if (!executables.length) {throw new Error("No game executable was found in the embedded archive.");}
+        if (executables.length === 1) {await convert(executables[0]);}
+        else {self.postMessage({type: "inventory", executables});}
+        return;
+    }
+    if (/\.(gmk|gm81)$/i.test(path)) {throw new Error("GameMaker project files are not supported yet. Choose a compiled EXE.");}
     const parent = path.includes("/") ? path.slice(0, path.lastIndexOf("/") + 1) : "";
     const studio = [...files].find(([name, bytes]) => name.toLowerCase() === (parent + "data.win").toLowerCase() && new TextDecoder().decode(bytes.subarray(0, 4)) === "FORM");
     if (studio) {
@@ -86,48 +80,32 @@ async function convert(path) {
         self.postMessage({type: "ready", files: converted, name: path.split("/").pop().replace(/\.exe$/i, "")}, [...new Set(converted.map(([, data]) => data.buffer))]);
         return;
     }
-    self.postMessage({type: "progress", text: "converting GameMaker data..."});
-    const input = mount(files);
-    const output = new Directory(new Map());
-    const errors = [];
-    const wasi = new WASI(["converter", "/input/" + path], [], [
-        new OpenFile(new File([])),
-        ConsoleStdout.lineBuffered(() => {}),
-        ConsoleStdout.lineBuffered(line => errors.push(line)),
-        new PreopenDirectory("/", new Map([["input", input], ["output", output]]))
-    ], {debug: false});
-    const response = await fetch(new URL("../vendor/converter.wasm", import.meta.url));
-    if (!response.ok) {throw new Error("Could not load the converter. Reload the page and try again.");}
-    const module = await WebAssembly.compile(await response.arrayBuffer());
-    const instance = await WebAssembly.instantiate(module, {wasi_snapshot_preview1: wasi.wasiImport});
-    const code = wasi.start(instance);
-    if (code !== 0 || !output.contents.has("manifest.json")) {
-        throw new Error("Could not convert this executable. It may use an unsupported GameMaker version or packer.\n" + errors.join("\n").slice(-3000));
+    const bytes = files.get(path);
+    const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map(value => value.toString(16).padStart(2, "0")).join("");
+    if (packed(bytes)) {
+        self.postMessage({type: "progress", text: "unpacking executable..."});
+        files.set(path, await unpackexe(bytes));
     }
-    const converted = flatten(output);
-    const existing = new Set(converted.map(([name]) => name.toLowerCase()));
-    for (const [name, data] of files) {
-        if (!name.startsWith(parent)) {continue;}
-        const relative = name.slice(parent.length);
-        if (/\.(exe|dll)$/i.test(relative) || existing.has(relative.toLowerCase())) {continue;}
-        converted.push([relative, data]);
-    }
-    self.postMessage({type: "ready", files: converted, name: path.split("/").pop().replace(/\.exe$/i, "")}, [...new Set(converted.map(([, bytes]) => bytes.buffer))]);
+    const entry = path.slice(parent.length);
+    const converted = [...files].filter(([name]) => name.startsWith(parent) && name.slice(parent.length) !== "manifest.json").map(([name, data]) => [name.slice(parent.length), data]);
+    converted.push(["manifest.json", new TextEncoder().encode(JSON.stringify({format_version: 1, engine_family: "opengmk", source_hash: hash, entry}))]);
+    self.postMessage({type: "ready", files: converted, name: entry.replace(/\.(exe|gmk|gm81)$/i, "")}, [...new Set(converted.map(([, data]) => data.buffer))]);
 }
 
 self.onmessage = async event => {
     try {
         if (event.data.type === "open") {
             files = await unpack(new Uint8Array(event.data.bytes), event.data.name);
-            if (files.has("manifest.json") && files.has("logic.lowered.json")) {
+            if (files.has("manifest.json") && (files.has("logic.lowered.json") || /"engine_family"\s*:\s*"(opengmk|studio)"/.test(new TextDecoder().decode(files.get("manifest.json"))))) {
                 const entries = [...files];
                 self.postMessage({type: "ready", files: entries, name: event.data.name.replace(/\.zip$/i, "")}, [...new Set(entries.map(([, bytes]) => bytes.buffer))]);
                 return;
             }
-            const executables = [...files.keys()].filter(path => /\.exe$/i.test(path) && !path.startsWith("__MACOSX/") && !path.split("/").pop().startsWith("._"));
+            let executables = [...files.keys()].filter(path => /\.(exe|gmk|gm81)$/i.test(path) && !path.startsWith("__MACOSX/") && !path.split("/").pop().startsWith("._"));
+            if (executables.some(path => /\.exe$/i.test(path))) {executables = executables.filter(path => /\.exe$/i.test(path));}
             if (!executables.length) {
-                if ([...files.keys()].some(path => /\.(gmk|gm81|gm6|gmd|yyp|gmx)$/i.test(path))) {throw new Error("This archive contains a GameMaker project. Choose its compiled game instead.");}
-                throw new Error("No game executable was found in this archive.");
+                if ([...files.keys()].some(path => /\.(gmk|gm81|gm6|gmd|yyp|gmx)$/i.test(path))) {throw new Error("This GameMaker project version is not supported yet.");}
+                throw new Error("No supported game was found in this archive.");
             }
             self.postMessage({type: "inventory", executables});
         } else if (event.data.type === "convert") {await convert(event.data.path);}
