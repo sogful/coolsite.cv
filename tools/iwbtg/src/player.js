@@ -2,6 +2,7 @@ import {instantiateWasmRuntimeBridge as instantiate, createWebAudioHost as creat
 import {controls} from "./controls.js";
 import {nativeactions} from "./compatibility.js";
 import {savehost} from "./storage.js";
+import {warning} from "./interface.js";
 
 /*//////////////////////////////////////////////////////////////////////*/
 
@@ -50,6 +51,7 @@ export async function play(game, status, restart) {
     const context = new AudioContext();
     const audio = createaudio({audioContext: context, fetch: async path => {
         const bytes = files.get(String(path).replace(/^\/+/, ""));
+        if (!bytes) {warning("Missing audio: " + path);}
         return new Response(bytes || null, {status: bytes ? 200 : 404});
     }});
     audio.configurePackage(pkg, "");
@@ -74,7 +76,7 @@ export async function play(game, status, restart) {
     let timer = 0;
     let pending = false;
     document.querySelector(".gamename").textContent = game.name;
-    savelabel.textContent = "saves are kept separately for this game";
+    savelabel.textContent = "";
     function touchlayout() {
         player.classList.toggle("touchdevice", touchquery.matches || navigator.maxTouchPoints > 0);
         input.clear();

@@ -104,7 +104,7 @@ export function savehost(id, files, changed) {
 
     function persist(next) {
         state = next;
-        try {localStorage.setItem(key, JSON.stringify(next)); changed("saves stored in this browser");}
+        try {localStorage.setItem(key, JSON.stringify(next)); changed("");}
         catch (error) {changed("could not store saves: " + error.message); throw error;}
     }
 
@@ -124,7 +124,7 @@ export function savehost(id, files, changed) {
             set(key, value) {persist({...state, replica: {...state.replica, [key]: value}});},
             remove(key) {const replica = {...state.replica}; delete replica[key]; persist({...state, replica});},
             watch() {},
-            save() {changed("saves stored in this browser");}
+            save() {changed("");}
         },
         readFile(path) {
             const name = pathkey(path);

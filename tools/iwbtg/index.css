@@ -1,9 +1,117 @@
-body {background-color: black}
+/*//////////////////////////////////////////////////////////////////////*/
+
+body {
+    display: flex; align-items: center;
+    justify-content: center; min-height: 100dvh;
+    box-sizing: border-box; max-width: none;
+    margin: 0; padding: 32px 16px;
+    background: black; color: #fff;
+    font-family: "Comic Sans MS", sans-serif; font-size: 24px;
+}
 .toolheading .fangamelogo {max-height: 104px}
+a, p, ul, li, h1, h2, h3, h4, h5, h6, sup, sub {color: white}
+.toolmain {
+    width: min(100%,960px); text-align: center;
+}
+.toolheading .fangamelogo {
+    max-height: 156px; margin: 0 auto 24px;
+}
+.importrow {margin: 0 0 16px}
+.upload .selection {
+    display: flex; justify-content: center;
+    flex-wrap: wrap; gap: 16px;
+}
+.selection[hidden] {display: none}
+.filebutton, .toolmain button:not(.imagebutton):not(.touchbutton) {
+    border: 31px solid transparent; border-image: url("assets/button.png") 31 fill stretch;
+    background: #000; color: #fff;
+    padding: 2px 12px; border-radius: 0;
+    image-rendering: pixelated; cursor: pointer;
+    position: relative; box-sizing: border-box;
+}
+.filebutton {
+    justify-content: center; gap: 0;
+    line-height: 1;
+}
+.fileinput {
+    position: absolute; inset: -31px;
+    width: calc(100% + 62px); height: calc(100% + 62px);
+    opacity: 0; cursor: pointer;
+}
+.toolmain button:focus-visible {
+    outline: 2px solid #fff; outline-offset: 6px;
+}
+.toolmain button:disabled {
+    opacity: 0.5; cursor: default;
+}
+.toolmain button:active, .filebutton:active {filter: brightness(0.7)}
+.status {
+    margin: 16px 0 8px; line-height: 1.7;
+}
+.hint {
+    color: #aaa; margin: 8px 0;
+    line-height: 1.7;
+}
+.library {margin-top: 32px}
+.games, .savedgame {justify-content: center}
+.savedgame {gap: 16px}
+.toolmain button:not(.imagebutton):not(.touchbutton) {line-height: 1}
+.buttonimage {image-rendering: pixelated}
+.gameoptions {
+    width: min(640px,calc(100% - 44px)); color: #fff;
+    text-align: left;
+}
+.prompt {
+    background: #000; color: #fff;
+    border: 2px solid #aaa; text-align: center;
+}
+.promptbuttons {
+    flex-wrap: wrap; justify-content: center;
+}
+.pixeltext {
+    display: inline-block; white-space: normal;
+    line-height: 1; vertical-align: middle;
+}
+.pixelword {
+    display: inline-block; vertical-align: middle;
+    image-rendering: pixelated;
+}
+.pixelspace {
+    display: inline-block; width: 8px;
+}
+.pixelreader {
+    position: absolute; width: 1px;
+    height: 1px; padding: 0;
+    overflow: hidden; clip-path: inset(50%);
+    white-space: pre; border: 0;
+}
+@media (max-width: 600px) {
+    body {padding: 24px 12px}
+    .toolheading .fangamelogo {max-height: 124px}
+    .hint {margin-top: 16px}
+}
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-a, p, ul, li, h1, h2, h3, h4, h5, h6, sup, sub {color: white} 
+.savedgame button, .gameoptions button, .gameoptions .filebutton {zoom: 0.5}
+.prompt {
+    padding: 12px; white-space: normal;
+}
+.prompttext {
+    margin: 0 0 12px; white-space: pre-line;
+    line-height: 1.25;
+}
+.promptbuttons {
+    margin: 0; gap: 12px;
+}
+.promptbuttons button {zoom: 0.5}
+.prompt .pause {
+    position: fixed; top: max(10px,env(safe-area-inset-top));
+    left: max(10px,env(safe-area-inset-left));
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
 .playing {overflow: hidden}
 .player {
     position: fixed; inset: 0;
@@ -84,8 +192,7 @@ a, p, ul, li, h1, h2, h3, h4, h5, h6, sup, sub {color: white}
     left: max(10px,env(safe-area-inset-left)); z-index: 4;
     width: min(440px,calc(100% - 44px)); max-height: calc(100dvh - 110px);
     overflow: auto; padding: 12px;
-    background: #fff; color: #222;
-    border: 1px solid #999;
+    background: black; color: #222;
 }
 .gameoptions[hidden] {display: none}
 .gameoptions label {
@@ -135,3 +242,68 @@ a, p, ul, li, h1, h2, h3, h4, h5, h6, sup, sub {color: white}
     width: 100%; height: 100%;
     border: 0; background: #000;
 }
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.toolmain button:focus:not(:focus-visible), .toolmain input:focus, .toolmain select:focus, .toolmain textarea:focus {outline: none}
+.promptbuttons button:focus {outline: none}
+.promptbuttons .selected {filter: brightness(1.4)}
+.promptbuttons .selected::after {
+    content: ""; position: absolute;
+    left: 0; top: calc(50% - 6px);
+    border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+    border-left: 8px solid #fff;
+}
+.status:empty, .savestatus:empty {display: none}
+.library {
+    max-height: 40dvh; overflow: auto;
+    padding: 4px; scrollbar-gutter: stable;
+}
+.games {
+    grid-template-columns: repeat(auto-fill,minmax(min(100%,200px),1fr)); gap: 6px;
+    align-items: start;
+}
+.savedgame {min-width: 0}
+.savedgame button {
+    flex: 1; min-width: 0;
+    overflow: hidden; text-align: left;
+}
+.savedgame button .pixeltext {
+    white-space: nowrap; max-width: 100%;
+    overflow: hidden;
+}
+.gameoptions {
+    color: #fff; max-height: calc(100dvh - 100px);
+    scrollbar-gutter: stable; text-align: left;
+}
+.gameoptions .toolbar {
+    gap: 6px; margin: 8px 0;
+}
+.gameoptions .gamename {
+    font-size: 1em; overflow-wrap: anywhere;
+}
+.report, .licenses {
+    zoom: 0.5; margin: 12px 0 0;
+}
+.diagnostics {font-size: 24px}
+.licenses {
+    display: flex; flex-wrap: wrap;
+    gap: 12px 20px;
+}
+.licenses a .pixeltext {border-bottom: 2px solid currentColor}
+.gamebuttons, .exitgame {transition: opacity 0.35s}
+.idle .gamebuttons, .idle .exitgame {
+    opacity: 0; pointer-events: none;
+}
+.notices {
+    position: absolute; left: max(12px,env(safe-area-inset-left));
+    bottom: max(12px,env(safe-area-inset-bottom)); z-index: 6;
+    max-width: min(560px,80vw); pointer-events: none;
+    text-align: left;
+}
+.notice {
+    zoom: 0.5; margin: 6px 0 0;
+    color: #fff; text-shadow: 1px 1px #000;
+    transition: opacity 1s; overflow-wrap: anywhere;
+}
+.fading {opacity: 0}

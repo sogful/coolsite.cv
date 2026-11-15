@@ -1,6 +1,7 @@
 import {controls} from "./controls.js";
 import {savehost} from "./storage.js";
 import plugin from "../vendor/opengmk/host.js";
+import {ignored} from "./interface.js";
 
 /*//////////////////////////////////////////////////////////////////////*/
 
@@ -42,6 +43,8 @@ export async function playopengmk(game, status, restart) {
         input?.clear();
     }
     function show(request) {
+        const automatic = ignored(request);
+        if (automatic) {return Promise.resolve(automatic);}
         input?.clear();
         const text = request.text.replaceAll("\ufffd|\ufffd[\ufffdY\ufffd\ufffd", "ポーズ中").trim();
         document.querySelector(".prompttext").textContent = text;
@@ -62,6 +65,7 @@ export async function playopengmk(game, status, restart) {
             const button = document.createElement("button");
             button.textContent = item.label;
             button.value = String(item.value);
+            if (item.kind === "primary") {button.dataset.primary = "";}
             buttons.append(button);
         }
         return new Promise(resolve => {
@@ -160,7 +164,7 @@ export async function playopengmk(game, status, restart) {
         fullscreen.hidden = !player.requestFullscreen;
         fullscreen.addEventListener("click", () => {void player.requestFullscreen?.().catch(failed => status(failed.message));}, options);
         document.querySelector(".gamename").textContent = game.name;
-        label.textContent = "saves are kept separately for this game";
+        label.textContent = "";
         report.textContent = "OpenGMK 0.2.3";
         function tick(now) {
             if (stopped || failure) {return;}

@@ -2,10 +2,12 @@ import {isolate} from "./isolation.js";
 import {play} from "./player.js";
 import {library, getgame, remember, download} from "./storage.js";
 import {zipSync} from "../vendor/zip.js";
+import {setup} from "./interface.js";
 
 /*//////////////////////////////////////////////////////////////////////*/
 
 await isolate();
+setup();
 
 let worker;
 let timeout;
@@ -37,6 +39,7 @@ async function showlibrary() {
             row.className = "savedgame";
             const button = document.createElement("button");
             button.textContent = game.name;
+            button.title = game.name;
             button.addEventListener("click", () => {
                 if (busy) {return;}
                 cancel();
@@ -64,7 +67,7 @@ async function closegame() {
     active = null;
     current = null;
     hidescreen();
-    status("game closed");
+    status("");
     if (running) {await running.dispose();}
 }
 
@@ -75,6 +78,7 @@ async function launch(game) {
     const player = document.querySelector(".player");
     const message = document.querySelector(".playerstatus");
     status("loading game...");
+    document.querySelector(".notices").replaceChildren();
     player.hidden = false;
     player.setAttribute("aria-busy", "true");
     document.body.classList.add("playing");
@@ -179,7 +183,7 @@ document.querySelector(".importsave").addEventListener("change", async event => 
 /*//////////////////////////////////////////////////////////////////////*/
 
 const assets = [
-    "logo.webp", "appearance.css", "src/appearance.js", "assets/button.png", "assets/favicon.ico",
+    "logo.webp", "src/appearance.js", "src/interface.js", "assets/button.png", "favicon.ico",
     "assets/fonts/comic.png", "assets/fonts/comic.json",
     "src/classic/binary.js", "src/classic/resources.js", "src/classic/convert.js",
     "isolation.js", "src/isolation.js", "src/opengmk.js", "src/upx.js", "index.css", "src/app.js", "src/player.js", "src/storage.js", "src/controls.js", "src/compatibility.js", "src/archive.js", "src/converter.js", "src/studio.js", "runtime/studio.html", "runtime/studioframe.js",

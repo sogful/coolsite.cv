@@ -1,5 +1,6 @@
 import {controls} from "./controls.js";
 import {savehost} from "./storage.js";
+import {warning} from "./interface.js";
 
 /*//////////////////////////////////////////////////////////////////////*/
 
@@ -60,10 +61,11 @@ export async function playstudio(game, status, restart) {
             log(text) {
                 if (messages.length < 100) {messages.push(text.slice(0, 2000));}
                 report.textContent = messages.join("\n");
+                if (/warn|(?:audio|sound|music).*(?:missing|not found|failed|error)|(?:missing|failed|error).*(?:audio|sound|music)/i.test(text)) {warning(text);}
             }
         });
         document.querySelector(".gamename").textContent = game.name;
-        savelabel.textContent = "saves are kept separately for this game";
+        savelabel.textContent = "";
         input = controls(canvas, state => {
             const next = new Set(state.keysHeld);
             for (const code of next) {if (!held.has(code)) {runner.key(code, true);}}
@@ -87,6 +89,7 @@ export async function playstudio(game, status, restart) {
             }, options);
         }
         frame.contentWindow.addEventListener("blur", () => input.clear(), options);
+        frame.contentWindow.addEventListener("pointermove", () => player.dispatchEvent(new Event("pointermove", {bubbles: true})), options);
         const settings = document.querySelector(".settings");
         const panel = document.querySelector(".gameoptions");
         panel.hidden = true;
