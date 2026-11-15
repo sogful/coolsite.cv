@@ -29,6 +29,25 @@ export function packed(bytes) {
     } catch {return false;}
 }
 
+function relocate(output, overlay, end) {
+    const view = new DataView(output.buffer, output.byteOffset, output.byteLength);
+    const formats = [
+        {position: 0x32337, signature: [0xe2, 0xf7, 0xc7, 0x05, 0x2e, 0x2f, 0x43, 0x00], mask: 0x32336, load: 0x322a9, header: 0x144ac0},
+        {position: 0x462cc, signature: [0x80, 0x34, 0x08, null, 0xe2, 0xfa, 0xe9], mask: 0x462cf, load: 0x46255, header: 0x1f0c53}
+    ];
+    for (const format of formats) {
+        if (format.header + 4 > end || !format.signature.every((byte, index) => byte === null || output[format.position + index] === byte)) {continue;}
+        const mask = output[format.mask] * 0x01010101;
+        const load = (view.getUint32(format.load, true) ^ mask) >>> 0;
+        const header = view.getUint32(format.header, true);
+        const offset = load + header;
+        if (offset < overlay || offset - overlay >= output.length - end) {throw new Error("Invalid protected game data offset.");}
+        const moved = header + end - overlay;
+        if (moved < 0 || moved > 0xffffffff) {throw new Error("Invalid relocated game data offset.");}
+        view.setUint32(format.header, moved, true);
+    }
+}
+
 export function rebuild(original, headers, image) {
     const input = sections(original);
     const entries = sections(headers, true);
@@ -67,6 +86,7 @@ export function rebuild(original, headers, image) {
         output.set(image.subarray(offset, offset + entry.size), entry.offset);
     }
     output.set(original.subarray(overlay), end);
+    relocate(output, overlay, end);
     return output;
 }
 
