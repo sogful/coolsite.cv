@@ -183,7 +183,8 @@ document.querySelector(".importsave").addEventListener("change", async event => 
 /*//////////////////////////////////////////////////////////////////////*/
 
 const assets = [
-    "logo.webp",
+    "logo.webp", "appearance.css", "src/appearance.js", "assets/button.png", "assets/favicon.ico",
+    "assets/fonts/comic.woff", "assets/fonts/comic.png", "assets/fonts/comic.json", "assets/fonts/license.txt",
     "src/classic/binary.js", "src/classic/resources.js", "src/classic/convert.js",
     "isolation.js", "src/isolation.js", "src/opengmk.js", "src/upx.js", "index.css", "src/app.js", "src/player.js", "src/storage.js", "src/controls.js", "src/compatibility.js", "src/archive.js", "src/converter.js", "src/studio.js", "runtime/studio.html", "runtime/studioframe.js",
     ...["left", "right", "pause", "reset", "settings", "shoot", "jump", "close"].map(name => "assets/controls/" + name + ".png")
@@ -213,8 +214,6 @@ document.querySelector(".exportgame").addEventListener("click", async event => {
         const branding = await fetch(new URL("../../branding.css", import.meta.url));
         if (!branding.ok) {throw new Error("Could not load the logo styles.");}
         output["branding.css"] = new Uint8Array(await branding.arrayBuffer());
-        const favicon = await fetch(new URL("../../favicon.svg", import.meta.url));
-        output["favicon.svg"] = new Uint8Array(await favicon.arrayBuffer());
         output["webgame.zip"] = zipSync(Object.fromEntries(game.files), {level: 1});
         output["game.json"] = new TextEncoder().encode(JSON.stringify({id: game.id, name: game.name}));
         output["readme.txt"] = new TextEncoder().encode("serve this folder over http or https, then open index.html.\n");

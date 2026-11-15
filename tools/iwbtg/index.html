@@ -4,24 +4,25 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <title>fangame player</title>
-    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../base.css">
     <link rel="stylesheet" href="../branding.css">
     <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="appearance.css">
 </head>
 <body>
-    <main>
+    <main class="toolmain">
         <h1 class="toolheading"><img class="toollogo fangamelogo" src="logo.webp" alt="fangame player" width="548" height="208"></h1>
         <div class="upload">
-            <p><label>game <input class="gamefile" type="file" accept=".zip,.exe,.rar,.7z,.cab"></label></p>
+            <p class="importrow"><label class="filebutton"><span>choose game</span><input class="gamefile fileinput" type="file" accept=".zip,.exe,.rar,.7z,.cab"></label></p>
             <div class="selection" hidden>
                 <label>game <select class="executables"></select></label>
                 <button class="convert" type="button">convert</button>
             </div>
             <button class="cancel" type="button" hidden>cancel</button>
         </div>
-        <p class="status" role="status" aria-live="polite">choose a fangame file</p>
-        <p class="hint">gamemaker 6, 8/8.1 and studio</p>
+        <p class="status" role="status" aria-live="polite">choose an executable/compressed archive</p>
+        <p class="hint">(gamemaker 6, 8.0, 8.1, 8.2 and studio 1.x/2.x supported)</p>
         <section class="player" aria-label="game" hidden>
             <div class="stage">
                 <canvas class="gamecanvas" tabindex="0" aria-label="game screen"></canvas>
@@ -71,6 +72,7 @@
             <div class="games"></div>
         </section>
     </main>
+    <script type="module" src="src/appearance.js"></script>
     <script type="module" src="src/app.js"></script>
 </body>
 </html>
