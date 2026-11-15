@@ -16,7 +16,6 @@ let generation = 0;
 const status = text => {document.querySelector(".status").textContent = text;};
 const fileinput = document.querySelector(".gamefile");
 const selection = document.querySelector(".selection");
-const cancelbutton = document.querySelector(".cancel");
 const decoder = new TextDecoder();
 
 function cancel() {
@@ -24,7 +23,6 @@ function cancel() {
     worker = null;
     clearTimeout(timeout);
     busy = false;
-    cancelbutton.hidden = true;
     selection.hidden = true;
     fileinput.disabled = false;
 }
@@ -120,7 +118,6 @@ fileinput.addEventListener("change", async () => {
     if (!/\.(zip|exe|rar|7z|cab|gmk|gm81)$/i.test(file.name)) {status("choose a game archive, exe, gmk or gm81 file."); return;}
     busy = true;
     fileinput.disabled = true;
-    cancelbutton.hidden = false;
     status("reading game files...");
     worker = new Worker(new URL("./converter.js", import.meta.url), {type: "module"});
     worker.onerror = event => {cancel(); status("conversion failed: " + event.message);};
@@ -163,7 +160,6 @@ fileinput.addEventListener("change", async () => {
 document.querySelector(".exitgame").addEventListener("click", () => {void closegame().catch(error => status(error.message));});
 
 document.querySelector(".convert").addEventListener("click", () => begin(document.querySelector(".executables").value));
-cancelbutton.addEventListener("click", () => {cancel(); status("conversion cancelled");});
 document.querySelector(".exportsave").addEventListener("click", () => {
     if (!active) {return;}
     download(new Blob([active.save.backup()], {type: "application/json"}), current.name + " saves.json");
@@ -184,7 +180,7 @@ document.querySelector(".importsave").addEventListener("change", async event => 
 
 const assets = [
     "logo.webp", "appearance.css", "src/appearance.js", "assets/button.png", "assets/favicon.ico",
-    "assets/fonts/comic.woff", "assets/fonts/comic.png", "assets/fonts/comic.json", "assets/fonts/license.txt",
+    "assets/fonts/comic.png", "assets/fonts/comic.json",
     "src/classic/binary.js", "src/classic/resources.js", "src/classic/convert.js",
     "isolation.js", "src/isolation.js", "src/opengmk.js", "src/upx.js", "index.css", "src/app.js", "src/player.js", "src/storage.js", "src/controls.js", "src/compatibility.js", "src/archive.js", "src/converter.js", "src/studio.js", "runtime/studio.html", "runtime/studioframe.js",
     ...["left", "right", "pause", "reset", "settings", "shoot", "jump", "close"].map(name => "assets/controls/" + name + ".png")

@@ -10,18 +10,29 @@ async function start() {
     const cache = new Map();
     function picture(word) {
         if (cache.has(word)) {return cache.get(word);}
-        const glyphs = [...word].map(letter => font.glyphs[letter.codePointAt(0)] || font.glyphs[63]);
+        const missing = [...word].some(letter => !font.glyphs[letter.codePointAt(0)]);
+        const glyphs = missing ? [] : [...word].map(letter => font.glyphs[letter.codePointAt(0)]);
         const canvas = document.createElement("canvas");
-        canvas.width = glyphs.reduce((width, glyph) => width + glyph[2], 0);
-        canvas.height = font.height;
         const context = canvas.getContext("2d");
+        context.font = "13px sans-serif";
+        canvas.width = missing ? Math.ceil(context.measureText(word).width) : glyphs.reduce((width, glyph) => width + glyph[2], 0);
+        canvas.height = font.height;
         context.imageSmoothingEnabled = false;
+        if (missing) {
+            context.font = "13px sans-serif";
+            context.fillStyle = "#fff";
+            context.fillText(word, 0, font.baseline || 15);
+        }
         let offset = 0;
         for (const [x, y, width, height] of glyphs) {
             context.drawImage(atlas, x, y, width, height, offset, 0, width, height);
             offset += width;
         }
         const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+        if (missing) {
+            for (let index = 3; index < pixels.data.length; index += 4) {pixels.data[index] = pixels.data[index] >= 128 ? 255 : 0;}
+            context.putImageData(pixels, 0, 0);
+        }
         let top = canvas.height;
         let bottom = 0;
         for (let y = 0; y < canvas.height; y++) {
@@ -33,7 +44,7 @@ async function start() {
         cropped.width = canvas.width;
         cropped.height = Math.max(1, bottom - top);
         cropped.getContext("2d").drawImage(canvas, 0, top, canvas.width, cropped.height, 0, 0, canvas.width, cropped.height);
-        const result = {url: cropped.toDataURL(), width: cropped.width * 2, height: cropped.height * 2, baseline: (10 - bottom) * 2};
+        const result = {url: cropped.toDataURL(), width: cropped.width * 2, height: cropped.height * 2, baseline: ((font.baseline || 10) - bottom) * 2};
         if (cache.size > 512) {cache.clear();}
         cache.set(word, result);
         return result;

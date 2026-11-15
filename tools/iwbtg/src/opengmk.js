@@ -25,6 +25,10 @@ export async function playopengmk(game, status, restart) {
     let timer;
     let stopped = false;
     let answer;
+    let paused = false;
+    const pausebutton = document.querySelector(".pause");
+    const pauseparent = pausebutton.parentElement;
+    const pausenext = pausebutton.nextSibling;
     let width = 800;
     let height = 608;
     let failure;
@@ -39,7 +43,10 @@ export async function playopengmk(game, status, restart) {
     }
     function show(request) {
         input?.clear();
-        document.querySelector(".prompttext").textContent = request.text;
+        const text = request.text.replaceAll("\ufffd|\ufffd[\ufffdY\ufffd\ufffd", "ポーズ中").trim();
+        document.querySelector(".prompttext").textContent = text;
+        paused = !request.input && request.buttons.length === 1 && /pause|ポーズ|暂停|暫停|пауза/i.test(text);
+        if (paused) {dialog.append(pausebutton);}
         const buttons = document.querySelector(".promptbuttons");
         buttons.replaceChildren();
         let field;
@@ -64,13 +71,33 @@ export async function playopengmk(game, status, restart) {
         });
     }
     dialog.addEventListener("cancel", event => event.preventDefault(), options);
-    dialog.addEventListener("close", () => answer?.(), options);
+    function restorepause() {
+        if (pausebutton.parentElement === dialog) {pauseparent.insertBefore(pausebutton, pausenext);}
+        paused = false;
+    }
+    dialog.addEventListener("close", () => {
+        restorepause();
+        answer?.();
+        canvas.focus({preventScroll: true});
+    }, options);
+    function resume(event) {
+        if (!paused || !dialog.open) {return;}
+        if (event.type === "keydown" && event.code !== "KeyP") {return;}
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        input?.clear();
+        dialog.close(dialog.querySelector(".promptbuttons button").value);
+    }
+    pausebutton.addEventListener("pointerdown", resume, {...options, capture: true});
+    pausebutton.addEventListener("click", resume, {...options, capture: true});
+    window.addEventListener("keydown", resume, {...options, capture: true});
     function dispose() {
         if (stopped) {return;}
         stopped = true;
         cancelAnimationFrame(timer);
         input?.dispose();
         if (dialog.open) {dialog.close("-1");}
+        restorepause();
         answer?.();
         controller.abort();
         runner?.dispose();
