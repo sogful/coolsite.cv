@@ -1,4 +1,5 @@
 import {WASI, File, Directory, OpenFile, ConsoleStdout, PreopenDirectory} from "../vendor/wasi.js";
+import {archivepayload, openarchive} from "./archive.js";
 import {unzipSync} from "../vendor/zip.js";
 
 /*//////////////////////////////////////////////////////////////////////*/
@@ -14,9 +15,13 @@ function normalize(path) {
     return normalized;
 }
 
-function unpack(bytes, name) {
+async function unpack(bytes, name, depth = 0) {
     if (bytes.length > limit) {throw new Error("Choose a file smaller than 128 MB.");}
-    if (name.toLowerCase().endsWith(".exe")) {return new Map([[name, bytes]]);}
+    if (name.toLowerCase().endsWith(".exe")) {
+        const embedded = archivepayload(bytes);
+        return embedded ? openarchive(embedded, normalize) : new Map([[name, bytes]]);
+    }
+    if (/\.(rar|7z|cab)$/i.test(name)) {return openarchive(bytes, normalize);}
     let total = 0;
     let entries = 0;
     const paths = new Set();
@@ -31,7 +36,12 @@ function unpack(bytes, name) {
         paths.add(path);
         return !entry.name.endsWith("/");
     }});
-    return new Map(Object.entries(result).map(([path, data]) => [normalize(path), data]));
+    const entriesmap = new Map(Object.entries(result).map(([path, data]) => [normalize(path), data]));
+    if (depth < 2 && ![...entriesmap.keys()].some(path => /\.(exe|win)$/i.test(path))) {
+        const nested = [...entriesmap].filter(([path]) => /\.(zip|rar|7z|cab)$/i.test(path));
+        if (nested.length === 1) {return unpack(nested[0][1], nested[0][0], depth + 1);}
+    }
+    return entriesmap;
 }
 
 function mount(entries) {
@@ -66,7 +76,15 @@ async function convert(path) {
     const parent = path.includes("/") ? path.slice(0, path.lastIndexOf("/") + 1) : "";
     const studio = [...files].find(([name, bytes]) => name.toLowerCase() === (parent + "data.win").toLowerCase() && new TextDecoder().decode(bytes.subarray(0, 4)) === "FORM");
     if (studio) {
-        throw new Error("This game uses GameMaker Studio. Studio bytecode is not supported by this player yet. It needs a separate runner or a rebuilt HTML5 export.");
+        const bytes = studio[1];
+        const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map(value => value.toString(16).padStart(2, "0")).join("");
+        const version = bytes[17];
+        const supported = version >= 8 && version <= 17;
+        if (!supported) {throw new Error("This Studio bytecode version is not supported: " + version);}
+        const converted = [...files].filter(([name]) => name.startsWith(parent) && !/\.(exe|dll)$/i.test(name)).map(([name, data]) => [name.toLowerCase() === (parent + "data.win").toLowerCase() ? "data.win" : name.slice(parent.length), data]);
+        converted.push(["manifest.json", new TextEncoder().encode(JSON.stringify({format_version: 1, engine_family: "studio", source_hash: hash, bytecode_version: version, compatibility: "partial"}))]);
+        self.postMessage({type: "ready", files: converted, name: path.split("/").pop().replace(/\.exe$/i, "")}, [...new Set(converted.map(([, data]) => data.buffer))]);
+        return;
     }
     self.postMessage({type: "progress", text: "converting GameMaker data..."});
     const input = mount(files);
@@ -100,14 +118,17 @@ async function convert(path) {
 self.onmessage = async event => {
     try {
         if (event.data.type === "open") {
-            files = unpack(new Uint8Array(event.data.bytes), event.data.name);
+            files = await unpack(new Uint8Array(event.data.bytes), event.data.name);
             if (files.has("manifest.json") && files.has("logic.lowered.json")) {
                 const entries = [...files];
                 self.postMessage({type: "ready", files: entries, name: event.data.name.replace(/\.zip$/i, "")}, [...new Set(entries.map(([, bytes]) => bytes.buffer))]);
                 return;
             }
-            const executables = [...files.keys()].filter(path => /\.exe$/i.test(path));
-            if (!executables.length) {throw new Error("No executable was found in this zip.");}
+            const executables = [...files.keys()].filter(path => /\.exe$/i.test(path) && !path.startsWith("__MACOSX/") && !path.split("/").pop().startsWith("._"));
+            if (!executables.length) {
+                if ([...files.keys()].some(path => /\.(gmk|gm81|gm6|gmd|yyp|gmx)$/i.test(path))) {throw new Error("This archive contains a GameMaker project. Choose its compiled game instead.");}
+                throw new Error("No game executable was found in this archive.");
+            }
             self.postMessage({type: "inventory", executables});
         } else if (event.data.type === "convert") {await convert(event.data.path);}
     } catch (error) {

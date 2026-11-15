@@ -12,15 +12,15 @@
     <main>
         <h1>fangame player</h1>
         <div class="upload">
-            <p><label>game <input class="gamefile" type="file" accept=".zip,.exe"></label></p>
+            <p><label>game <input class="gamefile" type="file" accept=".zip,.exe,.rar,.7z,.cab"></label></p>
             <div class="selection" hidden>
                 <label>executable <select class="executables"></select></label>
                 <button class="convert" type="button">convert</button>
             </div>
             <button class="cancel" type="button" hidden>cancel</button>
         </div>
-        <p class="status" role="status" aria-live="polite">choose a fangame zip or exe!</p>
-        <p class="hint">gamemaker 8/8.1 supported</p>
+        <p class="status" role="status" aria-live="polite">choose a fangame file</p>
+        <p class="hint">gamemaker 8/8.1 and studio</p>
         <section class="player" aria-label="game" hidden>
             <div class="stage">
                 <canvas class="gamecanvas" tabindex="0" aria-label="game screen"></canvas>
@@ -36,13 +36,12 @@
                 </div>
             </div>
             <div class="gamebuttons">
-                <button class="imagebutton pause" type="button" aria-label="pause" title="pause" aria-pressed="false"><img class="buttonimage" src="assets/controls/pause.png" alt="" draggable="false"></button>
+                <button class="imagebutton pause" type="button" data-key="80" aria-label="pause" title="pause"><img class="buttonimage" src="assets/controls/pause.png" alt="" draggable="false"></button>
                 <button class="imagebutton retry" type="button" data-key="82" aria-label="retry" title="retry"><img class="buttonimage" src="assets/controls/reset.png" alt="" draggable="false"></button>
                 <button class="imagebutton settings" type="button" aria-label="settings" title="settings" aria-expanded="false"><img class="buttonimage" src="assets/controls/settings.png" alt="" draggable="false"></button>
             </div>
             <button class="imagebutton exitgame" type="button" aria-label="exit game" title="exit game"><img class="buttonimage closeimage" src="assets/controls/close.png" alt="" draggable="false"></button>
             <p class="playerstatus" role="status" aria-live="polite" hidden></p>
-            <p class="pausedlabel" hidden>paused</p>
             <section class="gameoptions" aria-label="game settings" hidden>
                 <h2 class="gamename"></h2>
                 <div class="toolbar menukeys" aria-label="menu controls">
@@ -59,6 +58,7 @@
                     <button class="fullscreen" type="button">fullscreen</button>
                 </div>
                 <details class="report"><summary>conversion report</summary><pre class="diagnostics"></pre></details>
+                <p class="licenses"><a href="vendor/licenses.txt" target="_blank" rel="noopener">licenses</a> <a href="vendor/source.zip">converter source</a> <a href="vendor/studio/source.zip">studio source</a> <a href="vendor/archive/source.zip">archive source</a></p>
             </section>
             <dialog class="prompt">
                 <p class="prompttext"></p>

@@ -1,10 +1,11 @@
 import {instantiateWasmRuntimeBridge as instantiate, createWebAudioHost as createaudio, WasmRuntimeSession as runtimesession, renderWasmFrame as renderframe, ResourceCache as resourcecache} from "../vendor/runtime.js";
 import {controls} from "./controls.js";
+import {nativeactions} from "./compatibility.js";
 import {savehost} from "./storage.js";
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-export async function play(game, status) {
+export async function play(game, status, restart) {
     const files = new Map(game.files);
     const decoder = new TextDecoder();
     function json(path) {
@@ -13,11 +14,16 @@ export async function play(game, status) {
         return JSON.parse(decoder.decode(bytes));
     }
     const manifest = json("manifest.json");
+    if (manifest.engine_family === "studio") {
+        const {playstudio} = await import("./studio.js");
+        return playstudio(game, status, restart);
+    }
     const pkg = {
         manifest, rooms: json("rooms.json"), objects: json("objects.json"), scripts: json("scripts.ir.json"),
         rawLogic: json("logic.raw.json"), loweredLogic: json("logic.lowered.json"),
         analysis: json("analysis.json"), resources: json(manifest.resource_index_path)
     };
+    nativeactions(pkg);
     const canvas = document.querySelector(".gamecanvas");
     const player = document.querySelector(".player");
     const savelabel = document.querySelector(".savestatus");
@@ -53,13 +59,12 @@ export async function play(game, status) {
     const input = controls(canvas, state => session.setInputState(state));
     const controller = new AbortController();
     const options = {signal: controller.signal};
-    const pausebutton = document.querySelector(".pause");
     const touchquery = matchMedia("(any-pointer: coarse)");
     const report = document.querySelector(".diagnostics");
     const dialog = document.querySelector(".prompt");
     const warnings = new Set([...(manifest.warnings || []), ...(pkg.analysis.unsupported_features || [])]);
     let stopped = false;
-    let paused = false;
+    let halted = false;
     let previous = 0;
     let elapsed = 0;
     let timer = 0;
@@ -74,23 +79,13 @@ export async function play(game, status) {
     touchquery.addEventListener("change", touchlayout, options);
     window.addEventListener("resize", touchlayout, options);
 
-    function pausestate() {
-        const label = paused ? "resume" : "pause";
-        pausebutton.setAttribute("aria-label", label);
-        pausebutton.setAttribute("aria-pressed", String(paused));
-        pausebutton.title = label;
-        document.querySelector(".pausedlabel").hidden = !paused;
-    }
-
     function reportstate() {
         for (const line of snapshot.diagnostics || []) {if (warnings.size < 200) {warnings.add(line);}}
         report.textContent = "GameMaker 8 / 8.1\nCompatibility: experimental\nRooms: " + manifest.room_count + "\n" + [...warnings].join("\n");
     }
 
     function fatal(error) {
-        paused = true;
-        pausestate();
-        document.querySelector(".pausedlabel").hidden = true;
+        halted = true;
         const message = document.querySelector(".playerstatus");
         message.textContent = "game stopped: " + (error.message || error);
         message.hidden = false;
@@ -126,7 +121,7 @@ export async function play(game, status) {
         if (stopped) {return;}
         const delta = previous ? Math.min(250, now - previous) : 0;
         previous = now;
-        if (!paused && !document.hidden && !pending && !dialog.open) {
+        if (!halted && !document.hidden && !pending && !dialog.open) {
             pending = true;
             try {
                 elapsed += delta;
@@ -151,19 +146,11 @@ export async function play(game, status) {
         if (!stopped) {timer = requestAnimationFrame(tick);}
     }
 
-    pausestate();
-    pausebutton.addEventListener("click", () => {
-        paused = !paused;
-        pausestate();
-        input.clear();
-        if (paused) {void context.suspend();} else {void context.resume();}
-    }, options);
     document.querySelector(".restart").addEventListener("click", async () => {
-        const waspaused = paused;
-        paused = true;
+        halted = true;
         input.clear();
         audio.stopAllSounds();
-        try {snapshot = await bridge.reset(); await draw(); paused = waspaused;}
+        try {snapshot = await bridge.reset(); await draw(); halted = false; document.querySelector(".playerstatus").hidden = true; status("running - experimental compatibility");}
         catch (error) {fatal(error);}
     }, options);
     const settings = document.querySelector(".settings");
@@ -182,17 +169,24 @@ export async function play(game, status) {
     }, options);
     dialog.addEventListener("cancel", event => event.preventDefault(), options);
     dialog.addEventListener("close", async () => {
-        try {snapshot = await bridge.dialogResponse(dialog.returnValue || "accepted");}
-        catch (error) {fatal(error);}
-        previous = 0;
+        if (stopped) {return;}
+        pending = true;
+        try {
+            const event = snapshot.pendingDialog?.site.match(/:event:9:(\d+):/);
+            snapshot = await bridge.dialogResponse(dialog.returnValue || "accepted");
+            const result = event ? await bridge.step({left: false, right: false, jump: false, restart: false, keysHeld: [Number(event[1])], keysPressed: [Number(event[1])], keysReleased: []}) : await session.stepOnce();
+            snapshot = result.snapshot;
+            await renderframe(canvas, result.frame, pkg.resources, "", cache);
+        } catch (error) {fatal(error);}
+        finally {pending = false; previous = 0;}
     }, options);
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) {void context.suspend();}
-        else if (!paused) {void context.resume();}
+        else if (!halted) {void context.resume();}
         previous = 0;
     }, options);
     for (const type of ["pointerdown", "keydown"]) {
-        player.addEventListener(type, () => {if (!paused) {void context.resume();}}, options);
+        player.addEventListener(type, () => {if (!halted) {void context.resume();}}, options);
     }
     try {await draw();}
     catch (error) {input.dispose(); controller.abort(); audio.stopAllSounds(); await context.close(); for (const url of urls.values()) {URL.revokeObjectURL(url);} throw error;}

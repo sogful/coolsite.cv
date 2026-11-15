@@ -1,5 +1,9 @@
 The converter is distributed under GPL-2.0-only. Exact corresponding source and build scripts are in source.zip alongside these files.
 
+The Studio runtime uses AGPL-3.0. Its license and corresponding source are in studio/license.txt and studio/source.zip.
+
+Archive support uses 7-Zip under LGPL-2.1-or-later with the unRAR restriction. Its license and corresponding source are in archive/license.txt and archive/source.zip.
+
 iwanna-gm8-web-engine 7b73aaa609afb82ff6dc530504b12fcf3d5e7597
 MIT License
 

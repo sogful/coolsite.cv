@@ -56,5 +56,5 @@ export function controls(canvas, update) {
         }, options);
         button.addEventListener("contextmenu", event => event.preventDefault(), options);
     }
-    return {clear, dispose() {if (!disposed) {clear(); controller.abort(); disposed = true;}}};
+    return {clear, key(code, down) {if (down) {keyboard.add(code);} else {keyboard.delete(code);} publish();}, dispose() {if (!disposed) {clear(); controller.abort(); disposed = true;}}};
 }

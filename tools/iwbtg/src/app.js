@@ -55,7 +55,6 @@ function hidescreen() {
     document.body.classList.remove("playing");
     document.querySelector(".gameoptions").hidden = true;
     document.querySelector(".playerstatus").hidden = true;
-    document.querySelector(".pausedlabel").hidden = true;
 }
 
 async function closegame() {
@@ -79,17 +78,18 @@ async function launch(game) {
     player.setAttribute("aria-busy", "true");
     document.body.classList.add("playing");
     document.querySelector(".gameoptions").hidden = true;
-    document.querySelector(".pausedlabel").hidden = true;
     message.textContent = "loading game...";
     message.hidden = false;
     try {
         if (active) {await active.dispose(); active = null;}
-        const canvas = document.querySelector(".gamecanvas");
-        canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+        const previouscanvas = document.querySelector(".gamecanvas");
+        const canvas = previouscanvas.cloneNode(false);
+        canvas.hidden = false;
+        previouscanvas.replaceWith(canvas);
         if (!game.files) {game = await getgame(game.id);}
         if (serial !== generation) {return;}
         if (!game) {throw new Error("This game is no longer stored in the browser.");}
-        const running = await play(game, text => {if (serial === generation) {status(text);}});
+        const running = await play(game, text => {if (serial === generation) {status(text);}}, () => launch(game).catch(error => status(error.message)));
         if (serial !== generation) {await running.dispose(); return;}
         active = running;
         current = game;
@@ -114,7 +114,7 @@ fileinput.addEventListener("change", async () => {
     if (!file || busy) {return;}
     cancel();
     if (file.size > 128 * 1024 * 1024) {status("choose a file smaller than 128 MB."); return;}
-    if (!/\.(zip|exe)$/i.test(file.name)) {status("choose a zip or exe file."); return;}
+    if (!/\.(zip|exe|rar|7z|cab)$/i.test(file.name)) {status("choose a zip, rar, 7z, cab or exe file."); return;}
     busy = true;
     fileinput.disabled = true;
     cancelbutton.hidden = false;
@@ -180,7 +180,7 @@ document.querySelector(".importsave").addEventListener("change", async event => 
 /*//////////////////////////////////////////////////////////////////////*/
 
 const assets = [
-    "index.css", "src/app.js", "src/player.js", "src/storage.js", "src/controls.js",
+    "index.css", "src/app.js", "src/player.js", "src/storage.js", "src/controls.js", "src/compatibility.js", "src/archive.js", "src/converter.js", "src/studio.js", "runtime/studio.html", "runtime/studioframe.js",
     ...["left", "right", "pause", "reset", "settings", "shoot", "jump", "close"].map(name => "assets/controls/" + name + ".png")
 ];
 
