@@ -282,7 +282,7 @@ a, p, ul, li, h1, h2, h3, h4, h5, h6, sup, sub {color: white}
 .gameoptions .gamename {
     font-size: 1em; overflow-wrap: anywhere;
 }
-.report, .licenses {
+.report, .licenses, .hint {
     zoom: 0.5; margin: 12px 0 0;
 }
 .diagnostics {font-size: 24px}
@@ -307,3 +307,6 @@ a, p, ul, li, h1, h2, h3, h4, h5, h6, sup, sub {color: white}
     transition: opacity 1s; overflow-wrap: anywhere;
 }
 .fading {opacity: 0}
+.gamecanvas:focus, .gamecanvas:focus-visible, .studioframe:focus, .studioframe:focus-visible {
+    outline: none; box-shadow: none;
+}
