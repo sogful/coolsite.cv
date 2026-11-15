@@ -21,7 +21,19 @@ async function start() {
             context.drawImage(atlas, x, y, width, height, offset, 0, width, height);
             offset += width;
         }
-        const result = {url: canvas.toDataURL(), width: canvas.width * 2, height: canvas.height * 2};
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+        let top = canvas.height;
+        let bottom = 0;
+        for (let y = 0; y < canvas.height; y++) {
+            for (let x = 0; x < canvas.width; x++) {
+                if (pixels.data[(y * canvas.width + x) * 4 + 3]) {top = Math.min(top, y); bottom = Math.max(bottom, y + 1);}
+            }
+        }
+        const cropped = document.createElement("canvas");
+        cropped.width = canvas.width;
+        cropped.height = Math.max(1, bottom - top);
+        cropped.getContext("2d").drawImage(canvas, 0, top, canvas.width, cropped.height, 0, 0, canvas.width, cropped.height);
+        const result = {url: cropped.toDataURL(), width: cropped.width * 2, height: cropped.height * 2, baseline: (10 - bottom) * 2};
         if (cache.size > 512) {cache.clear();}
         cache.set(word, result);
         return result;
@@ -57,6 +69,7 @@ async function start() {
                 image.src = glyph.url;
                 image.width = glyph.width;
                 image.height = glyph.height;
+                image.style.verticalAlign = glyph.baseline + "px";
                 image.alt = "";
                 image.draggable = false;
                 span.append(image);

@@ -46,15 +46,10 @@
             <p class="playerstatus" role="status" aria-live="polite" hidden></p>
             <section class="gameoptions" aria-label="game settings" hidden>
                 <h2 class="gamename"></h2>
-                <div class="toolbar menukeys" aria-label="menu controls">
-                    <button class="menukey" type="button" data-key="38">up</button>
-                    <button class="menukey" type="button" data-key="40">down</button>
-                    <button class="menukey" type="button" data-key="13">enter</button>
-                </div>
                 <p class="savestatus" role="status"></p>
                 <div class="toolbar">
                     <button class="exportsave" type="button">export saves</button>
-                    <label>import saves <input class="importsave" type="file" accept=".json"></label>
+                    <label class="filebutton"><span>import saves</span><input class="importsave fileinput" type="file" accept=".json"></label>
                     <button class="exportgame" type="button">download web version</button>
                     <button class="restart" type="button">restart game</button>
                     <button class="fullscreen" type="button">fullscreen</button>
