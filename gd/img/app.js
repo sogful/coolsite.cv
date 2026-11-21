@@ -90,6 +90,7 @@ let spriteatlasdimensions = [];
 let backgroundtile = null;
 let backgroundtilepixels = null;
 let catalogresults = [];
+const cataloguses = new Map();
 let atlasready = false;
 let cataloglimit = 72;
 const sampledtexture = [0, 0, 0, 0];
@@ -427,7 +428,7 @@ async function loadnativeatlas() {
 }
 
 function catalogdescription(asset) {
-  const uses = plan.reduce((count, candidate) => count + (candidate.asset.id === asset.id ? 1 : 0), 0);
+  const uses = cataloguses.get(asset.id) || 0;
   return `${Math.round(asset.naturalwidth)} × ${Math.round(asset.naturalheight)} · ${asset.spritecount} sprite${asset.spritecount === 1 ? "" : "s"}${uses ? ` · used ${uses}×` : ""}`;
 }
 
@@ -476,6 +477,18 @@ function rendercatalog(reset = false) {
     ? `${library.length.toLocaleString()} native object IDs · showing ${Math.min(cataloglimit, catalogresults.length).toLocaleString()}`
     : `${catalogresults.length.toLocaleString()} matches · showing ${Math.min(cataloglimit, catalogresults.length).toLocaleString()}`;
   catalogmore.hidden = cataloglimit >= catalogresults.length;
+}
+
+function updatecatalogusage() {
+  cataloguses.clear();
+  for (const object of plan) {
+    const id = object.asset.id;
+    cataloguses.set(id, (cataloguses.get(id) || 0) + 1);
+  }
+  cataloggrid.querySelectorAll(".catalogmeta").forEach((meta, index) => {
+    const text = catalogdescription(catalogresults[index]);
+    if (meta.textContent !== text) meta.textContent = text;
+  });
 }
 
 function preparetarget() {
@@ -762,7 +775,7 @@ function updatepreview(updatecatalog = false) {
   const seednote = searchcount > 1 ? ` · best of ${searchcount} searches` : "";
   const helpernote = result.helpers ? ` + ${result.helpers} ${result.opacityhelpers ? "setup" : "visibility"} helper${result.helpers === 1 ? "" : "s"}` : "";
   statuscopy.textContent = `${objectsummary}${helpernote} · ${result.objects.toLocaleString()} objects total${seednote}. ${method}, ${transforms}, ${mapping}, ${fiterror.toFixed(1)}% preview mean RGB error vs source at ${cleannumber(previewsize().zoom)}× editor zoom in ${Math.max(1, Math.round(fittime))} ms.${visibilitywarning()}`;
-  if (updatecatalog) rendercatalog(true);
+  if (updatecatalog) updatecatalogusage();
 }
 
 async function refresh(revision = fitrevision) {
