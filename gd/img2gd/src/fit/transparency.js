@@ -38,7 +38,11 @@ function transparentregions() {
     let mode = 0, weight = 0;
     for (const [value, count] of bin.samples) if (count > weight) {mode = value; weight = count;}
     if (weight > bin.solid * 0.12) for (let c = 0; c < 4; c += 1) color[c] = (mode >>> (24 - c * 8)) & 255;
-    if (!palette.some(other => color.reduce((sum, value, c) => sum + (value - other[c]) ** 2, 0) < 64)) palette.push(color);
+    const duplicate = palette.some(other => {
+      const tolerance = color[3] === 255 && other[3] === 255 ? 210 : 64;
+      return color.reduce((sum, value, c) => sum + (value - other[c]) ** 2, 0) < tolerance;
+    });
+    if (!duplicate) palette.push(color);
   }
   const associated = palette.map(([r, g, b, a]) => [r * a / 255, g * a / 255, b * a / 255, a]);
   const nearest = new Uint8Array(length);
@@ -80,6 +84,10 @@ function transparentstrips(loops, color) {
         objects.push({asset: library.find(asset => asset.id === 495), x: (l + ll + r + rr) / 4, y: middle,
           width: (top + bottom) / 2, height: Math.hypot(drift, end - y), angle: 0, warpx: 0,
           warpy: -Math.atan2(drift, end - y) * 180 / Math.PI, red: color[0], green: color[1], blue: color[2]});
+      } else if (top > 0.01 && bottom > 0.01 && color[3] === 255) {
+        const polygon = [[l, y], [r, y], [rr, end], [ll, end]];
+        const [a, b, c, d] = polygon;
+        objects.push(...regiontriangles(polygon, [[a, b, d], [b, c, d]], color));
       } else {
         if (top > 0.01) objects.push(regiontriangle([[l, y], [r, y], [ll, end]], color));
         if (bottom > 0.01) objects.push(regiontriangle([[r, y], [rr, end], [ll, end]], color));
@@ -237,7 +245,7 @@ function transparentchoices(region, loops, analysis, later, budget, silhouette =
       try {
         const points = alignpolygon(outer, polygon, tolerance);
         const triangles = triangulatepolygon(points);
-        compare(triangles.map(vertices => regiontriangle(vertices, color)));
+        compare(transparenttriangles(points, triangles, color));
       } catch (error) {
         if (error.message !== "Region polygon could not be triangulated without losing geometry.") throw error;
       }
@@ -251,7 +259,7 @@ function transparentchoices(region, loops, analysis, later, budget, silhouette =
       for (const boundary of [polygon, ellipse]) {
         const joined = joinregionholes(boundary, outlines.slice(1));
         if (joined.length < 3) continue;
-        try {compare(triangulatepolygon(joined).map(vertices => regiontriangle(vertices, color)));}
+        try {compare(transparenttriangles(joined, triangulatepolygon(joined), color));}
         catch (error) {
           if (error.message !== "Region polygon could not be triangulated without losing geometry.") throw error;
         }
@@ -268,6 +276,11 @@ function transparentchoices(region, loops, analysis, later, budget, silhouette =
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
+
+function transparenttriangles(polygon, triangles, color) {
+  if (color[3] === 255) return regiontriangles(polygon, triangles, color);
+  return triangles.map(vertices => regiontriangle(vertices, color));
+}
 
 async function refinetransparentplan(groups, choices, limit, revision) {
   const canvas = document.createElement("canvas");

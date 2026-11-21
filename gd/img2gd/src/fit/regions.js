@@ -116,30 +116,41 @@ function labelregions(nearest, minimum) {
 
 function regioncontour(region, labels, holes = false) {
   const stride = target.width + 1;
+  const steps = [1, stride, -1, -stride];
+  const turns = [3, 0, 1];
   const edges = new Map();
-  function edge(x, y, xx, yy) {edges.set(y * stride + x, yy * stride + xx);}
+  function edge(x, y, direction) {
+    const vertex = y * stride + x;
+    edges.set(vertex, (edges.get(vertex) || 0) | (1 << direction));
+  }
   for (let y = region.top; y < region.bottom; y += 1) {
     for (let x = region.left; x < region.right; x += 1) {
       const index = y * target.width + x;
       if (labels[index] !== region.id) continue;
-      if (!y || labels[index - target.width] !== region.id) edge(x, y, x + 1, y);
-      if (x + 1 === target.width || labels[index + 1] !== region.id) edge(x + 1, y, x + 1, y + 1);
-      if (y + 1 === target.height || labels[index + target.width] !== region.id) edge(x + 1, y + 1, x, y + 1);
-      if (!x || labels[index - 1] !== region.id) edge(x, y + 1, x, y);
+      if (!y || labels[index - target.width] !== region.id) edge(x, y, 0);
+      if (x + 1 === target.width || labels[index + 1] !== region.id) edge(x + 1, y, 1);
+      if (y + 1 === target.height || labels[index + target.width] !== region.id) edge(x + 1, y + 1, 2);
+      if (!x || labels[index - 1] !== region.id) edge(x, y + 1, 3);
     }
   }
   const contours = [];
   while (edges.size) {
-    const start = edges.keys().next().value;
+    const [start, initial] = edges.entries().next().value;
+    const heading = steps.findIndex((_, direction) => initial & (1 << direction));
     let current = start;
+    let direction = heading;
     const points = [];
     do {
       points.push([current % stride, Math.floor(current / stride)]);
-      const next = edges.get(current);
-      edges.delete(current);
-      current = next;
-    } while (current !== undefined && current !== start && points.length <= target.width * target.height * 4);
-    if (current === start) contours.push(points);
+      const remaining = edges.get(current) & ~(1 << direction);
+      if (remaining) edges.set(current, remaining);
+      else edges.delete(current);
+      current += steps[direction];
+      const outgoing = (edges.get(current) || 0) | (current === start ? 1 << heading : 0);
+      const turn = turns.find(offset => outgoing & (1 << ((direction + offset) % 4)));
+      direction = turn === undefined ? -1 : (direction + turn) % 4;
+    } while (direction >= 0 && (current !== start || direction !== heading));
+    if (current === start && direction === heading) contours.push(points);
   }
   contours.sort((left, right) => polygonarea(right) - polygonarea(left));
   return holes ? contours : contours[0] || [];
@@ -431,7 +442,11 @@ function regionobjects(region, palette, labels, tolerance, aligned = false, turn
     polygon = alignpolygon(contour, polygon, tolerance);
   }
   const triangles = triangulatepolygon(polygon);
-  const objects = triangles.map(points => {
+  return [...regiontriangles(polygon, triangles, color, turn), ...regionstitches(polygon, triangles, color)];
+}
+
+function regiontriangles(polygon, triangles, color, turn = 0) {
+  return triangles.map(points => {
     const margins = points.map((point, index) => {
       const left = polygon.indexOf(points[(index + 1) % 3]);
       const right = polygon.indexOf(points[(index + 2) % 3]);
@@ -446,7 +461,6 @@ function regionobjects(region, palette, labels, tolerance, aligned = false, turn
     point[1] + changes[index][1] * factor]);
     return regiontriangle(expanded, color, turn);
   });
-  return [...objects, ...regionstitches(polygon, triangles, color)];
 }
 
 function coarseregion(region, palette, rectangle = false) {
