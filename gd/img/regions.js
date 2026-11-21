@@ -1,4 +1,4 @@
-const macroassets = new Set([211, 495, 497, 694]);
+const macroassets = new Set([50, 51, 211, 236, 495, 497, 694]);
 let regionfitactive = false;
 
 /*//////////////////////////////////////////////////////////////////////*/
@@ -74,6 +74,11 @@ function vectorregions() {
       }
     }
   }
+  return {palette, coverage: covered / length, ...labelregions(nearest, 25)};
+}
+
+function labelregions(nearest, minimum) {
+  const length = nearest.length;
   const labels = new Int32Array(length).fill(-1);
   const queue = new Int32Array(length);
   const regions = [];
@@ -102,15 +107,14 @@ function vectorregions() {
     regions.push(region);
   }
   return {
-    palette, labels, coverage: covered / length,
-    regions: regions.filter(region => region.count >= 25)
+    labels, regions: regions.filter(region => region.count >= minimum)
       .sort((left, right) => right.count - left.count).slice(0, 64),
   };
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-function regioncontour(region, labels) {
+function regioncontour(region, labels, holes = false) {
   const stride = target.width + 1;
   const edges = new Map();
   function edge(x, y, xx, yy) {edges.set(y * stride + x, yy * stride + xx);}
@@ -137,7 +141,8 @@ function regioncontour(region, labels) {
     } while (current !== undefined && current !== start && points.length <= target.width * target.height * 4);
     if (current === start) contours.push(points);
   }
-  return contours.sort((left, right) => polygonarea(right) - polygonarea(left))[0] || [];
+  contours.sort((left, right) => polygonarea(right) - polygonarea(left));
+  return holes ? contours : contours[0] || [];
 }
 
 function polygonarea(points) {
@@ -568,7 +573,8 @@ async function refineregions(groups, analysis, tolerance, budget, revision) {
 /*//////////////////////////////////////////////////////////////////////*/
 
 async function fitcolorregions(limit, revision) {
-  if (!limit || !sourceisopaque()) return null;
+  if (!limit) return null;
+  if (!sourceisopaque()) return fittransparentregions(limit, revision);
   const reserved = limit > visibilitycost ? visibilitycost : 0;
   fitpixels = 64000;
   preparetarget();

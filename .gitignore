@@ -12,7 +12,8 @@ __pycache__/
 /blog/
 /gd/tosfx/
 /gd/cbf
-/gd/img
+/gd/img/*
+!/gd/img/transparency.js
 
 /gd/img/scripts/
 /gd/img/assets/gd-objects/
