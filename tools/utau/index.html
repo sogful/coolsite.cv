@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>utau voice changer</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="stylesheet" href="../base.css">
+    <link rel="stylesheet" href="../branding.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <main class="app">
+        <h1 class="toolheading"><span class="textlogo">utau voice changer</span></h1>
+        <div class="inputs">
+            <section class="inputsection projectdrop">
+                <h2 class="heading">project</h2>
+                <label class="filelabel">
+                    <span class="hint">(ust/ustx/utau/svp/vsqx/vpr/midi/musicxml/ufdata supported)</span>
+                    <input class="projectfile" type="file" accept=".ust,.ustx,.utau,.svp,.vsqx,.vpr,.mid,.midi,.xml,.musicxml,.ufdata">
+                </label>
+                <p class="projectinfo detail" role="status">choose or drop a project</p>
+            </section>
+            <section class="inputsection bankdrop">
+                <h2 class="heading">voicebank</h2>
+                <label class="filelabel">
+                    <span class="hint">(zip/7z)</span>
+                    <input class="bankfile" type="file" accept=".zip,.7z">
+                </label>
+                <div class="folderrow">
+                    <button class="folderbutton" type="button">choose folder</button>
+                    <span class="hint">or drop a folder</span>
+                    <input class="folderfile" type="file" webkitdirectory multiple hidden aria-label="voicebank folder">
+                </div>
+                <label class="bankchoice" hidden>voice <select class="bankselect"></select></label>
+                <p class="bankinfo detail" role="status">choose a voicebank</p>
+            </section>
+        </div>
+
+        <section class="settings" hidden>
+            <div class="options">
+                <label>track <select class="trackselect"><option value="all">all vocal tracks</option></select></label>
+                <label>pitch <select class="pitchmode"><option value="auto">automatic range</option><option value="keep">keep original</option><option value="custom">transpose</option></select></label>
+                <label class="custompitch" hidden><input class="transpose" type="number" min="-48" max="48" step="1" value="0" aria-label="transpose in semitones"> semitones</label>
+            </div>
+            <div class="sfxoptions options" hidden>
+                <label>sounds <select class="pattern"><option value="auto">automatic</option><option value="single">one sound</option><option value="alternate">alternate sounds</option><option value="paired">open then close</option></select></label>
+                <label class="soundchoice" hidden>sound <select class="soundselect"></select></label>
+            </div>
+            <details class="advanced">
+                <summary>more settings</summary>
+                <div class="options">
+                    <label>project renderer <select class="renderer"><option value="auto">automatic</option><option value="classic">Classic</option><option value="worldline">Worldline</option></select></label>
+                    <label class="exactchoice"><input class="strict" type="checkbox">require matching lyrics</label>
+                </div>
+            </details>
+            <p class="mapping detail" role="status"></p>
+        </section>
+
+        <div class="actions">
+            <button class="previewbutton" type="button" disabled>preview 15 seconds</button>
+            <button class="renderbutton" type="button" disabled>render song</button>
+            <button class="cancelbutton" type="button" hidden>cancel</button>
+        </div>
+        <p class="status detail" role="status" aria-live="polite"></p>
+        <progress class="progress" max="1" value="0" hidden aria-label="render progress"></progress>
+
+        <section class="result" hidden>
+            <h2 class="heading resulttitle">audio</h2>
+            <canvas class="waveform" width="1200" height="120" aria-label="rendered waveform"></canvas>
+            <audio class="player" controls preload="metadata"></audio>
+            <div class="downloads">
+                <a class="wavdownload">download wav</a>
+                <button class="tracksbutton" type="button" hidden>download tracks</button>
+            </div>
+        </section>
+        <div class="exports" hidden>
+            <button class="projectbutton" type="button">download changed project</button>
+            <button class="bundlebutton" type="button">project + voicebank zip</button>
+        </div>
+    </main>
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>

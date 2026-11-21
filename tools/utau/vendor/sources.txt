@@ -1,0 +1,8 @@
+js-yaml 5.5.0
+https://github.com/nodeca/js-yaml
+https://unpkg.com/js-yaml@5.5.0/dist/js-yaml.mjs
+MIT license in yamllicense.txt.
+
+7-Zip WebAssembly
+https://www.7-zip.org/
+License and corresponding source archive are in archive/.

@@ -1,0 +1,96 @@
+.app {
+    max-width: 760px; margin: 7vh auto 2em;
+}
+.inputs {
+    display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 1.6em; margin-top: 1.6em;
+}
+.inputsection {
+    min-width: 0; padding: 1em 0;
+    border-top: 1px solid #bbb;
+}
+.inputsection.dragging {
+    outline: 2px solid #555; outline-offset: 8px;
+}
+.heading {
+    font-size: 1.1em; font-weight: 600;
+    margin: 0 0 0.7em;
+}
+.filelabel {
+    display: flex; flex-direction: column;
+    align-items: stretch; gap: 0.65em;
+}
+.projectfile, .bankfile {
+    width: 100%; min-width: 0;
+}
+.hint {line-height: 1.4}
+.detail {
+    font-size: 0.9em; line-height: 1.45;
+    overflow-wrap: anywhere; margin: 0.8em 0 0;
+}
+.folderrow {
+    display: flex; align-items: center;
+    gap: 0.65em; margin-top: 0.8em;
+    flex-wrap: wrap;
+}
+.bankchoice {
+    display: flex; margin-top: 0.8em;
+}
+.bankselect {max-width: 100%}
+.settings {
+    margin: 0.7em 0 1.2em; padding-top: 1em;
+    border-top: 1px solid #bbb;
+}
+.options {
+    display: flex; flex-wrap: wrap;
+    gap: 0.8em 1.2em; align-items: center;
+    margin-bottom: 0.8em;
+}
+.options label {max-width: 100%}
+.options select {max-width: 15em}
+.transpose {width: 4.5em}
+.advanced {margin-top: 0.8em}
+.advanced summary {cursor: pointer}
+.advanced .options {margin-top: 0.8em}
+.actions, .exports, .downloads {
+    display: flex; flex-wrap: wrap;
+    align-items: center; gap: 0.7em;
+}
+.actions {margin-top: 1em}
+.exports {margin-top: 1.3em}
+button, select, input {max-width: 100%}
+button {
+    padding: 0.3em 0.6em; cursor: pointer;
+}
+button:disabled {cursor: default}
+.status.error {color: #a11}
+.progress {
+    width: 100%; margin-top: 0.8em;
+}
+.result {
+    margin-top: 1.7em; padding-top: 1em;
+    border-top: 1px solid #bbb;
+}
+.waveform {
+    display: block; width: 100%;
+    height: 80px; margin: 0.6em 0;
+}
+.player {
+    display: block; width: 100%;
+    margin: 0.5em 0 1em;
+}
+[hidden] {display: none !important}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+@media (max-width: 580px) {
+    .app {margin-top: 1.2em}
+    .inputs {
+        grid-template-columns: minmax(0,1fr); gap: 0;
+    }
+    .options {
+        align-items: flex-start; gap: 0.8em;
+    }
+    .options label {flex-wrap: wrap}
+    .actions button {flex: 1 1 auto}
+}
