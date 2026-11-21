@@ -1,5 +1,6 @@
 const pixelartedge = 8192;
 const pixelartarea = 4000000;
+const pixelartobjectlimit = 80000;
 
 function pixelartcolor(red, green, blue, alpha) {
   return (red | green << 8 | blue << 16 | alpha << 24) >>> 0;
@@ -177,7 +178,7 @@ function pixelartrectangles(pixels, width, height, limit, asset) {
   const palette = pixelartpalette(pixels, width, height, limit);
   if (!palette) return null;
   const {keys, colors, alphaobjects} = palette;
-  const maximum = Math.max(80000, limit);
+  const maximum = Math.max(pixelartobjectlimit, limit);
   const horizontal = pixelartruns(keys, width, height, false, maximum);
   const vertical = pixelartruns(keys, width, height, true, maximum);
   const base = new Map();
@@ -238,7 +239,7 @@ function drawpixelartresult(canvas, objects) {
   context.putImageData(image, 0, 0);
 }
 
-async function fitpixelart(limit, revision) {
+async function fitpixelart(revision) {
   const width = sourceimage.naturalWidth;
   const height = sourceimage.naturalHeight;
   const asset = library.find(item => item.id === 495);
@@ -262,9 +263,8 @@ async function fitpixelart(limit, revision) {
   canvas.height = height;
   drawpixelartsource(canvas);
   const pixels = canvas.getContext("2d").getImageData(0, 0, width, height).data;
-  const result = pixelartrectangles(pixels, width, height, limit, asset);
-  if (!result) return reject("Pixel art exceeds this object limit.");
-  if (result.count > limit) return reject("Pixel art needs " + result.count.toLocaleString() + " objects.");
+  const result = pixelartrectangles(pixels, width, height, pixelartobjectlimit, asset);
+  if (!result || result.count > pixelartobjectlimit) return reject("Pixel Art exceeds the 80,000-object export limit.");
 
   fitpixels = 0;
   underlaycount = 0;

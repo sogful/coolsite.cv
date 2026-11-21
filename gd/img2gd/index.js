@@ -81,7 +81,7 @@ let opacitycheck = Promise.resolve(false);
 let imagerevision = 0;
 let alphaready = false;
 let pixelartactive = false;
-let pixelartchoice = false;
+let autoselectedpixelart = false;
 let dominantcolor = null;
 let plan = [];
 let underlaycount = 0;
@@ -707,17 +707,14 @@ function updatestart() {
   startbutton.disabled = fitting || !atlasready || !alphaready || !validrangevalues();
 }
 
-function selectedpixelart() {
-  return fitselect.value === "pixelart" || fitselect.value === "auto" && pixelartchoice;
-}
-
 function updatefields() {
-  const exact = selectedpixelart();
+  const exact = fitselect.value === "pixelart";
   const textures = !exact && fitselect.value !== "regions" && !regionfitactive;
   seedsearchselect.disabled = !textures || !maximumfit();
   coverageselect.disabled = !textures || !detailfit();
   samplerselect.disabled = exact;
-  for (const slider of [colourslider, previewzoomslider]) {
+  croptoggle.disabled = warptoggle.disabled = exact;
+  for (const slider of [limitslider, effortslider, colourslider, previewzoomslider]) {
     slider.disabled = exact;
     slider.parentElement.querySelector(".rangevalueeditor").disabled = exact;
   }
@@ -770,13 +767,13 @@ async function startfit() {
   invalidateexports();
   renderstate.textContent = "FITTING";
   seedretryoffset = 0;
-  const limit = objectlimit();
   updatestart();
 
   try {
-    if (selectedpixelart()) {
-      if (!await fitpixelart(limit, revision)) return;
+    if (fitselect.value === "pixelart") {
+      if (!await fitpixelart(revision)) return;
     } else {
+      const limit = objectlimit();
       if (!await runfitsearch(limit, fittrials(), revision)) return;
       if (!await finishcrop(revision, limit)) return;
     }
@@ -808,9 +805,7 @@ function loadimage(url, name) {
   previewimage.classList.remove("ispixelart");
   previewempty.hidden = true;
   pixelartactive = false;
-  pixelartchoice = false;
   regionfitactive = false;
-  if (pixelartdialog.open) pixelartdialog.close();
   if (advanceddialog.open) advanceddialog.close();
   sampledopaque = null;
   alphaready = false;
@@ -857,11 +852,6 @@ async function prepareexports(raw, name) {
 
 const advanceddialog = document.querySelector(".advanceddialog");
 const advancedopen = document.querySelector(".advancedopen");
-const pixelartdialog = document.querySelector(".pixelartdialog");
-const pixelartyes = document.querySelector(".pixelartyes");
-const pixelartno = document.querySelector(".pixelartno");
-const pixelaskskip = document.querySelector(".pixelaskskip");
-const pixelaskkey = "img2gd.skip-pixel-art-prompt";
 
 function showdialog(dialog) {
   if (dialog.open) return;
@@ -876,21 +866,6 @@ function showdialog(dialog) {
 }
 
 advancedopen.addEventListener("click", () => showdialog(advanceddialog));
-pixelartno.addEventListener("click", () => pixelartdialog.close());
-pixelartyes.addEventListener("click", () => {
-  pixelartchoice = true;
-  pixelartdialog.close();
-  updatefields();
-});
-try {
-  pixelaskskip.checked = localStorage.getItem(pixelaskkey) === "1";
-} catch {}
-
-pixelaskskip.addEventListener("change", () => {
-  try {
-    localStorage.setItem(pixelaskkey, pixelaskskip.checked ? "1" : "0");
-  } catch {}
-});
 
 document.querySelectorAll(".dialogclose").forEach(button => {
   button.addEventListener("click", () => button.closest(".appdialog").close());
@@ -909,14 +884,17 @@ sourceimage.addEventListener("load", async () => {
     renderstate.textContent = "ERROR";
     return;
   }
+  if (fitselect.value === "auto" || autoselectedpixelart) {
+    autoselectedpixelart = sourceimage.naturalWidth < 150 && sourceimage.naturalHeight < 150;
+    fitselect.value = autoselectedpixelart ? "pixelart" : "auto";
+    updatefields();
+  }
   opacitycheck = sourceisopaque() ? cropopaque(sourceimage, () => revision === imagerevision) : Promise.resolve(false);
   const opaque = await opacitycheck;
   if (revision !== imagerevision) return;
   sampledopaque = opaque;
   alphaready = true;
   updatestart();
-  if (!pixelaskskip.checked && fitselect.value === "auto"
-    && sourceimage.naturalWidth < 150 && sourceimage.naturalHeight < 150) showdialog(pixelartdialog);
 });
 
 sourceimage.addEventListener("error", () => {
@@ -938,8 +916,9 @@ form.addEventListener("rangevaluechange", updatefields);
 form.addEventListener("change", event => {
   if (!event.target.matches("select, .croptoggleinput, .warptoggleinput")) return;
   regionfitactive = false;
-  if (event.target === fitselect && fitselect.value === "regions") {
-    coverageselect.value = "2";
+  if (event.target === fitselect) {
+    autoselectedpixelart = false;
+    if (fitselect.value === "regions") coverageselect.value = "2";
   }
   updatefields();
 });

@@ -22,7 +22,7 @@ function visibilityrequired(candidates = plan) {
 }
 
 function visibilitycount() {
-  return objectlimit() > visibilitycost && visibilityrequired() ? visibilitycost : 0;
+  return (pixelartactive || objectlimit() > visibilitycost) && visibilityrequired() ? visibilitycost : 0;
 }
 
 function visibilitywarning() {
