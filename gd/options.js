@@ -32,6 +32,17 @@ for (const select of document.querySelectorAll("select.gdinput")) {
   value.setAttribute("aria-live", "polite");
   value.setAttribute("aria-atomic", "true");
 
+  const labels = document.createElement("span");
+  labels.className = "optionlabels";
+  labels.append(value);
+  for (const choice of select.options) {
+    const measure = document.createElement("span");
+    measure.className = "optionmeasure optionvalue gdplain";
+    measure.textContent = choice.label;
+    measure.setAttribute("aria-hidden", "true");
+    labels.append(measure);
+  }
+
   const previous = document.createElement("button");
   const next = document.createElement("button");
   previous.className = "optionarrow optionprevious";
@@ -39,7 +50,7 @@ for (const select of document.querySelectorAll("select.gdinput")) {
   for (const [button, action] of [[previous, "Previous"], [next, "Next"]]) {
     button.type = "button";
     button.setAttribute("aria-label", action + " option");
-    button.setAttribute("aria-describedby", value.id);
+    button.setAttribute("aria-describedby", [value.id, select.getAttribute("aria-describedby")].filter(Boolean).join(" "));
   }
 
   function changeoption(direction) {
@@ -67,7 +78,7 @@ for (const select of document.querySelectorAll("select.gdinput")) {
   select.addEventListener("change", updateoptions);
   select.form?.addEventListener("reset", () => setTimeout(updateoptions, 0));
 
-  stepper.append(previous, value, next);
+  stepper.append(previous, labels, next);
   select.after(stepper);
   select.hidden = true;
   optionsteppers.push({select, value, previous, next});
