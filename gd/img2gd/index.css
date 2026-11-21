@@ -3,7 +3,7 @@
 }
 
 html {
-  background: #4a2817; overflow: clip;
+  background: #002e73; overflow: clip;
 }
 
 body.imgpage {
@@ -19,7 +19,8 @@ body.imgpage {
 .maincontent {
   display: grid; grid-template-rows: auto minmax(0, 1fr);
   gap: var(--gap); block-size: 100%;
-  inline-size: min(100%, 1200px); margin-inline: auto;
+  inline-size: min(100%, 1200px, 133.333vh); margin-inline: auto;
+  inline-size: min(100%, 1200px, 133.333dvh);
   padding: var(--gap) max(var(--gap), env(safe-area-inset-right)) max(var(--gap), env(safe-area-inset-bottom)) max(var(--gap), env(safe-area-inset-left));
   position: relative; z-index: 4;
 }
@@ -42,7 +43,7 @@ body.imgpage {
 
 .workspace {
   display: grid; gap: var(--gap);
-  grid-template-columns: minmax(235px, 310px) minmax(0, 1fr);
+  grid-template-columns: clamp(220px, 36%, 310px) minmax(0, 1fr);
   align-items: start; min-block-size: 0;
 }
 
@@ -87,7 +88,7 @@ body.imgpage {
 
 .toolbutton {
   padding: 4px 9px; white-space: nowrap;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .sourcename {
@@ -142,17 +143,19 @@ body.imgpage {
 .canvasgrid {
   display: grid; gap: 8px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: auto minmax(0, 1fr);
   min-block-size: 0;
 }
 
 .canvasfigure {
-  display: grid; grid-template-rows: auto minmax(0, 1fr);
+  display: grid; grid-row: span 2;
+  grid-template-rows: subgrid;
   gap: 5px; margin: 0;
   min-inline-size: 0; min-block-size: 0;
 }
 
 .canvasfigure figcaption {
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .canvasfigure canvas {
@@ -170,7 +173,7 @@ body.imgpage {
 }
 
 .stats {
-  gap: 3px 12px; font-size: 12px;
+  gap: 3px 12px; font-size: 13px;
   color: var(--gdmuted);
 }
 
@@ -180,13 +183,13 @@ body.imgpage {
 
 .exportlinks a,
 .buildbutton {
-  min-block-size: 34px; font-size: 12px;
+  min-block-size: 34px; font-size: 13px;
   display: inline-flex; align-items: center;
   justify-content: center;
 }
 
 .statuscopy {
-  margin: 0; font-size: 12px;
+  margin: 0; font-size: 13px;
   min-block-size: 1.35em; max-block-size: 3.6em;
   overflow: auto; overscroll-behavior: contain;
   text-align: left; color: var(--gdmuted);
@@ -272,6 +275,9 @@ body.imgpage {
   .previewpanel,
   .controlpanel { gap: 5px; }
   .panel { padding: 7px; }
+  .canvasfigure figcaption { font-size: 14px; }
+  .stats,
+  .statuscopy { font-size: 12px; }
   .optionalstat { display: none; }
 }
 
@@ -283,7 +289,7 @@ body.imgpage {
   .exportlinks { gap: 5px; }
   .exportlinks a,
   .buildbutton {
-    padding-inline: 6px; font-size: 11px;
+    padding-inline: 6px; font-size: 12px;
   }
   .dropzone,
   .toolbutton,

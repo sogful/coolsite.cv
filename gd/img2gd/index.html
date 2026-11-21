@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>img2gd</title>
 
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23061c42'/%3E%3Cpath d='M3 4h10v8H3z' fill='%23ffbd1a'/%3E%3Cpath d='M5 6h6v4H5z' fill='%23061c42'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" href="../icon.png">
   <link rel="preload" as="font" type="font/woff2" href="../assets/fonts/pusab.woff2" crossorigin>
 
   <link rel="stylesheet" href="../global.css">
@@ -64,7 +64,9 @@
           </label>
           <label class="fieldlabel sliderlabel">
             <span>Object limit <b class="limitvalue">1,500</b></span>
-            <input class="limitslider gdrange" type="range" min="0" max="1500" value="1500" step="1">
+            <span class="gdslider">
+              <input class="limitslider gdrange" type="range" min="0" max="1500" value="1500" step="1">
+            </span>
           </label>
         </div>
         <div class="settingsrow">
@@ -79,7 +81,11 @@
         <dialog class="gdpane appdialog advanceddialog" aria-labelledby="advancedtitle">
           <div class="dialoghead">
             <h2 class="dialogtitle" id="advancedtitle"><span class="gdplain">Advanced settings</span></h2>
-            <button class="gdbutton gdsecondary toolbutton dialogclose" type="button">Close</button>
+            <button class="gdbutton gdcircle dialogclose" type="button" aria-label="Close advanced settings">
+              <svg class="gdcloseicon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12Z"/>
+              </svg>
+            </button>
           </div>
           <div class="dialogbody advancedfields">
             <label class="checklabel">
@@ -104,7 +110,9 @@
             </label>
             <label class="fieldlabel">
               <span>Trials per object <b class="trialvalue">96</b></span>
-              <input class="trialslider gdrange" type="range" min="4" max="768" value="96" step="4">
+              <span class="gdslider">
+                <input class="trialslider gdrange" type="range" min="4" max="768" value="96" step="4">
+              </span>
             </label>
             <label class="fieldlabel">
               <span>Fitting coverage</span>
@@ -129,11 +137,15 @@
             </label>
             <label class="fieldlabel">
               <span>Color levels <b class="colourvalue">256</b></span>
-              <input class="colourslider gdrange" type="range" min="2" max="256" value="256" step="1">
+              <span class="gdslider">
+                <input class="colourslider gdrange" type="range" min="2" max="256" value="256" step="1">
+              </span>
             </label>
             <label class="fieldlabel">
               <span>Preview zoom <b class="previewzoomvalue">0.35×</b></span>
-              <input class="previewzoomslider gdrange" type="range" min="0.15" max="0.60" value="0.35" step="0.01">
+              <span class="gdslider">
+                <input class="previewzoomslider gdrange" type="range" min="0.15" max="0.60" value="0.35" step="0.01">
+              </span>
               <small class="previewzoomhelp">PNG width 252 px</small>
             </label>
             <label class="fieldlabel">
@@ -188,7 +200,11 @@
     <dialog class="gdpane appdialog catalogdialog" aria-labelledby="catalogtitle">
       <div class="dialoghead">
         <h2 class="dialogtitle" id="catalogtitle"><span class="gdplain">Native objects</span></h2>
-        <button class="gdbutton gdsecondary toolbutton dialogclose" type="button">Close</button>
+        <button class="gdbutton gdcircle dialogclose" type="button" aria-label="Close native objects">
+          <svg class="gdcloseicon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12Z"/>
+          </svg>
+        </button>
       </div>
       <div class="dialogbody">
         <label class="fieldlabel">

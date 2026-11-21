@@ -3,9 +3,7 @@
   --gdgold: #ffe68e; --gdfocus: #fdf08c;
   --gdedge: #4e2816; --gdwell: #502a1a;
   --gdsurface: #985533; --gdpanelborder: #281609;
-  --gdbackdrop: linear-gradient(#6a3c22, #4a2817);
-  color: var(--gdtext); background: var(--gdbackdrop);
-  color-scheme: dark;
+  color: var(--gdtext); color-scheme: dark;
 }
 
 .gdpane {
@@ -21,20 +19,26 @@
   box-shadow: inset 0 1px 2px #2d130b, 0 1px #cb845575;
 }
 
+.gdtheme .gdplain { -webkit-text-stroke: 0; }
+
+.gdtheme .gdplain::before,
+.gdtheme .gdgold::before {
+  filter: none; text-shadow: 0 .065em #321a0c;
+}
+
 .gdbutton {
   --gdbuttonlight: linear-gradient(90deg, #c5fb56, #a2e635 52%, #6dd116);
   --gdbuttondark: linear-gradient(90deg, #90f83a, #6dcf24 52%, #4aa60f);
   --gdbuttonbevel: #345b17;
+  --gdbuttonrim: 1px;
   padding: 5px 9px; border: 2px solid #171408;
   border-radius: 7px; cursor: pointer;
   background: var(--gdbuttonlight) top / 100% 51% no-repeat,
     var(--gdbuttondark) bottom / 100% 50% no-repeat;
-  box-shadow: 0 0 0 1px #fff5dc, 0 2px 0 1px #3d2614,
+  box-shadow: 0 0 0 var(--gdbuttonrim) #fff5dc, 0 2px 0 1px #3d2614,
     inset 0 -2px var(--gdbuttonbevel);
-  color: #fff; font: 13px/1.1 pusab, sans-serif;
-  text-decoration: none; paint-order: stroke fill;
-  -webkit-text-stroke: 1.25px #192110;
-  text-shadow: 0 1px #1f2914;
+  color: #141907; font: 700 13px/1.2 Arial, sans-serif;
+  text-decoration: none;
 }
 
 .gdsecondary {
@@ -43,10 +47,24 @@
   --gdbuttonbevel: #53534a;
 }
 
-.gdbutton:hover:not(:disabled, [aria-disabled="true"]) { filter: brightness(1.09); }
+.gdbutton:hover:not(:disabled, [aria-disabled="true"]) { --gdbuttonrim: 2px; }
 .gdbutton:active:not(:disabled, [aria-disabled="true"]) { transform: translateY(1px); }
 .gdbutton:disabled,
 .gdbutton[aria-disabled="true"] { cursor: not-allowed; filter: grayscale(.8) brightness(.8); }
+
+.gdcircle {
+  display: grid; place-items: center;
+  flex: none; padding: 0;
+  inline-size: 34px; block-size: 34px;
+  border-radius: 50%;
+}
+
+.gdcloseicon {
+  inline-size: 25px; block-size: 25px;
+  fill: #ffca00; stroke: #211507;
+  stroke-width: 2.5; stroke-linejoin: round;
+  paint-order: stroke fill;
+}
 
 .gdinput {
   background: #4d2617; color: var(--gdtext);
@@ -79,60 +97,69 @@
 
 .gdcheck:checked::before {
   content: ""; position: absolute;
-  inset: -4px -5px -2px -4px; pointer-events: none;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m3 13 6 6 12-14' fill='none' stroke='%23242115' stroke-linecap='round' stroke-linejoin='round' stroke-width='6'/%3E%3Cpath d='m3 13 6 6 12-14' fill='none' stroke='%23a8f144' stroke-linecap='round' stroke-linejoin='round' stroke-width='3.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  inset: -4px -5px -3px -4px; pointer-events: none;
+  background: url("assets/svgs/checkmark.svg") center / contain no-repeat;
 }
 
 .gdcheck:disabled { cursor: not-allowed; }
 
-.gdrange {
+.gdslider {
+  --gdthumbsize: 17px;
   --gdprogress: 0%;
-  --gdrailmeter: repeating-linear-gradient(124deg, #a3f4ff70 0 6px, transparent 6px 14px)
+  --gdthumbface: linear-gradient(#c4a332 0 62%, #927100 62%);
+  display: grid; align-items: center;
+  position: relative;
+}
+
+.gdslider::before {
+  content: ""; position: absolute;
+  inset-inline: calc(var(--gdthumbsize) / 2); inset-block-start: 50%;
+  block-size: 8px; box-sizing: border-box;
+  transform: translateY(-50%);
+  border: 1px solid #282009; border-radius: 99px;
+  background: repeating-linear-gradient(124deg, #a3f4ff70 0 6px, transparent 6px 14px)
     left / var(--gdprogress) 100% no-repeat,
     linear-gradient(#4eddf8, #169bcc) left / var(--gdprogress) 100% no-repeat, #332019;
-  --gdrailrim: 2px solid #e5b82e;
-  --gdthumbface: linear-gradient(#eac552 0 56%, #ac7b12 57% 100%);
+  box-shadow: 0 0 0 1px #ffe651; pointer-events: none;
+}
+
+.gdrange {
   appearance: none; background: transparent;
-  cursor: pointer;
+  position: relative; cursor: pointer;
 }
 
 .gdrange::-webkit-slider-runnable-track {
-  height: 9px; border: var(--gdrailrim);
-  border-radius: 99px; background: var(--gdrailmeter);
-  box-shadow: 0 0 0 1px #271407, inset 0 0 0 1px #2b19097a;
+  block-size: var(--gdthumbsize); background: transparent;
 }
 
 .gdrange::-moz-range-track {
-  height: 5px; border: var(--gdrailrim);
-  border-radius: 99px; background: var(--gdrailmeter);
-  box-shadow: 0 0 0 1px #271407, inset 0 0 0 1px #2b19097a;
+  block-size: var(--gdthumbsize); background: transparent;
 }
 
 .gdrange::-webkit-slider-thumb {
-  appearance: none; margin-top: -6px;
-  width: 17px; height: 17px;
-  border: 1px solid #271703; border-radius: 50%;
-  background: var(--gdthumbface); box-shadow: inset 0 0 0 1px #ffe568, 0 0 0 1px #3b220e;
+  appearance: none; box-sizing: border-box;
+  inline-size: var(--gdthumbsize); block-size: var(--gdthumbsize);
+  border: 1px solid #463219; border-radius: 50%;
+  background: var(--gdthumbface); box-shadow: inset 0 0 0 .75px #ffe568;
 }
 
 .gdrange::-moz-range-thumb {
-  width: 15px; height: 15px;
-  border: 1px solid #271703; border-radius: 50%;
-  background: var(--gdthumbface); box-shadow: inset 0 0 0 1px #ffe568, 0 0 0 1px #3b220e;
+  box-sizing: border-box;
+  inline-size: var(--gdthumbsize); block-size: var(--gdthumbsize);
+  border: 1px solid #463219; border-radius: 50%;
+  background: var(--gdthumbface); box-shadow: inset 0 0 0 .75px #ffe568;
 }
+
+.gdslider:active { --gdthumbface: linear-gradient(#fff16b 0 62%, #e3ad16 62%); }
 
 .gdrange:disabled { opacity: .55; cursor: not-allowed; }
-
-.gdcornercss {
-  aspect-ratio: 1; opacity: .72;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23412615' stroke='%23f0ba70' stroke-width='2' stroke-linejoin='round' d='M1 10h17v19h16v16h18v18H1z'/%3E%3Cpath fill='%2379a634' d='M2 12h14v15H2zM19 46h13v15H19z'/%3E%3Cpath fill='%233b9795' d='M2 30h14v31H2zM35 47h15v14H35z'/%3E%3Cpath fill='%23e6b451' d='M19 31h13v12H19z'/%3E%3Cpath fill='%23fff1be' fill-opacity='.45' d='M2 12h14v3H2zM2 30h14v3H2zM19 31h13v3H19zM19 46h13v3H19zM35 47h15v3H35z'/%3E%3C/svg%3E") left bottom / contain no-repeat;
-}
 
 @media (forced-colors: active) {
   .gdcheck,
   .gdrange { appearance: auto; }
 
-  .gdcheck:checked::before { display: none; }
-  .gdbutton { -webkit-text-stroke: 0; text-shadow: none; }
-  .gdcornercss { display: none; }
+  .gdcheck:checked::before,
+  .gdslider::before { display: none; }
+
+  .gdcloseicon { fill: ButtonText; stroke: none; }
 }

@@ -124,17 +124,13 @@ for (const label of goldLabels) {
 const scriptUrl = document.currentScript.src;
 const artworkUrl = new URL("assets/images/corner.png", scriptUrl);
 const corners = ["topleft", "topright", "bottomright", "bottomleft"];
-const usevector = document.body.classList.contains("gdtheme");
 for (const corner of corners) {
-  const artwork = document.createElement(usevector ? "span" : "img");
+  const artwork = document.createElement("img");
   artwork.className = `gdcornerart gdcornerart${corner}`;
+  artwork.src = artworkUrl.href;
+  artwork.alt = "";
   artwork.setAttribute("aria-hidden", "true");
-  if (usevector) {
-    artwork.classList.add("gdcornercss");
-  } else {
-    artwork.src = artworkUrl.href;
-    artwork.alt = "";
-    artwork.decoding = "async";
-  }
+  artwork.decoding = "async";
+  artwork.fetchPriority = "low";
   document.body.append(artwork);
 }

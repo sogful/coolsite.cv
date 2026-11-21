@@ -663,7 +663,7 @@ function updatefields() {
   for (const slider of [limitslider, trialslider, colourslider, previewzoomslider]) {
     const min = Number(slider.min);
     const fraction = (slider.valueAsNumber - min) / (Number(slider.max) - min);
-    slider.style.setProperty("--gdprogress", `${fraction * 100}%`);
+    slider.parentElement.style.setProperty("--gdprogress", `${fraction * 100}%`);
   }
   limitvalue.textContent = Number(limitslider.value).toLocaleString();
   trialvalue.textContent = trialslider.value;

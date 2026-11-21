@@ -48,7 +48,7 @@
 
 .format-note,
 .field-unit {
-  font-size: 11px; font-weight: 400;
+  font-size: 12px; font-weight: 400;
   color: var(--gdmuted);
 }
 
@@ -79,7 +79,8 @@
 }
 
 .drop-title {
-  font-size: 15px; overflow-wrap: anywhere;
+  font-size: 16px; font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .drop-subtitle {
@@ -139,7 +140,8 @@
 .convert-button {
   display: block; inline-size: 100%;
   padding: 8px 14px; min-block-size: 40px;
-  margin-block-start: 15px; font-size: 16px;
+  margin-block-start: 15px;
+  font: 17px/1.15 pusab, sans-serif;
 }
 
 .privacy-note { text-align: center; }
