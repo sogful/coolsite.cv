@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <defs>
+    <linearGradient id="bevel" x2="0" y2="1">
+      <stop offset=".5" stop-color="#ffaa55"/>
+      <stop offset=".5" stop-color="#553311"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="320" rx="31" fill="#fff"/>
+  <rect x="5.5" y="5.5" width="309" height="309" rx="25.5"/>
+  <rect x="13" y="13" width="294" height="294" rx="18.5" fill="url(#bevel)"/>
+  <rect x="13" y="21" width="294" height="278" rx="18.5" fill="#995533"/>
+</svg>

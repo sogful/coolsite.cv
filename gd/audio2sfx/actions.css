@@ -6,22 +6,17 @@
 .sfx-action-copy,
 .sfx-action-note {
   margin: 0; text-align: left;
-  color: var(--gdmuted); font-size: 12px;
+  color: var(--gdmuted); font-size: var(--gdreadsize);
   line-height: 1.4;
 }
 
 .sfx-action-buttons {
   display: grid; gap: 8px;
-  grid-template-columns: repeat(2, minmax(0, 1fr)); margin-block-start: 9px;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); margin-block-start: 9px;
 }
 
 .sfx-button {
-  min-block-size: 35px; padding: 5px 8px;
-  font-size: 12px;
+  min-block-size: 40px;
 }
 
 .sfx-action-note { margin-block-start: 8px; }
-
-@media (max-width: 380px) {
-  .sfx-action-buttons { grid-template-columns: minmax(0, 1fr); }
-}

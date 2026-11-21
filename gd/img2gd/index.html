@@ -11,6 +11,7 @@
 
   <link rel="stylesheet" href="../global.css">
   <link rel="stylesheet" href="../theme.css">
+  <link rel="stylesheet" href="../controls.css">
   <link rel="stylesheet" href="index.css">
   <link rel="stylesheet" href="../lettering.css">
 
@@ -38,17 +39,17 @@
   <main class="maincontent">
     <header class="pagehead">
       <h1 class="pagetitle"><span class="gdlogo">img2gd</span></h1>
-      <button class="gdbutton toolbutton catalogopen" type="button">Objects</button>
+      <button class="gdbutton toolbutton catalogopen" type="button"><span class="gdplain">Objects</span></button>
     </header>
     <section class="workspace" aria-label="Image to Geometry Dash level converter">
       <form class="controlpanel panel gdpane" id="converter">
         <div class="uploadrow">
           <label class="dropzone gdwell">
             <input class="imagefile" type="file" aria-label="Choose an image" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.jpg,.jpeg,.png,.webp,.gif,.svg">
-            <span class="droptitle">Choose image</span>
+            <span class="droptitle gdplain">Choose image</span>
             <span class="dropsubtitle" role="status" hidden>JPG, PNG, WebP, GIF, SVG</span>
           </label>
-          <button class="gdbutton gdsecondary toolbutton examplebutton" type="button">Example</button>
+          <button class="gdbutton gdsecondary toolbutton examplebutton" type="button"><span class="gdplain">Example</span></button>
         </div>
         <p class="sourcename">Loading example</p>
 
@@ -75,19 +76,18 @@
             <span>Crop to edges</span>
           </label>
           <span class="assistivetext" id="crophelp">Available for fully opaque images.</span>
-          <button class="gdbutton gdsecondary toolbutton advancedopen" type="button">Advanced</button>
+          <button class="gdbutton gdsecondary toolbutton advancedopen" type="button"><span class="gdplain">Advanced</span></button>
         </div>
 
         <dialog class="gdpane appdialog advanceddialog" aria-labelledby="advancedtitle">
           <div class="dialoghead">
             <h2 class="dialogtitle" id="advancedtitle"><span class="gdplain">Advanced settings</span></h2>
             <button class="gdbutton gdcircle dialogclose" type="button" aria-label="Close advanced settings">
-              <svg class="gdcloseicon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12Z"/>
-              </svg>
+              <span class="gdcloseicon" aria-hidden="true"></span>
             </button>
           </div>
           <div class="dialogbody advancedfields">
+            <div class="compactfields"></div>
             <label class="checklabel">
               <input class="underlaytoggleinput gdcheck" type="checkbox" checked>
               <span>Fill with the most common color</span>
@@ -184,10 +184,10 @@
           <span class="optionalstat"><b class="sizecount">0 KB</b> GMD</span>
         </div>
         <div class="exportlinks">
-          <button class="gdbutton buildbutton" type="submit" form="converter">Build level</button>
-          <a class="gdbutton gdsecondary downloadlink" hidden download>GMD</a>
-          <a class="gdbutton gdsecondary gdlvldownload" hidden download>GDLVL</a>
-          <a class="gdbutton gdsecondary pngdownload" hidden download>PNG</a>
+          <button class="gdbutton buildbutton" type="submit" form="converter"><span class="gdplain">Build level</span></button>
+          <a class="gdbutton gdsecondary downloadlink" hidden download><span class="gdplain">GMD</span></a>
+          <a class="gdbutton gdsecondary gdlvldownload" hidden download><span class="gdplain">GDLVL</span></a>
+          <a class="gdbutton gdsecondary pngdownload" hidden download><span class="gdplain">PNG</span></a>
         </div>
         <p class="statuscopy" aria-live="polite">Loading the example image.</p>
         <div class="assistivetext" aria-hidden="true">
@@ -201,9 +201,7 @@
       <div class="dialoghead">
         <h2 class="dialogtitle" id="catalogtitle"><span class="gdplain">Native objects</span></h2>
         <button class="gdbutton gdcircle dialogclose" type="button" aria-label="Close native objects">
-          <svg class="gdcloseicon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12Z"/>
-          </svg>
+          <span class="gdcloseicon" aria-hidden="true"></span>
         </button>
       </div>
       <div class="dialogbody">
@@ -213,7 +211,7 @@
         </label>
         <p class="catalogcount" aria-live="polite">Loading objects.</p>
         <div class="cataloggrid"></div>
-        <button class="gdbutton toolbutton catalogmore" type="button" hidden>Show more</button>
+        <button class="gdbutton toolbutton catalogmore" type="button" hidden><span class="gdplain">Show more</span></button>
       </div>
     </dialog>
   </main>

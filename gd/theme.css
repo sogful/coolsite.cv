@@ -1,16 +1,15 @@
 .gdtheme {
+  --gdreadsize: 1rem; --gdlabelsize: 1.5rem;
+  --gdlogosize: 2.5rem;
   --gdtext: #fff5e4; --gdmuted: #f9e4ca;
   --gdgold: #ffe68e; --gdfocus: #fdf08c;
   --gdedge: #4e2816; --gdwell: #502a1a;
-  --gdsurface: #985533; --gdpanelborder: #281609;
   color: var(--gdtext); color-scheme: dark;
 }
 
 .gdpane {
-  background: var(--gdsurface); color: var(--gdtext);
-  border: 2px solid var(--gdpanelborder); border-radius: 10px;
-  box-shadow: 0 0 0 1px #ffefda, 0 3px 0 #351a0d,
-    inset 0 2px #efa368, inset 0 -2px #693619;
+  color: var(--gdtext); background: transparent;
+  border: 2px solid transparent; border-image: url("controls/panel.svg") 48 fill / 14px;
 }
 
 .gdwell {
@@ -19,51 +18,23 @@
   box-shadow: inset 0 1px 2px #2d130b, 0 1px #cb845575;
 }
 
-.gdtheme .gdplain { -webkit-text-stroke: 0; }
-
-.gdtheme .gdplain::before,
-.gdtheme .gdgold::before {
-  filter: none; text-shadow: 0 .065em #321a0c;
-}
-
 .gdbutton {
-  --gdbuttonlight: linear-gradient(90deg, #c5fb56, #a2e635 52%, #6dd116);
-  --gdbuttondark: linear-gradient(90deg, #90f83a, #6dcf24 52%, #4aa60f);
-  --gdbuttonbevel: #345b17;
-  --gdbuttonrim: 1px;
-  padding: 5px 9px; border: 2px solid #171408;
-  border-radius: 7px; cursor: pointer;
-  background: var(--gdbuttonlight) top / 100% 51% no-repeat,
-    var(--gdbuttondark) bottom / 100% 50% no-repeat;
-  box-shadow: 0 0 0 var(--gdbuttonrim) #fff5dc, 0 2px 0 1px #3d2614,
-    inset 0 -2px var(--gdbuttonbevel);
-  color: #141907; font: 700 13px/1.2 Arial, sans-serif;
-  text-decoration: none;
+  display: inline-flex; align-items: center;
+  justify-content: center; vertical-align: middle;
+  min-inline-size: 0; min-block-size: 40px;
+  padding: 7px 13px; cursor: pointer;
+  font: 400 var(--gdlabelsize)/1.08 pusab, sans-serif;
+  color: #faffff; text-align: center;
+  text-decoration: none; font-synthesis: none;
 }
 
-.gdsecondary {
-  --gdbuttonlight: linear-gradient(90deg, #deded9, #b7b7b2);
-  --gdbuttondark: linear-gradient(90deg, #b4b4ae, #888880);
-  --gdbuttonbevel: #53534a;
-}
-
-.gdbutton:hover:not(:disabled, [aria-disabled="true"]) { --gdbuttonrim: 2px; }
 .gdbutton:active:not(:disabled, [aria-disabled="true"]) { transform: translateY(1px); }
 .gdbutton:disabled,
-.gdbutton[aria-disabled="true"] { cursor: not-allowed; filter: grayscale(.8) brightness(.8); }
+.gdbutton[aria-disabled="true"] { cursor: not-allowed; filter: grayscale(1) brightness(.8); }
 
 .gdcircle {
-  display: grid; place-items: center;
   flex: none; padding: 0;
-  inline-size: 34px; block-size: 34px;
-  border-radius: 50%;
-}
-
-.gdcloseicon {
-  inline-size: 25px; block-size: 25px;
-  fill: #ffca00; stroke: #211507;
-  stroke-width: 2.5; stroke-linejoin: round;
-  paint-order: stroke fill;
+  inline-size: 40px; block-size: 40px;
 }
 
 .gdinput {
@@ -87,79 +58,27 @@
 /*//////////////////////////////////////////////////////////////////////*/
 
 .gdcheck {
-  appearance: none; flex: none;
-  inline-size: 18px; block-size: 18px;
-  margin: 0; position: relative;
-  border: 2px solid #242018; border-radius: 4px;
-  background: #9a9a9a; cursor: pointer;
-  box-shadow: 0 0 0 1px #fff5dc, inset 1px 1px #d5d5d1, inset -1px -1px #656560;
+  flex: none; margin: 0;
+  cursor: pointer;
 }
-
-.gdcheck:checked::before {
-  content: ""; position: absolute;
-  inset: -4px -5px -3px -4px; pointer-events: none;
-  background: url("assets/svgs/checkmark.svg") center / contain no-repeat;
-}
-
-.gdcheck:disabled { cursor: not-allowed; }
 
 .gdslider {
-  --gdthumbsize: 17px;
-  --gdprogress: 0%;
-  --gdthumbface: linear-gradient(#c4a332 0 62%, #927100 62%);
   display: grid; align-items: center;
-  position: relative;
-}
-
-.gdslider::before {
-  content: ""; position: absolute;
-  inset-inline: calc(var(--gdthumbsize) / 2); inset-block-start: 50%;
-  block-size: 8px; box-sizing: border-box;
-  transform: translateY(-50%);
-  border: 1px solid #282009; border-radius: 99px;
-  background: repeating-linear-gradient(124deg, #a3f4ff70 0 6px, transparent 6px 14px)
-    left / var(--gdprogress) 100% no-repeat,
-    linear-gradient(#4eddf8, #169bcc) left / var(--gdprogress) 100% no-repeat, #332019;
-  box-shadow: 0 0 0 1px #ffe651; pointer-events: none;
+  position: relative; --gdprogress: 0%;
 }
 
 .gdrange {
-  appearance: none; background: transparent;
-  position: relative; cursor: pointer;
+  appearance: none; position: relative;
+  background: transparent; cursor: pointer;
 }
 
-.gdrange::-webkit-slider-runnable-track {
-  block-size: var(--gdthumbsize); background: transparent;
-}
-
-.gdrange::-moz-range-track {
-  block-size: var(--gdthumbsize); background: transparent;
-}
-
-.gdrange::-webkit-slider-thumb {
-  appearance: none; box-sizing: border-box;
-  inline-size: var(--gdthumbsize); block-size: var(--gdthumbsize);
-  border: 1px solid #463219; border-radius: 50%;
-  background: var(--gdthumbface); box-shadow: inset 0 0 0 .75px #ffe568;
-}
-
-.gdrange::-moz-range-thumb {
-  box-sizing: border-box;
-  inline-size: var(--gdthumbsize); block-size: var(--gdthumbsize);
-  border: 1px solid #463219; border-radius: 50%;
-  background: var(--gdthumbface); box-shadow: inset 0 0 0 .75px #ffe568;
-}
-
-.gdslider:active { --gdthumbface: linear-gradient(#fff16b 0 62%, #e3ad16 62%); }
-
-.gdrange:disabled { opacity: .55; cursor: not-allowed; }
+.gdcheck:disabled,
+.gdrange:disabled { cursor: not-allowed; }
+.gdrange:disabled { opacity: .55; }
 
 @media (forced-colors: active) {
-  .gdcheck,
-  .gdrange { appearance: auto; }
-
-  .gdcheck:checked::before,
-  .gdslider::before { display: none; }
-
-  .gdcloseicon { fill: ButtonText; stroke: none; }
+  .gdpane {
+    border: 2px solid CanvasText; border-image: none;
+    background: Canvas; color: CanvasText;
+  }
 }

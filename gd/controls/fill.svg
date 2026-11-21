@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="32" viewBox="0 0 128 32">
+  <defs>
+    <linearGradient id="blue" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="32">
+      <stop offset="1.6%" stop-color="#ffffff"/>
+      <stop offset="7.8%" stop-color="#ffffff"/>
+      <stop offset="10.9%" stop-color="#e2ffff"/>
+      <stop offset="14.1%" stop-color="#01c7ff"/>
+      <stop offset="23.4%" stop-color="#01c7ff"/>
+      <stop offset="35.9%" stop-color="#25d2ff"/>
+      <stop offset="39.1%" stop-color="#00b5ff"/>
+      <stop offset="42.2%" stop-color="#009bff"/>
+      <stop offset="57.8%" stop-color="#00b5ff"/>
+      <stop offset="67.2%" stop-color="#00b9ff"/>
+      <stop offset="70.3%" stop-color="#01c4ff"/>
+      <stop offset="85.9%" stop-color="#00b0ff"/>
+      <stop offset="89.1%" stop-color="#4cdfff"/>
+      <stop offset="92.2%" stop-color="#79eeff"/>
+      <stop offset="98.4%" stop-color="#71ebff"/>
+    </linearGradient>
+    <linearGradient id="stripe" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="32">
+      <stop offset="1.6%" stop-color="#ffffff"/>
+      <stop offset="7.8%" stop-color="#ffffff"/>
+      <stop offset="10.9%" stop-color="#faffff"/>
+      <stop offset="14.1%" stop-color="#58e2ff"/>
+      <stop offset="23.4%" stop-color="#58e2ff"/>
+      <stop offset="35.9%" stop-color="#71eaff"/>
+      <stop offset="39.1%" stop-color="#3cd0ff"/>
+      <stop offset="42.2%" stop-color="#07b8ff"/>
+      <stop offset="57.8%" stop-color="#33d0ff"/>
+      <stop offset="67.2%" stop-color="#3ad2ff"/>
+      <stop offset="70.3%" stop-color="#53ddff"/>
+      <stop offset="85.9%" stop-color="#25cdff"/>
+      <stop offset="89.1%" stop-color="#8df5ff"/>
+      <stop offset="92.2%" stop-color="#b4ffff"/>
+      <stop offset="98.4%" stop-color="#abffff"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#blue)" d="M0 0h128v32H0Z"/>
+  <path fill="url(#stripe)" d="M0 0h53L38 32H0Z M117 0h11v32h-26Z"/>
+</svg>

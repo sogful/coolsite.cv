@@ -13,7 +13,7 @@
 
 @font-face {
   font-family: aller;
-  src: url("cbf/assets/fonts/allerbold.woff2") format("woff2");
+  src: url("assets/fonts/allerbold.woff2") format("woff2");
   font-weight: 700;
   font-display: swap;
 }

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="124" viewBox="0 0 160 124">
+  <defs>
+    <linearGradient id="front" gradientUnits="userSpaceOnUse" x1="26.7" y1="42.7" x2="87.2" y2="139.6">
+      <stop offset="0%" stop-color="#ffe841"/>
+      <stop offset="11.6%" stop-color="#ffe841"/>
+      <stop offset="24.5%" stop-color="#ffdb38"/>
+      <stop offset="37.2%" stop-color="#ffce2f"/>
+      <stop offset="50.1%" stop-color="#ffc026"/>
+      <stop offset="62.9%" stop-color="#ffb21c"/>
+      <stop offset="75.8%" stop-color="#eca513"/>
+      <stop offset="88.6%" stop-color="#da9709"/>
+      <stop offset="100%" stop-color="#ca8c02"/>
+    </linearGradient>
+    <linearGradient id="rim" gradientUnits="userSpaceOnUse" x1="23.2" y1="37.1" x2="40.7" y2="65.1">
+      <stop offset="0%" stop-color="#fff5bd"/>
+      <stop offset="0%" stop-color="#fff5bd"/>
+      <stop offset="0%" stop-color="#fff5bd"/>
+      <stop offset="0%" stop-color="#fff5bd"/>
+      <stop offset="89.2%" stop-color="#fff2b6"/>
+      <stop offset="89.2%" stop-color="#fff2b6"/>
+      <stop offset="89.2%" stop-color="#fff2b6"/>
+      <stop offset="90.9%" stop-color="#fff2b6"/>
+      <stop offset="100%" stop-color="#fff1b4"/>
+    </linearGradient>
+  </defs>
+  <path fill="#000" opacity="0.35" d="M24.7 122.1 C24.3 120.5 23.4 120 20.8 120 L17.4 120 13.1 82.2 C10.8 61.5 8.6 42.6 8.3 40.2 C7.8 36.4 7.9 36 9.8 36 C11.8 36 11.9 35.6 11.4 30.3 L10.8 24.5 17.2 18.4 L23.5 12.2 47.1 11.6 L70.7 10.9 73.3 14.8 L75.9 18.8 103.2 19.4 C118.2 19.8 134.4 20.3 139.2 20.6 L148 21.2 148 24.6 C148 27.3 148.4 28 150 28 C151.3 28 152 28.7 152 30 C152 31.6 152.7 32 155.5 32 C157.4 32 159 32.3 159 32.8 C159 36.5 149.6 121.7 149.1 122.1 C148.8 122.5 120.8 123.1 86.9 123.4 L25.3 124.1 24.7 122.1Z"/>
+  <path fill="#000" d="M17.9 119.9 C17.2 117.2 8.3 37.3 8.7 36.7 C9 36.3 23.9 36.2 41.9 36.6 L74.7 37.3 77.9 32.7 L81.1 28 116.5 28 C151.6 28 152 28 152 30 C152 33.5 142.8 118.5 142.4 118.9 C141.9 119.4 18 120.4 17.9 119.9Z"/>
+  <path fill="url(#front)" d="M20.6 114.6 C19.9 111.9 12 44.8 12 41.7 C12 39.7 12.2 39.7 43.9 40.3 C79.2 41.1 76.7 41.5 81 34.5 L83.2 31 115.5 31 C133.3 31 148.1 31.3 148.3 31.8 C148.7 32.6 140.2 109.7 139.5 111.8 C139.2 112.7 132.9 113 113 113 C92.5 113 86.5 113.3 84.7 114.4 C83 115.4 75.4 115.9 51.9 116.4 L21.2 116.9 20.6 114.6Z"/>
+  <path fill="url(#rim)" d="M19.1 103.2 C18.5 97.9 16.7 82.2 15 68.5 C13.4 54.8 12 42.6 12 41.6 C12 39.8 13 39.7 44 40.4 L76 41.2 78 38.8 C79 37.5 80.9 35.2 82.2 33.7 L84.5 30.9 116.3 31.6 C141.8 32.2 148 32.6 148 33.7 C148 34.8 142.3 35 117.2 35 L86.5 35 84 39 C82.6 41.3 80.4 43.3 79.1 43.7 C77.7 44 63 44 46.3 43.7 C29.6 43.3 16 43.1 16 43.3 C16 43.4 17.6 57.8 19.5 75.3 C23.5 111.2 23.6 113 21.6 113 C20.7 113 20 110.2 19.1 103.2Z"/>
+</svg>

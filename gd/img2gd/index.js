@@ -812,7 +812,26 @@ function applypreset() {
 }
 
 const advanceddialog = document.querySelector(".advanceddialog");
-document.querySelector(".advancedopen").addEventListener("click", () => advanceddialog.showModal());
+const advancedopen = document.querySelector(".advancedopen");
+const compactfields = document.querySelector(".compactfields");
+const compactlayout = matchMedia("(max-height: 500px), (max-width: 360px) and (max-height: 680px)");
+const compactcontrols = [document.querySelector(".basicfields"), croptoggle.closest("label"), examplebutton]
+  .map(control => ({control, parent: control.parentElement, next: control.nextElementSibling}));
+
+function updatesettingslayout() {
+  const compact = compactlayout.matches;
+  for (const {control, parent, next} of compactcontrols) {
+    if (compact) compactfields.append(control);
+    else parent.insertBefore(control, next);
+  }
+  form.classList.toggle("compact", compact);
+  advancedopen.querySelector(".gdplain").textContent = compact ? "Settings" : "Advanced";
+  advanceddialog.querySelector(".gdplain").textContent = compact ? "Settings" : "Advanced settings";
+}
+
+updatesettingslayout();
+compactlayout.addEventListener("change", updatesettingslayout);
+advancedopen.addEventListener("click", () => advanceddialog.showModal());
 document.querySelectorAll(".dialogclose").forEach(button => {
   button.addEventListener("click", () => button.closest(".appdialog").close());
 });

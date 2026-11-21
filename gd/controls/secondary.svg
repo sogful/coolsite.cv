@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="367" height="122" viewBox="0 0 367 122">
+  <defs>
+    <linearGradient id="bevel" gradientUnits="userSpaceOnUse" x1="23.5" y1="0" x2="344.5" y2="0">
+      <stop offset="0%" stop-color="#198280"/>
+      <stop offset="11.4%" stop-color="#167d7b"/>
+      <stop offset="24.3%" stop-color="#137776"/>
+      <stop offset="37.1%" stop-color="#107070"/>
+      <stop offset="50%" stop-color="#0d6a6a"/>
+      <stop offset="62.9%" stop-color="#0a6465"/>
+      <stop offset="75.7%" stop-color="#075e60"/>
+      <stop offset="88.6%" stop-color="#04585a"/>
+      <stop offset="100%" stop-color="#015356"/>
+    </linearGradient>
+    <linearGradient id="bottom" gradientUnits="userSpaceOnUse" x1="20.5" y1="0" x2="347.5" y2="0">
+      <stop offset="0%" stop-color="#33ffff"/>
+      <stop offset="11.6%" stop-color="#2dfaf6"/>
+      <stop offset="24.3%" stop-color="#27eeec"/>
+      <stop offset="37.2%" stop-color="#21e2e1"/>
+      <stop offset="50%" stop-color="#1cd5d6"/>
+      <stop offset="62.8%" stop-color="#15c8ca"/>
+      <stop offset="75.7%" stop-color="#0fbcc0"/>
+      <stop offset="88.4%" stop-color="#09b0b4"/>
+      <stop offset="100%" stop-color="#03a5aa"/>
+    </linearGradient>
+    <linearGradient id="top" gradientUnits="userSpaceOnUse" x1="20.5" y1="0" x2="347.5" y2="0">
+      <stop offset="0%" stop-color="#57ffeb"/>
+      <stop offset="11.6%" stop-color="#4effe5"/>
+      <stop offset="24.3%" stop-color="#45ffdd"/>
+      <stop offset="37.2%" stop-color="#3bffdb"/>
+      <stop offset="50%" stop-color="#30f7d9"/>
+      <stop offset="62.8%" stop-color="#26efd7"/>
+      <stop offset="75.7%" stop-color="#1ce7d6"/>
+      <stop offset="88.4%" stop-color="#12ded4"/>
+      <stop offset="100%" stop-color="#08d7d3"/>
+    </linearGradient>
+  </defs>
+  <path fill="#fff" d="M21.2 119.1 C11 115.6 4.2 107.2 2 95.1 C0.3 86 0.7 25.1 2.5 20 C5.8 10.6 14 4.2 25.5 2 C29.9 1.2 74 1 187.5 1.2 C335.1 1.5 343.8 1.6 348.1 3.3 C354.6 5.8 360.4 11.1 363.4 17.3 L366 22.5 366.2 59 C366.5 91.1 366.3 96.1 364.8 100.3 C362.6 106.8 358.7 112.3 354 115.5 C345.7 121.3 354.4 121 183.6 121 C34 120.9 26.2 120.8 21.2 119.1Z"/>
+  <path fill="#000" d="M23.8 113.6 C18.6 111.7 15.5 109.6 12.7 105.8 C7.6 98.8 7.5 98.1 7.5 58.8 L7.5 22.2 10.5 17.8 C12.6 14.8 15.3 12.6 19.5 10.5 L25.5 7.5 184.1 7.5 L342.6 7.5 348.5 10.5 C353.1 12.8 355.1 14.7 357.5 18.5 L360.5 23.4 360.2 58.9 C359.9 99.2 359.5 101.2 352.9 107.9 C345.2 115.5 358 115 183.6 115 C56 114.9 26.8 114.7 23.8 113.6Z"/>
+  <path fill="url(#bevel)" d="M29.5 108.1 C24 106.7 20 104 17.2 99.8 L14.5 95.7 14.2 60 L13.9 24.3 16.7 21 C23 13.5 9 14 184 14 C358.9 14 345 13.5 351.3 20.9 L354 24.2 354 56.9 C354 94.6 353.6 97.4 347.1 103.3 C344.9 105.3 341.7 107.1 339.8 107.4 C334.3 108.3 32.7 108.9 29.5 108.1Z"/>
+  <path fill="url(#bottom)" d="M25.5 99.8 C23.9 99.2 21.3 97.8 19.7 96.8 C14.1 92.8 14 92 14 56.6 L14 24.2 16.7 20.9 C23 13.5 9.1 14 184 14 C359 14 345 13.5 351.3 21 L354.1 24.2 353.8 57.6 L353.5 90.9 350.5 94.1 C343.5 101.6 357.8 101 184 100.9 C76.8 100.9 27.6 100.5 25.5 99.8Z"/>
+  <path fill="url(#top)" d="M14 42.1 L14 24.2 16.7 20.9 C23 13.5 9.1 14 184 14 C358.9 14 345 13.5 351.3 20.9 L354 24.2 354 42.1 L354 60 184 60 L14 60 14 42.1Z"/>
+</svg>

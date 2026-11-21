@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="../global.css">
     <link rel="stylesheet" href="../lettering.css">
     <link rel="stylesheet" href="../theme.css">
+    <link rel="stylesheet" href="../controls.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="actions.css">
     <script src="../global.js" defer></script>
@@ -32,37 +33,35 @@
 
           <label class="dropzone gdwell" id="dropzone" for="audio-file" tabindex="0">
             <input class="filepicker" id="audio-file" name="file" type="file" accept="audio/wav,audio/x-wav,audio/ogg,audio/mpeg,.wav,.ogg,.mp3" required>
-            <svg class="upload-icon" viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-              <path fill="currentColor" d="M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5-23.5T720-160H240Z"></path>
-            </svg>
-            <span class="drop-title" id="file-title">Choose a song</span>
+            <span class="upload-icon" aria-hidden="true"></span>
+            <span class="drop-title gdplain" id="file-title">Choose a song</span>
             <span class="drop-subtitle" id="file-subtitle">Or drop an audio file here. Up to 100 MB.</span>
           </label>
 
           <div class="fields">
             <label class="field-label">
-              Start at <span class="field-unit">seconds</span>
+              <span class="field-name">Start at <span class="field-unit">seconds</span></span>
               <input class="audiofield gdinput" name="start" type="number" min="0" step="0.01" value="0">
             </label>
             <label class="field-label">
-              Length <span class="field-unit">seconds</span>
+              <span class="field-name">Length <span class="field-unit">seconds</span></span>
               <input class="audiofield gdinput" name="duration" type="number" min="0.25" max="30" step="0.25" value="10">
             </label>
             <label class="field-label">
-              Concurrent SFX <span class="field-unit">layers</span>
+              <span class="field-name">Concurrent SFX <span class="field-unit">layers</span></span>
               <input class="audiofield gdinput" name="layers" type="number" min="1" max="12" step="1" value="4">
             </label>
             <label class="field-label">
-              Trigger volume <span class="field-unit">×</span>
+              <span class="field-name">Trigger volume <span class="field-unit">×</span></span>
               <input class="audiofield gdinput" name="volume" type="number" min="0.05" max="2" step="0.05" value="0.75">
             </label>
           </div>
 
           <details class="advanced">
-            <summary class="advanced-toggle gdbutton gdsecondary">Matching settings</summary>
+            <summary class="advanced-toggle gdbutton gdsecondary"><span class="gdplain">Matching settings</span></summary>
             <div class="advanced-fields">
               <label class="field-label">
-                Window size <span class="field-unit">milliseconds</span>
+                <span class="field-name">Window size <span class="field-unit">milliseconds</span></span>
                 <select class="audiofield gdinput" name="hop">
                   <option value="0.0625" selected>62.5 · detailed</option>
                   <option value="0.125">125 · quicker</option>
@@ -70,7 +69,7 @@
                 </select>
               </label>
               <label class="field-label">
-                Candidate search <span class="field-unit">clips</span>
+                <span class="field-name">Candidate search <span class="field-unit">clips</span></span>
                 <select class="audiofield gdinput" name="shortlist">
                   <option value="128" selected>128 · thorough</option>
                   <option value="64">64 · balanced</option>
@@ -81,7 +80,7 @@
             <p class="advanced-note">More layers and a thorough search can improve the match, but may take longer and sound less consistent in-game.</p>
           </details>
 
-          <button class="convert-button gdbutton" id="convert-button" type="submit">Build level</button>
+          <button class="convert-button gdbutton" id="convert-button" type="submit"><span class="gdplain">Build level</span></button>
           <p class="privacy-note">Audio stays on this computer and is discarded after conversion.</p>
         </form>
 
@@ -93,12 +92,15 @@
             </div>
             <p class="status-copy" id="status-copy">Choose a song to start.</p>
             <div class="progress-track" id="progress-track" hidden><span class="progress-fill"></span></div>
-            <div class="result" id="result" hidden></div>
+            <div class="result" id="result" hidden>
+              <a class="download-link gdbutton" download><span class="gdplain">Download GMD</span></a>
+              <p class="result-meta"></p>
+            </div>
             <div class="sfx-actions" id="sfx-actions" hidden>
               <p class="sfx-action-copy">Save the SFX this level uses. Pick your GeometryDash folder, or download a ZIP to extract there.</p>
               <div class="sfx-action-buttons">
-                <button class="sfx-button gdbutton" type="button" id="save-sfx-folder">Save to a folder</button>
-                <button class="sfx-button gdbutton gdsecondary" type="button" id="download-sfx-zip">Download SFX ZIP</button>
+                <button class="sfx-button gdbutton" type="button" id="save-sfx-folder"><span class="gdplain">Save to a folder</span></button>
+                <button class="sfx-button gdbutton gdsecondary" type="button" id="download-sfx-zip"><span class="gdplain">Download SFX ZIP</span></button>
               </div>
               <p class="sfx-action-note" id="sfx-action-note">Existing files are left untouched. The ZIP contains every SFX used by this level.</p>
             </div>

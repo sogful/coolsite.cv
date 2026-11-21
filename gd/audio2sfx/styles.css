@@ -1,7 +1,7 @@
 .audiopage {
   margin: 0; min-block-size: 100vh;
   box-sizing: border-box;
-  font: 15px/1.4 aller, Arial, sans-serif;
+  font: var(--gdreadsize)/1.4 aller, Arial, sans-serif;
 }
 
 .audiopage * { box-sizing: inherit; }
@@ -24,7 +24,7 @@
 
 .intro {
   max-inline-size: 470px; margin: 12px auto 0;
-  font-size: 15px; color: var(--gdtext);
+  font-size: var(--gdreadsize); color: var(--gdtext);
 }
 
 .workspace {
@@ -43,12 +43,12 @@
 }
 
 .panel-title {
-  font-size: 20px; margin: 0;
+  font-size: var(--gdlabelsize); margin: 0;
 }
 
 .format-note,
 .field-unit {
-  font-size: 12px; font-weight: 400;
+  font-size: var(--gdreadsize); font-weight: 400;
   color: var(--gdmuted);
 }
 
@@ -79,12 +79,13 @@
 }
 
 .drop-title {
-  font-size: 16px; font-weight: 700;
+  font-size: var(--gdlabelsize); min-inline-size: 0;
+  max-inline-size: 100%;
   overflow-wrap: anywhere;
 }
 
 .drop-subtitle {
-  font-size: 12px; color: var(--gdmuted);
+  font-size: var(--gdreadsize); color: var(--gdmuted);
   margin-block-start: 3px;
 }
 
@@ -96,16 +97,22 @@
 
 .field-label {
   display: grid; align-items: baseline;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 2px 6px; min-inline-size: 0;
-  font-size: 13px; font-weight: 700;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px; min-inline-size: 0;
+  font-size: var(--gdreadsize); font-weight: 700;
+}
+
+.field-name {
+  display: flex; align-items: baseline;
+  flex-wrap: wrap; justify-content: space-between;
+  gap: 0 6px;
 }
 
 .audiofield {
   grid-column: 1 / -1; box-sizing: border-box;
   min-inline-size: 0; inline-size: 100%;
   padding: 5px 8px; min-block-size: 34px;
-  font: 14px aller, Arial, sans-serif;
+  font: var(--gdreadsize) aller, Arial, sans-serif;
 }
 
 .audiofield[type="number"] { appearance: textfield; }
@@ -115,25 +122,13 @@
 .advanced-toggle {
   display: inline-flex; align-items: center;
   gap: 10px; list-style: none;
-  padding: 4px 10px; min-block-size: 31px;
-  font-size: 12px;
 }
 
 .advanced-toggle::-webkit-details-marker { display: none; }
 
-.advanced-toggle::after {
-  content: ""; inline-size: 6px; block-size: 6px;
-  border: solid currentColor; border-width: 0 2px 2px 0;
-  transform: translateY(-1px) rotate(45deg);
-}
-
-.advanced[open] .advanced-toggle::after {
-  transform: translateY(2px) rotate(225deg);
-}
-
 .advanced-note,
 .privacy-note {
-  color: var(--gdmuted); font-size: 12px;
+  color: var(--gdmuted); font-size: var(--gdreadsize);
   text-align: left; margin: 9px 0 0;
 }
 
@@ -141,7 +136,6 @@
   display: block; inline-size: 100%;
   padding: 8px 14px; min-block-size: 40px;
   margin-block-start: 15px;
-  font: 17px/1.15 pusab, sans-serif;
 }
 
 .privacy-note { text-align: center; }
@@ -167,7 +161,7 @@
 
 .status-copy {
   margin: 0; text-align: left;
-  font-size: 14px; color: var(--gdtext);
+  font-size: var(--gdreadsize); color: var(--gdtext);
 }
 
 .progress-track {
@@ -192,18 +186,18 @@
 
 .download-link {
   display: flex; justify-content: center;
-  padding: 7px 10px; font-size: 14px;
+  padding: 7px 10px;
   text-decoration: none;
 }
 
 .result-meta {
-  color: var(--gdmuted); font-size: 12px;
+  color: var(--gdmuted); font-size: var(--gdreadsize);
   margin: 7px 0 0; line-height: 1.4;
 }
 
 .catalog-status {
   margin: 0; padding: 8px 10px;
-  font-size: 12px; text-align: left;
+  font-size: var(--gdreadsize); text-align: left;
 }
 
 .locallink {
@@ -215,13 +209,9 @@
   .audiomain { inline-size: min(calc(100% - 26px), 485px); }
 
   .workspace { grid-template-columns: minmax(0, 1fr); }
-
-  .intro { font-size: 14px; }
 }
 
 @media (max-width: 360px) {
-  .panel-title { font-size: 17px; }
-
   .fields,
   .advanced-fields { column-gap: 8px; }
 }

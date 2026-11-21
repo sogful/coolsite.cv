@@ -246,22 +246,17 @@ form.addEventListener("submit", async event => {
 
     objectUrl && URL.revokeObjectURL(objectUrl);
     objectUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.className = "download-link gdbutton";
+    const link = result.querySelector(".download-link");
     link.href = objectUrl;
     link.download = filename;
-    link.textContent = "↓  DOWNLOAD .GMD LEVEL";
-    result.replaceChildren(link);
 
     const details = [];
     const events = response.headers.get("X-Conversion-Events");
     if (events) details.push(`${Number(events).toLocaleString()} triggers`);
     details.push(`${latestSfxIds.length.toLocaleString()} unique SFX`);
     details.push(`${Math.round((Date.now() - started) / 1000)}s`);
-    const meta = document.createElement("p");
-    meta.className = "result-meta";
+    const meta = result.querySelector(".result-meta");
     meta.textContent = `${details.join(" · ")}. Your uploaded audio has been discarded.`;
-    result.append(meta);
     result.hidden = false;
     sfxActions.hidden = latestSfxIds.length === 0;
     progress.hidden = true;
