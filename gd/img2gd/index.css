@@ -252,7 +252,16 @@ body.imgpage {
   display: grid; grid-template-rows: auto minmax(0, 1fr);
 }
 
-.appdialog::backdrop { background: #1d110dcc; }
+.appdialog::backdrop { background: #1d110d4b; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .appdialog[open]::backdrop { animation: backdropopen 140ms linear both; }
+}
+
+@keyframes backdropopen {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 .dialoghead {
   position: relative; justify-content: center;

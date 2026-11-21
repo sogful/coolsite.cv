@@ -87,7 +87,7 @@
         <div class="settingsrow">
           <div class="settingactions">
             <button class="gdbutton startbutton" type="submit" disabled><gold class="gdgold">Start</gold></button>
-            <button class="gdbutton toolbutton advancedopen" type="button"><gold class="gdgold">Advanced</gold></button>
+            <button class="gdbutton toolbutton advancedopen" type="button" aria-haspopup="dialog"><gold class="gdgold">Advanced</gold></button>
             <cr class="fitmessage controlerror" role="status"></cr>
           </div>
           <label class="checklabel">
@@ -100,7 +100,7 @@
         <dialog class="gdpane appdialog advanceddialog" aria-labelledby="advancedtitle">
           <div class="dialoghead">
             <h2 class="dialogtitle" id="advancedtitle"><gold>Advanced settings</gold></h2>
-            <button class="gdbutton gdcircle dialogclose" type="button">
+            <button class="gdbutton gdcircle dialogclose" type="button" aria-label="Close advanced settings" autofocus>
               <span class="gdcloseicon" aria-hidden="true"></span>
             </button>
           </div>

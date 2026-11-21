@@ -103,15 +103,3 @@ cblack { color: #000; }
 cwhite { color: #fff; }
 cgray,
 cgrey { color: #808080; }
-
-
-/*//////////////////////////////////////////////////////////////////////*/
-
-.appdialog[open] {
-  animation: gdpopup 350ms cubic-bezier(.333333,1.567193,.666667,1);
-}
-
-@keyframes gdpopup {
-  from { scale: .62; }
-  to { scale: 1; }
-}

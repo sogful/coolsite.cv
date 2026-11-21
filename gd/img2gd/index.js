@@ -762,7 +762,26 @@ async function prepareexports(raw, name) {
 
 const advanceddialog = document.querySelector(".advanceddialog");
 const advancedopen = document.querySelector(".advancedopen");
-advancedopen.addEventListener("click", () => advanceddialog.showModal());
+const reducedmotion = matchMedia("(prefers-reduced-motion: reduce)");
+let advancedmotion;
+
+advancedopen.addEventListener("click", () => {
+  if (advanceddialog.open) return;
+  advancedmotion?.cancel();
+  advanceddialog.showModal();
+  if (reducedmotion.matches) return;
+  const keyframes = Array.from({length: 121}, (_, frame) => {
+    const time = frame / 120;
+    const scale = time === 1 ? 1 : 1 - .9 * 2 ** (-10 * time) * Math.cos(time * 2 * Math.PI / .6);
+    return {scale: String(scale)};
+  });
+  advancedmotion = advanceddialog.animate(keyframes, 500);
+});
+
+advanceddialog.addEventListener("close", () => {
+  if (!advanceddialog.open) advancedmotion?.cancel();
+});
+
 document.querySelectorAll(".dialogclose").forEach(button => {
   button.addEventListener("click", () => button.closest(".appdialog").close());
 });
