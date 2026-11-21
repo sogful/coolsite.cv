@@ -73,7 +73,7 @@ async function start(game, backup, callbacks) {
         write("/saves/" + name, Uint8Array.from(atob(value), character => character.charCodeAt(0)));
     }
     runtime.FS.chdir("/game");
-    const args = ["/game/data.win", "--save-folder", "/saves", "--disable-log-colours"];
+    const args = ["/game/data.win", "--save-folder", "/saves", "--disable-log-colours", "--lazy-textures", "--lazy-audio"];
     const pointers = args.map(value => runtime.stringToNewUTF8(value));
     const table = runtime._malloc((pointers.length + 1) * 4);
     for (let index = 0; index < pointers.length; index++) {new DataView(runtime.HEAPU8.buffer).setUint32(table + index * 4, pointers[index], true);}

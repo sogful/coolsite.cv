@@ -94,6 +94,18 @@ async function convert(path) {
     const studio = [...files].find(([name, bytes]) => (name.toLowerCase() === path.toLowerCase() && /\.(win|unx)$/i.test(path) || name.toLowerCase() === (parent + "data.win").toLowerCase()) && new TextDecoder().decode(bytes.subarray(0, 4)) === "FORM");
     if (studio) {
         const bytes = studio[1];
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        if (bytes.length >= 16 && view.getUint32(4, true) === bytes.length - 8) {
+            let offset = 8;
+            let code = false;
+            while (offset + 8 <= bytes.length) {
+                const size = view.getUint32(offset + 4, true);
+                if (size > bytes.length - offset - 8) {break;}
+                if (new TextDecoder().decode(bytes.subarray(offset, offset + 4)) === "CODE" && size >= 4 && view.getUint32(offset + 8, true) > 0) {code = true;}
+                offset += size + 8;
+            }
+            if (offset === bytes.length && !code) {throw new Error("This is a compiled GameMaker YYC game. YYC games are not supported yet.");}
+        }
         const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map(value => value.toString(16).padStart(2, "0")).join("");
         const version = bytes[17];
         const supported = version >= 8 && version <= 17;
