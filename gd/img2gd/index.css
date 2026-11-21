@@ -56,12 +56,16 @@ body.imgpage {
 }
 
 .controlpanel {
-  display: grid; gap: 12px 20px;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  display: grid; gap: 8px 24px;
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, .94fr);
+  grid-template-areas: "picker ranges" "actions ranges";
   align-items: center;
 }
 
-.sourcefields { min-inline-size: 0; position: relative; }
+.sourcefields {
+  grid-area: picker; min-inline-size: 0;
+  position: relative; padding-block-end: 1rem;
+}
 
 .uploadrow {
   padding-inline-end: 4px; border-radius: 20px;
@@ -84,11 +88,13 @@ body.imgpage {
 
 .filedimensions { white-space: nowrap; }
 
-.settingsrow { flex-direction: column; align-items: stretch; }
+.settingsrow {
+  grid-area: actions; flex-wrap: wrap;
+  justify-content: flex-start; align-items: center;
+}
 
 .settingactions {
   display: flex; gap: 6px;
-  justify-content: flex-end; margin-inline-start: auto;
   position: relative;
 }
 
@@ -118,25 +124,15 @@ body.imgpage {
   pointer-events: none; overflow-wrap: anywhere;
 }
 
+.dropsubtitle.controlerror { inset-block-start: auto; inset-block-end: 0; }
+
 .toolbutton { white-space: nowrap; }
 
 .basicfields {
-  display: grid; min-inline-size: 0;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 4px 22px; padding-inline-end: 9px;
+  grid-area: ranges; display: grid;
+  min-inline-size: 0; gap: 6px;
+  --rangelabelwidth: clamp(6.8125rem, 16vw, 11.5rem);
 }
-
-.basicfields .sliderlabel {
-  grid-column: 1 / -1; grid-template-columns: subgrid;
-  align-items: start; column-gap: inherit;
-}
-
-.sliderlabel > label {
-  display: flex; align-items: center;
-  min-block-size: 30px;
-}
-
-.sliderlabel .rangevaluemessage { grid-column: 1 / -1; }
 
 .advancedfields {
   display: grid; gap: 12px;
@@ -151,9 +147,7 @@ body.imgpage {
 
 .advancedfields { grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); }
 
-.previewzoomhelp {
-  font-size: inherit; color: var(--gdmuted);
-}
+.advancedfields .optionvalue { font-size: min(var(--gdlabelsize), 1.375rem); }
 
 .checklabel {
   display: flex; gap: 7px;
@@ -284,19 +278,12 @@ body.imgpage {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-@media (max-width: 840px), (max-height: 680px) {
+@media (max-width: 840px) {
   .controlpanel {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "picker" "ranges" "actions";
     gap: 8px;
   }
-
-  .settingsrow {
-    flex-flow: row wrap; align-items: center;
-  }
-
-  .sourcefields { padding-block-end: 1rem; }
-
-  .dropsubtitle { inset-block-start: auto; inset-block-end: 0; }
 }
 
 @media (max-width: 360px) {
@@ -315,9 +302,6 @@ body.imgpage {
     grid-template-areas: "picker ranges" "actions ranges";
   }
 
-  .sourcefields { grid-area: picker; }
-  .basicfields { grid-area: ranges; }
-  .settingsrow { grid-area: actions; }
   .workspace { grid-template-rows: auto minmax(126px, 1fr); }
 }
 

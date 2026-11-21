@@ -16,7 +16,6 @@ const samplerselect = document.querySelector(".samplerselect");
 const warpselect = document.querySelector(".warpselect");
 const colourmode = document.querySelector(".colourmode");
 const previewzoomslider = document.querySelector(".previewzoomslider");
-const previewzoomhelp = document.querySelector(".previewzoomhelp");
 const filecaption = document.querySelector(".filecaption");
 const filedimensions = document.querySelector(".filedimensions");
 const stats = document.querySelector(".stats");
@@ -157,7 +156,7 @@ function previewsize() {
   const ratio = target.height / target.width;
   const width = Math.max(1, Math.min(requested, 8192, Math.floor(8192 / ratio), Math.floor(Math.sqrt(4000000 / ratio))));
   const height = Math.max(1, Math.min(Math.round(width * ratio), Math.floor(4000000 / width)));
-  return {width, height, limited: width < requested, zoom: width < requested ? width / 720 : zoom};
+  return {width, height, zoom: width < requested ? width / 720 : zoom};
 }
 
 function mostcommoncolor(pixels, levels) {
@@ -432,8 +431,6 @@ function resizecanvases() {
   if (resultcanvas.height !== size.height) resultcanvas.height = size.height;
   if (sourcecanvas.width !== width) sourcecanvas.width = width;
   if (sourcecanvas.height !== height) sourcecanvas.height = height;
-  previewzoomhelp.textContent = size.limited
-    ? `PNG limited to ${size.width} × ${size.height} px` : `PNG width ${size.width} px`;
 }
 
 function previewopaque() {

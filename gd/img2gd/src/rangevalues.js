@@ -16,36 +16,11 @@ const {rangevalue, validrangevalues} = (() => {
       const tick = Math.round(index * ticks / divisions);
       return Number((minimum + tick * step).toFixed(precision));
     });
-    const editor = document.createElement("input");
-    const warning = document.createElement("span");
-    const warningtext = document.createElement("cr");
-    const emoji = document.createElement("img");
+    const editor = rail.querySelector(".rangevalueeditor");
+    const warning = rail.closest(".sliderlabel").querySelector(".rangevaluemessage");
+    const warningtext = warning.querySelector("cr");
+    const emoji = warning.querySelector("img");
     const control = {value: slider.valueAsNumber, valid: true};
-
-    editor.type = "text";
-    editor.inputMode = fractional ? "decimal" : "numeric";
-    editor.className = "rangevalueeditor";
-    editor.value = slider.value;
-    editor.autocomplete = "off";
-    editor.spellcheck = false;
-    editor.setAttribute("aria-label", (slider.getAttribute("aria-label") || "Slider") + " value");
-
-    warning.id = "range-warning-" + controls.size;
-    warning.className = "rangevaluemessage";
-    warning.setAttribute("role", "status");
-    warning.hidden = true;
-    warning.append(warningtext);
-    editor.setAttribute("aria-describedby", warning.id);
-
-    if (limitmessages) {
-      emoji.alt = "";
-      emoji.hidden = true;
-      warning.append(emoji);
-    }
-
-    rail.append(editor);
-    rail.parentElement.classList.add("rangewarninghost");
-    rail.after(warning);
     controls.set(slider, control);
 
     function place() {
