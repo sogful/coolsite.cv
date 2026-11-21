@@ -22,7 +22,7 @@ function vectorregions() {
   for (const color of [...histogram.values()].sort((left, right) => right.count - left.count)) {
     if (color.count < length * 0.0003 || palette.length >= 24) break;
     const rgb = [color.red, color.green, color.blue].map(value => Math.round(value / color.count));
-    if (palette.some(existing => existing.reduce((sum, value, index) => sum + (value - rgb[index]) ** 2, 0) < 500)) continue;
+    if (palette.some(existing => existing.reduce((sum, value, index) => sum + (value - rgb[index]) ** 2, 0) <= 75)) continue;
     const blend = palette.some((left, index) => palette.slice(index + 1).some(right => {
       const direction = right.map((value, channel) => value - left[channel]);
       const distance = direction.reduce((sum, value) => sum + value * value, 0);
@@ -79,7 +79,7 @@ function vectorregions() {
   const regions = [];
   for (let index = 0; index < length; index += 1) {
     if (labels[index] !== -1) continue;
-    const region = {id: regions.length, color: nearest[index], count: 0, left: target.width, right: 0, top: target.height, bottom: 0};
+    const region = {id: regions.length, seed: index, color: nearest[index], count: 0, left: target.width, right: 0, top: target.height, bottom: 0};
     labels[index] = region.id;
     let count = 1;
     queue[0] = index;
@@ -240,7 +240,7 @@ function regiontriangle(points, color) {
   };
 }
 
-function regionellipse(region, labels, color) {
+function regionellipse(region, labels, color, contour) {
   const width = region.right - region.left;
   const height = region.bottom - region.top;
   const x = (region.left + region.right) / 2;
@@ -255,7 +255,14 @@ function regionellipse(region, labels, color) {
       if (inside || mask) union += 1;
     }
   }
-  if (intersection / union < (region.count < 200 ? 0.85 : 0.945)) return null;
+  if (intersection / union < (region.count < 200 ? 0.85 : 0.945)) {
+    const area = polygonarea(contour);
+    if (area <= region.count || Math.min(width, height) < 8
+      || Math.abs(area / (Math.PI * width * height / 4) - 1) > 0.04) return null;
+    const tolerance = 0.025 + 1.5 / Math.min(width, height);
+    if (contour.some(([column, row]) => Math.abs(Math.hypot((column - x) * 2 / width, (row - y) * 2 / height) - 1) > tolerance))
+      return null;
+  }
   return {
     asset: library.find(asset => asset.id === 497), x, y, width, height, angle: 0, warpx: 0, warpy: 0,
     red: color[0], green: color[1], blue: color[2],
@@ -271,6 +278,29 @@ function pointinpolygon(point, polygon) {
       && point[0] < (b[0] - a[0]) * (point[1] - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside;
   }
   return inside;
+}
+
+function enclosingregions(regions, labels) {
+  for (const region of regions) {
+    region.contour = regioncontour(region, labels);
+    region.area = polygonarea(region.contour);
+  }
+  const ordered = [];
+  const placed = new Set();
+  function place(region) {
+    if (placed.has(region)) return;
+    const point = [region.seed % target.width + 0.5, Math.floor(region.seed / target.width) + 0.5];
+    for (const parent of regions) {
+      if (parent.area > region.area && parent.area > parent.count
+        && parent.left <= region.left && parent.right >= region.right
+        && parent.top <= region.top && parent.bottom >= region.bottom
+        && pointinpolygon(point, parent.contour)) place(parent);
+    }
+    placed.add(region);
+    ordered.push(region);
+  }
+  for (const region of regions) place(region);
+  return ordered;
 }
 
 function regionstitches(polygon, triangles, color) {
@@ -324,9 +354,12 @@ function regionstitches(polygon, triangles, color) {
 
 function regionobjects(region, palette, labels, tolerance) {
   const color = palette[region.color];
-  const ellipse = regionellipse(region, labels, color);
+  if (region.count === (region.right - region.left) * (region.bottom - region.top))
+    return [coarseregion(region, palette, true)];
+  const contour = region.contour;
+  const ellipse = regionellipse(region, labels, color, contour);
   if (ellipse) return [ellipse];
-  const polygon = simplifypolygon(regioncontour(region, labels), tolerance);
+  const polygon = simplifypolygon(contour, tolerance);
   if (polygon.length < 3) return [coarseregion(region, palette)];
   const triangles = triangulatepolygon(polygon);
   const objects = triangles.map(points => {
@@ -361,6 +394,33 @@ function coarseregion(region, palette, rectangle = false) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
+function fitregionbackground(limit, regions, analysis) {
+  const first = plan[0];
+  if (underlaycount || !first || first.asset.id !== 495
+    || first.width === target.width && first.height === target.height) return;
+  const original = plan;
+  let best = original;
+  let score = measurefittedpreview();
+  const frame = candidatevariant(first, {
+    x: target.width / 2, y: target.height / 2, width: target.width, height: target.height,
+  });
+  preparecandidate(frame);
+  function compare(objects) {
+    plan = objects;
+    if (objects.length + visibilitycount() > limit) return;
+    const error = measurefittedpreview();
+    if (error < score) {best = objects; score = error;}
+  }
+  compare([frame, ...original.slice(1)]);
+  if (regions.length > 1 && original.length < limit) {
+    const [red, green, blue] = analysis.palette[regions[1].color];
+    compare([{...frame, red, green, blue}, ...original]);
+  }
+  plan = best;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
 async function fitcolorregions(limit, revision) {
   if (!limit || !sourceisopaque()) return null;
   const reserved = limit > visibilitycost ? visibilitycost : 0;
@@ -373,14 +433,10 @@ async function fitcolorregions(limit, revision) {
   }
   warpselect.value = "on";
   coverageselect.value = "2";
-  batchfitteractive = true;
-  fitcoverage = 2;
-  if (!batchfitter) batchfitter = createbatchfitter();
   try {
     installunderlay(limit);
-    batchfitter.reset(2);
-    const regions = analysis.regions.filter(region => !underlaycount || !dominantcolor
-      || analysis.palette[region.color].reduce((sum, value, index) => sum + (value - dominantcolor[index]) ** 2, 0) >= 500);
+    const regions = enclosingregions(analysis.regions, analysis.labels).filter((region, index) => index > 0 || !underlaycount || !dominantcolor
+      || analysis.palette[region.color].reduce((sum, value, channel) => sum + (value - dominantcolor[channel]) ** 2, 0) > 75);
     let groups = [];
     let tolerance = 1.4;
     const available = limit - reserved - plan.length;
@@ -395,17 +451,18 @@ async function fitcolorregions(limit, revision) {
     for (const group of groups) {
       if (revision !== fitrevision) return false;
       const remaining = limit - reserved - plan.length;
-      if (!remaining) break;
+      if (remaining <= 0) break;
       const objects = group.objects.length <= remaining ? group.objects : [coarseregion(group.region, analysis.palette)];
       for (const candidate of objects) {
         candidate.macro = true;
         preparecandidate(candidate);
-        batchfitter.paint(candidate);
         plan.push(candidate);
       }
       renderstate.textContent = `REGIONS ${plan.length}/${limit}`;
       await yieldfittask();
     }
+    if (revision !== fitrevision) return false;
+    fitregionbackground(limit, regions, analysis);
     regionfitactive = true;
     updatefields();
     return revision === fitrevision;
@@ -414,10 +471,7 @@ async function fitcolorregions(limit, revision) {
     return null;
   } finally {
     if (revision === fitrevision) {
-      batchfitteractive = false;
       fitpixels = 0;
-      fitcoverage = 1;
-      batchfitter.clear();
     }
   }
 }
