@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GD text styles</title>
+  <link rel="stylesheet" href="styletest.css">
+  <script src="styletest.js" defer></script>
+</head>
+<body class="styletest">
+  <main class="textlab">
+    <header class="labheader">
+      <h1>GD text styles</h1>
+      <a href="https://gdcolon.com/gdfont">Font reference</a>
+    </header>
+
+    <form class="formatting">
+      <div class="editor">
+        <label class="field messagefield">
+          <span>Text</span>
+          <textarea class="message" rows="2" maxlength="500">Have I been CBFed?</textarea>
+        </label>
+        <label class="field">
+          <span>Font preview</span>
+          <select class="fontselect">
+            <optgroup label="Special and UI">
+              <option value="gold">Gold</option>
+              <option value="logo">Logo · Oxygene One</option>
+              <option value="aller" selected>Main HD · Aller</option>
+              <option value="helvetica">Main UHD · Helvetica Neue</option>
+              <option value="uploaded" disabled>Loaded font</option>
+            </optgroup>
+            <optgroup class="gamesfonts" label="Numbered fonts"></optgroup>
+            <optgroup class="bonusfonts" label="Bonus fonts"></optgroup>
+          </select>
+        </label>
+        <label class="field">
+          <span>Load a font file</span>
+          <input class="fontfile" type="file" accept=".woff2,.woff,.ttf,.otf">
+        </label>
+      </div>
+      <p class="fontstatus" role="status">Pusab, Oxygene One, and Aller are bundled. Other styles use installed fonts or a file you load.</p>
+
+      <details class="settings">
+        <summary>Formatting</summary>
+        <div class="fields">
+          <label class="field">Size <input class="size" type="number" min="12" max="160" value="48"></label>
+          <label class="field">Letter spacing <input class="spacing" type="number" min="-12" max="32" step="0.5" value="0"></label>
+          <label class="field">Max width <input class="linewidth" type="number" min="0" max="1200" placeholder="Auto"></label>
+          <label class="field">Align
+            <select class="alignment">
+              <option value="left">Left</option>
+              <option value="center" selected>Center</option>
+              <option value="right">Right</option>
+            </select>
+          </label>
+          <label class="field">Case
+            <select class="lettercase">
+              <option value="font">Font default</option>
+              <option value="none">As typed</option>
+              <option value="uppercase">Uppercase</option>
+              <option value="lowercase">Lowercase</option>
+            </select>
+          </label>
+          <label class="field">Color <input class="ink" type="color" value="#ffffff" list="gdcolors"></label>
+          <label class="field">Tint
+            <select class="tint">
+              <option value="theme">Font colors</option>
+              <option value="gradient">Tinted shading</option>
+              <option value="solid">Solid color</option>
+            </select>
+          </label>
+          <label class="field">Outline width <input class="outlinewidth" type="number" min="0" max="16" step="0.5" placeholder="Auto"></label>
+          <label class="field">Outline color <input class="outlinecolor" type="color" value="#000000"></label>
+          <label class="field">Logo rim width <input class="rimwidth" type="number" min="0" max="16" step="0.5" placeholder="Auto"></label>
+          <label class="field">Logo rim color <input class="rimcolor" type="color" value="#ffffff"></label>
+          <label class="field">Shadow <input class="shadowcolor" type="color" value="#000000"></label>
+          <label class="field">Shadow opacity (%) <input class="shadowopacity" type="number" min="0" max="100" value="30"></label>
+          <label class="field">Shadow X <input class="shadowx" type="number" min="-24" max="24" placeholder="Auto"></label>
+          <label class="field">Shadow Y <input class="shadowy" type="number" min="-24" max="24" placeholder="Auto"></label>
+          <label class="field">Frame
+            <select class="frame">
+              <option value="none">None</option>
+              <option value="green">Green</option>
+              <option value="grey">Grey</option>
+              <option value="darkgrey">Dark grey</option>
+              <option value="cyan">Cyan</option>
+              <option value="magenta">Magenta</option>
+              <option value="red">Red</option>
+              <option value="purple">Purple</option>
+              <option value="blue">Blue</option>
+              <option value="pink">Pink</option>
+              <option value="white">White</option>
+              <option value="black">Black</option>
+              <option value="fancy">Fancy</option>
+            </select>
+          </label>
+          <label class="field">Frame padding X <input class="padx" type="number" min="0" max="80" value="14"></label>
+          <label class="field">Frame padding Y <input class="pady" type="number" min="0" max="80" value="10"></label>
+          <label class="check"><input class="kerning" type="checkbox" checked> Font kerning</label>
+        </div>
+        <datalist id="gdcolors">
+          <option value="#ffffff"><option value="#ff0000"><option value="#ff8000"><option value="#ffc800">
+          <option value="#ffff00"><option value="#00ff00"><option value="#00ffb4"><option value="#00ffff">
+          <option value="#00b4ff"><option value="#0080ff"><option value="#0000ff"><option value="#8000ff">
+          <option value="#ff00ff"><option value="#ff0080"><option value="#424242"><option value="#696969">
+          <option value="#c8c8c8">
+        </datalist>
+      </details>
+      <details class="settings">
+        <summary>Insert characters</summary>
+        <div class="characters"></div>
+      </details>
+    </form>
+
+    <section class="specimens" aria-label="Selectable text samples">
+      <article class="specimen">
+        <h2>Logo</h2>
+        <div class="stage"><div class="lettering logotext" data-text="Have I been CBFed?"><span class="letterface">Have I been CBFed?</span></div></div>
+      </article>
+      <article class="specimen">
+        <h2>Gold</h2>
+        <div class="stage"><div class="lettering goldtext" data-text="Have I been CBFed?"><span class="letterface">Have I been CBFed?</span></div></div>
+      </article>
+      <article class="specimen">
+        <h2>Font 1 · Pusab</h2>
+        <div class="stage"><div class="lettering pusabtext" data-text="Have I been CBFed?"><span class="letterface">Have I been CBFed?</span></div></div>
+      </article>
+      <article class="specimen">
+        <h2 class="fonttitle">Main HD · Aller</h2>
+        <div class="stage"><div class="lettering pickedtext allertext" data-text="Have I been CBFed?"><span class="letterface">Have I been CBFed?</span></div></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
