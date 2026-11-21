@@ -1,0 +1,50 @@
+.optionstepper {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: stretch; grid-column: 1 / -1;
+  min-inline-size: 0; min-block-size: 46px;
+  border: 1px solid #4a2517; border-radius: 20px;
+  background: #6c3c25; color: #fff;
+}
+
+.optionstepper:has(.optionarrow:disabled) { opacity: .58; }
+
+.optionvalue {
+  align-self: center; justify-self: center;
+  min-inline-size: 0; max-inline-size: 100%;
+  margin-block: 5px; text-align: center;
+  font-size: var(--gdlabelsize); overflow-wrap: anywhere;
+}
+
+.optionarrow {
+  display: grid; place-items: center;
+  inline-size: 36px; min-block-size: 42px;
+  border: 0; border-radius: 20px;
+  padding: 3px; background: none;
+  cursor: pointer; transition: scale 90ms ease-out;
+}
+
+.optionarrow::after {
+  content: ""; inline-size: 24px;
+  block-size: 28px;
+  background: url("assets/svgs/arrow.svg") center / contain no-repeat;
+}
+
+.optionnext::after { scale: -1 1; }
+.optionarrow:active:not(:disabled) { scale: .9; }
+.optionarrow:disabled { cursor: not-allowed; }
+
+.optionarrow:focus-visible {
+  outline: 2px solid var(--gdfocus); outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .optionarrow { transition: none; }
+  .optionarrow:active:not(:disabled) { scale: 1; }
+}
+
+@media (forced-colors: active) {
+  .optionarrow::after {
+    background: ButtonText;
+    mask: url("assets/svgs/arrow.svg") center / contain no-repeat;
+  }
+}

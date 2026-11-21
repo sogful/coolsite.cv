@@ -2,14 +2,14 @@
   --gdreadsize: clamp(1rem, 3.9vw, 1.25rem); --gdlabelsize: clamp(1.375rem, 5.8vw, 1.875rem);
   --gdlogosize: clamp(2.5rem, 6.5vw, 3.125rem);
   --gdtext: #fff; --gdmuted: #e6e6e6;
-  --gdgold: #ffdc41; --gdfocus: #ffff96;
+  --gdfocus: #ffff96;
   --gdedge: #4e2816; --gdwell: #502a1a;
   color: var(--gdtext); color-scheme: dark;
 }
 
 .gdpane {
   color: var(--gdtext); background: transparent;
-  border: 2px solid transparent; border-image: url("controls/panel.svg") 48 fill / 14px;
+  border: 2px solid transparent; border-image: url("assets/svgs/panel.svg") 48 fill / 17.5px;
 }
 
 .gdwell {
@@ -25,10 +25,15 @@
   padding: 7px 13px; cursor: pointer;
   font: 400 var(--gdlabelsize)/1.08 pusab, sans-serif;
   color: #faffff; text-align: center;
+  user-select: none;
   text-decoration: none; font-synthesis: none;
+  scale: 1;
+  transition: scale 150ms ease-out;
 }
 
-.gdbutton:active:not(:disabled, [aria-disabled="true"]) { transform: translateY(1px); }
+.gdbutton:active:not(:disabled, [aria-disabled="true"]) {
+  scale: 1.12; transition-duration: 35ms;
+}
 .gdbutton:disabled,
 .gdbutton[aria-disabled="true"] { cursor: not-allowed; filter: grayscale(1) brightness(.8); }
 
@@ -69,6 +74,7 @@
 
 .gdrange {
   appearance: none; position: relative;
+  margin: 0;
   background: transparent; cursor: pointer;
 }
 
@@ -102,3 +108,58 @@ cblack { color: #000; }
 cwhite { color: #fff; }
 cgray,
 cgrey { color: #808080; }
+
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.appdialog {
+  opacity: 0; scale: .86;
+  animation: gdpopupclose 160ms ease-in;
+  transition: display 160ms allow-discrete, overlay 160ms allow-discrete;
+}
+
+.appdialog[open] {
+  opacity: 1; scale: 1;
+  animation: gdpopup 260ms ease-out;
+}
+
+@keyframes gdpopup {
+  from {
+    opacity: 0; scale: .78;
+  }
+  70% {
+    opacity: 1; scale: 1.035;
+  }
+  to { scale: 1; }
+}
+
+@keyframes gdpopupclose {
+  from {
+    opacity: 1; scale: 1;
+  }
+}
+
+.appdialog::backdrop {
+  opacity: 0; transition: opacity 150ms ease-out, display 180ms allow-discrete, overlay 180ms allow-discrete;
+}
+
+.appdialog[open]::backdrop { opacity: 1; }
+
+@starting-style {
+  .appdialog[open]::backdrop { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gdbutton,
+  .appdialog,
+  .appdialog::backdrop { transition: none; }
+
+  .gdbutton:active:not(:disabled, [aria-disabled="true"]) {
+    scale: none; transition: none;
+  }
+
+  .appdialog,
+  .appdialog[open] {
+    scale: none; animation: none;
+  }
+}

@@ -1,28 +1,26 @@
 .gdbutton {
   border: 0 solid transparent; background: transparent;
-  border-image-source: url("controls/button.svg"); border-image-slice: 38 fill;
+  border-image-source: url("assets/svgs/button.svg"); border-image-slice: 38 fill;
   border-image-width: 12px; border-image-repeat: stretch;
 }
 
-.gdsecondary { border-image-source: url("controls/secondary.svg"); }
-
 .gdcircle {
   border-image: none; border-radius: 50%;
-  background: url("controls/circle.svg") center / contain no-repeat;
+  background: url("assets/svgs/circle.svg") center / contain no-repeat;
 }
 
 .gdcloseicon {
   display: block; inline-size: 100%;
   block-size: 100%; pointer-events: none;
-  background: url("controls/cross.svg") center / contain no-repeat;
+  background: url("assets/svgs/cross.svg") center / contain no-repeat;
 }
 
-.upload-icon { background: url("controls/folder.svg") center / contain no-repeat; }
+.upload-icon { background: url("assets/svgs/folder.svg") center / contain no-repeat; }
 
 .advanced-toggle::after {
   content: ""; flex: none;
   inline-size: 15px; block-size: 17px;
-  background: url("controls/arrow.svg") center / contain no-repeat;
+  background: url("assets/svgs/arrow.svg") center / contain no-repeat;
   transform: rotate(180deg);
 }
 
@@ -35,7 +33,7 @@
   appearance: none; position: relative;
   inline-size: var(--gdchecksize); block-size: var(--gdchecksize);
   border: 0; border-radius: 4px;
-  background: url("controls/checkbox.svg") center / contain no-repeat;
+  background: url("assets/svgs/checkbox.svg") center / contain no-repeat;
 }
 
 .gdcheck:checked::before {
@@ -45,29 +43,36 @@
 }
 
 .gdslider {
-  --gdthumbsize: 23px; --gdthumb: url("controls/thumb.svg");
-  isolation: isolate;
+  --gdthumbsize: 30px; --gdthumb: url("assets/svgs/thumb.svg");
+  inline-size: 100%; min-inline-size: 0;
+  grid-template-columns: minmax(0, 1fr); isolation: isolate;
 }
 
 .gdslider::before,
 .gdslider::after {
   content: ""; position: absolute;
-  inset-inline: calc(var(--gdthumbsize) / 2); inset-block-start: 50%;
+  inset-inline: 0; inset-block-start: calc(var(--gdthumbsize) / 2);
   transform: translateY(-50%); pointer-events: none;
+  box-sizing: border-box;
 }
 
 .gdslider::before {
-  z-index: 1; block-size: 10px;
-  border: 0 solid transparent; border-image: url("controls/groove.svg") 16 30 fill / 3.6px 6.8px;
+  z-index: 1; block-size: 14px;
+  border: 0 solid transparent;
+  border-image: url("assets/svgs/groove.svg") 12 14 fill / 6.5px 7.5px;
 }
 
 .gdslider::after {
-  block-size: 6px; border-radius: 4px;
-  background: url("controls/fill.svg") left center / 24px 100% repeat-x;
+  block-size: 8px; border-radius: 6px;
+  background: url("assets/svgs/fill.svg") left center / 32px 100% repeat-x;
   clip-path: inset(0 calc(100% - var(--gdprogress)) 0 0);
 }
 
-.gdrange { z-index: 2; }
+.gdslider > .gdrange {
+  z-index: 2; min-block-size: var(--gdthumbsize);
+  inline-size: calc(100% + var(--gdthumbsize));
+  inset-inline-start: calc(var(--gdthumbsize) / -2); justify-self: start;
+}
 
 .gdrange::-webkit-slider-runnable-track {
   block-size: var(--gdthumbsize); background: transparent;
@@ -89,7 +94,7 @@
   background: var(--gdthumb) center / contain no-repeat;
 }
 
-.gdslider:active { --gdthumb: url("controls/thumb.svg#pressed"); }
+.gdslider:has(> .gdrange:active) { --gdthumb: url("assets/svgs/thumb.svg#pressed"); }
 
 /*//////////////////////////////////////////////////////////////////////*/
 
@@ -100,11 +105,11 @@
   }
 
   .gdcloseicon {
-    background: ButtonText; mask: url("controls/cross.svg") center / contain no-repeat;
+    background: ButtonText; mask: url("assets/svgs/cross.svg") center / contain no-repeat;
   }
 
   .advanced-toggle::after {
-    background: ButtonText; mask: url("controls/arrow.svg") center / contain no-repeat;
+    background: ButtonText; mask: url("assets/svgs/arrow.svg") center / contain no-repeat;
   }
 
   .gdcheck,
@@ -115,6 +120,10 @@
   .gdcheck:checked::before,
   .gdslider::before,
   .gdslider::after { display: none; }
+
+  .gdslider > .gdrange {
+    inline-size: 100%; inset-inline-start: auto;
+  }
 
   .gdrange::-webkit-slider-thumb { appearance: auto; }
 }
