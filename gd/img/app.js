@@ -573,11 +573,15 @@ function buildsource() {
   const colors = new Map();
   const colorlines = ["1_6_2_18_3_40_6_1000_7_1", "1_6_2_18_3_40_6_1001_7_1", "1_255_2_255_3_255_6_1004_7_1"];
   const hsvmode = colourmode.value === "hsv";
-  if (hsvmode) colorlines.push("1_255_2_0_3_0_4_-1_6_999_7_1");
+  let redchannel = hsvmode;
   function colorchannel(rgb) {
     const key = rgb.join(",");
     if (!colors.has(key)) {
       const channel = channelid(colors.size + 1);
+      if (channel > 1101) {
+        redchannel = true;
+        return 999;
+      }
       colors.set(key, channel);
       colorlines.push(`1_${rgb[0]}_2_${rgb[1]}_3_${rgb[2]}_4_-1_6_${channel}_7_1`);
     }
@@ -588,26 +592,23 @@ function buildsource() {
   const helpers = visibilityobjects();
   for (let index = 0; index < plan.length; index += 1) {
     const candidate = plan[index];
-    const fallbackRGB = [candidate.red, candidate.green, candidate.blue];
-    const baseRGB = candidate.baseRGB || fallbackRGB;
-    const detailRGB = candidate.detailRGB || fallbackRGB;
+    const tint = [candidate.red, candidate.green, candidate.blue];
+    let base = candidate.baseRGB || tint;
+    let detail = candidate.detailRGB || tint;
     let basechannel = 1004;
     let detailchannel = 1004;
     if (hsvmode) {
-      candidate.channel = 999;
       basechannel = 999;
       detailchannel = 999;
-      candidate.basehsv = hsvvalue({red: baseRGB[0], green: baseRGB[1], blue: baseRGB[2]});
-      candidate.detailhsv = hsvvalue({red: detailRGB[0], green: detailRGB[1], blue: detailRGB[2]});
     } else if (!candidate.asset.fixedonly) {
       const hasbase = assethasrole(candidate.asset, "base");
       const hasdetail = assethasrole(candidate.asset, "detail");
-      if (hasbase || !hasdetail) basechannel = colorchannel(baseRGB);
-      if (hasdetail) detailchannel = colorchannel(detailRGB);
-      else detailchannel = basechannel;
-      if (!hasbase) basechannel = detailchannel;
+      if (!hasdetail) detail = base;
+      else if (!hasbase) base = detail;
+      basechannel = colorchannel(base);
+      detailchannel = colorchannel(detail);
     }
-    candidate.channel = hsvmode ? 999 : basechannel;
+    candidate.channel = basechannel;
     const macro = candidate.role === "underlay" || candidate.macro && macroassets.has(candidate.asset.id);
     const scalex = macro ? candidate.width * pixelscale / candidate.asset.naturalwidth
       : Math.min(3, candidate.width * pixelscale / candidate.asset.naturalwidth);
@@ -624,15 +625,26 @@ function buildsource() {
       if (warpy) fields.push("131", cleannumber(warpy));
       if (warpx) fields.push("132", cleannumber(warpx));
     }
-    if (hsvmode) fields.push("41", "1", "42", "1", "43", candidate.basehsv, "44", candidate.detailhsv);
+    if (basechannel === 999) fields.push("41", "1");
+    if (detailchannel === 999) fields.push("42", "1");
+    if (basechannel === 999) {
+      candidate.basehsv = hsvvalue({red: base[0], green: base[1], blue: base[2]});
+      fields.push("43", candidate.basehsv);
+    }
+    if (detailchannel === 999) {
+      candidate.detailhsv = hsvvalue({red: detail[0], green: detail[1], blue: detail[2]});
+      fields.push("44", candidate.detailhsv);
+    }
     for (const [key, value] of Object.entries(candidate.asset.gmdfields || {})) fields.push(key, value);
     if (helpers.length) fields.push("57", "5001");
     fields.push("372", "1");
     parts.push(fields.join(","));
   }
+  if (redchannel) colorlines.push("1_255_2_0_3_0_4_-1_6_999_7_1");
   const header = ["kA2", "0", "kA3", "0", "kA4", "0", "kA6", "1", "kA7", "1", "kA8", "0", "kA9", "0", "kA10", "0", "kA11", "0", "kA13", "0", "kA22", "0", "kA40", "1", "kS38", `${colorlines.join("|")}|`];
   return {raw: `${header.join(",")};${[...parts, ...helpers].join(";")};`,
-    channels: hsvmode ? 1 : colors.size, objects: parts.length + helpers.length, helpers: helpers.length};
+    channels: colors.size + Number(redchannel), overflow: redchannel && !hsvmode,
+    objects: parts.length + helpers.length, helpers: helpers.length};
 }
 
 function levelname() {
@@ -698,7 +710,8 @@ function updatepreview(updatecatalog = false) {
   channelcount.textContent = result.channels.toLocaleString();
   sizecount.textContent = prettysize(new Blob([levelsource]).size);
   renderstate.textContent = fitselect.value === "grid" ? "SPRITE MOSAIC" : "SPRITE FIT";
-  const mapping = colourmode.value === "hsv" ? "one HSV-red channel 999" : "native base/detail colour channels";
+  const mapping = colourmode.value === "hsv" ? "one HSV-red channel 999"
+    : result.overflow ? "native base/detail colour channels with HSV for extra colours" : "native base/detail colour channels";
   const method = regionfitactive ? "clean color regions" : fitselect.value === "grid"
     ? "native shape cells" : `${trialslider.value} sprite trials per object`;
   const transforms = warpselect.value === "on" ? "rotation, XY scale and axis warp" : "rotation and XY scale";
