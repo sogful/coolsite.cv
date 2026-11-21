@@ -39,7 +39,7 @@ const downloadlink = document.querySelector(".downloadlink");
 const gdlvldownload = document.querySelector(".gdlvldownload");
 const pngdownload = document.querySelector(".pngdownload");
 const statuscopy = document.querySelector(".statuscopy");
-const catalogversion = "img2gd-native-batches-20261028-23";
+const catalogversion = "img2gd-packed-1";
 const uploadtypes = new Map([
   ["jpg", "image/jpeg"], ["jpeg", "image/jpeg"], ["png", "image/png"],
   ["webp", "image/webp"], ["gif", "image/gif"], ["svg", "image/svg+xml"],
@@ -357,19 +357,20 @@ async function ungzipjson(path) {
 }
 
 async function loadnativeatlas() {
-  const metadata = await ungzipjson(`assets/atlas/gd-object-atlas.json.gz?v=${catalogversion}`);
-  const [objectimages, spritepackage, backgroundimage, nativeorders] = await Promise.all([
-    Promise.all(metadata.atlases.map(path => loadlocalimage(`assets/atlas/${path}?v=${catalogversion}`))),
-    ungzipjson(`assets/atlas/${metadata.spriteArchive}?v=${catalogversion}`),
-    metadata.background ? loadlocalimage(`assets/atlas/${metadata.background}?v=${catalogversion}`) : Promise.resolve(null),
-    ungzipjson(`assets/atlas/gd-object-native-orders.json.gz?v=${catalogversion}`),
+  const asseturl = name => `assets/${name}?v=${catalogversion}`;
+  const [metadata, nativeorders] = await Promise.all([
+    ungzipjson(asseturl("objectatlas.gz")).then(expandatlas),
+    ungzipjson(asseturl("objectorder.gz")).then(expandorders),
+  ]);
+  const [objectimages, spriteimages, backgroundimage] = await Promise.all([
+    Promise.all(metadata.atlases.map(path => loadlocalimage(asseturl(path)))),
+    Promise.all(metadata.sprites.map(path => loadlocalimage(asseturl(path)))),
+    metadata.background ? loadlocalimage(asseturl(metadata.background)) : null,
   ]);
   atlasimages = objectimages;
   backgroundtile = tintbackgroundtile(backgroundimage);
-  spriteatlasdimensions = spritepackage.pages.map(page => [page.width, page.height]);
-  spriteatlasimages = await Promise.all(spritepackage.pages.map(page =>
-    loadlocalimage(`data:image/png;base64,${page.data}`)));
-  spritepackage.pages.forEach(page => { page.data = ""; });
+  spriteatlasimages = spriteimages;
+  spriteatlasdimensions = spriteimages.map(image => [image.naturalWidth, image.naturalHeight]);
   atlaspixels = atlasimages.map(image => {
     const canvas = document.createElement("canvas");
     canvas.width = image.width;
