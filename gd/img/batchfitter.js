@@ -435,7 +435,7 @@ function tintdraws(objects, fitter, scale, offset, stepx, stepy, width, height) 
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-async function refinelayercolors(revision) {
+async function refinelayercolors(revision, verify = null, frozen = null) {
   const original = plan;
   const zoom = previewzoomslider.value;
   const current = () => revision === fitrevision && plan === original && previewzoomslider.value === zoom;
@@ -507,7 +507,7 @@ async function refinelayercolors(revision) {
   let changed = false;
   for (let sweep = 0; sweep < 2; sweep++) {
     for (let role = heads.length - 1; role >= 0; role--) {
-      if (heads[role] < 0) continue;
+      if (heads[role] < 0 || frozen?.has(original[Math.floor(role / 2)])) continue;
       if (performance.now() >= deadline) {
         await yieldfittask();
         if (!current()) return false;
@@ -571,7 +571,7 @@ async function refinelayercolors(revision) {
   let accepted = false;
   try {
     plan = colors;
-    accepted = measurefittedpreview() < before;
+    accepted = measurefittedpreview() < before && (!verify || verify());
     return accepted;
   } finally {
     if (!accepted) {plan = original; drawresult();}
