@@ -1,6 +1,8 @@
 const form = document.querySelector(".controlpanel");
 const imagefile = document.querySelector(".imagefile");
 const dropzone = document.querySelector(".dropzone");
+const dropsubtitle = document.querySelector(".dropsubtitle");
+const browsehint = dropsubtitle.textContent;
 const examplebutton = document.querySelector(".examplebutton");
 const presetselect = document.querySelector(".presetselect");
 const seedsearchfield = document.querySelector(".seedsearchfield");
@@ -44,6 +46,10 @@ const catalogintro = document.querySelector(".catalogintro");
 const catalogheading = document.querySelector(".catalogheading");
 const catalogmore = document.querySelector(".catalogmore");
 const catalogversion = "img2gd-native-batches-20261028-23";
+const uploadtypes = new Map([
+  ["jpg", "image/jpeg"], ["jpeg", "image/jpeg"], ["png", "image/png"],
+  ["webp", "image/webp"], ["gif", "image/gif"], ["svg", "image/svg+xml"],
+]);
 const seedoffset = 97;
 const levelorigin = {x: 360, y: 300};
 
@@ -746,6 +752,7 @@ function loadimage(url, name) {
   if (imageurl) URL.revokeObjectURL(imageurl);
   imageurl = url.startsWith("blob:") ? url : "";
   imagename = name;
+  dropsubtitle.textContent = browsehint;
   sourceimage.src = url;
   sourcename.textContent = `${name} · loading preview`;
   invalidateexports();
@@ -753,8 +760,18 @@ function loadimage(url, name) {
   renderstate.textContent = "LOADING";
 }
 
-function validimage(file) {
-  return file && (file.type.startsWith("image/") || file.name.toLowerCase().endsWith(".svg"));
+function loadupload(files) {
+  if (!files.length) return;
+  for (const file of files) {
+    const extension = file.name.match(/\.([a-z]+)$/i)?.[1].toLowerCase();
+    const type = file.type.startsWith("image/") ? file.type : uploadtypes.get(extension);
+    if (type) {
+      const image = type === file.type ? file : file.slice(0, file.size, type);
+      loadimage(URL.createObjectURL(image), file.name);
+      return;
+    }
+  }
+  dropsubtitle.textContent = "Choose a JPG, PNG, WebP, GIF or SVG image.";
 }
 
 async function downloadlevel() {
@@ -807,8 +824,8 @@ sourceimage.addEventListener("error", () => {
 });
 
 imagefile.addEventListener("change", () => {
-  const file = imagefile.files[0];
-  if (validimage(file)) loadimage(URL.createObjectURL(file), file.name);
+  loadupload(imagefile.files);
+  imagefile.value = "";
 });
 
 examplebutton.addEventListener("click", () => loadimage("assets/soggycat.jpg", "soggycat.jpg"));
@@ -828,8 +845,7 @@ for (const name of ["dragleave", "drop"]) {
 }
 
 dropzone.addEventListener("drop", event => {
-  const file = event.dataTransfer.files[0];
-  if (validimage(file)) loadimage(URL.createObjectURL(file), file.name);
+  loadupload(event.dataTransfer.files);
 });
 
 presetselect.addEventListener("change", applypreset);

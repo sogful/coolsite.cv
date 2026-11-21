@@ -22,7 +22,7 @@
   <script src="fitsearch.js?v=img2gd-native-fit-20261030-2" defer></script>
   <script src="gmd.js?v=img2gd-export-20261108-1" defer></script>
   <script src="gdlvl.js?v=img2gd-export-20261108-1" defer></script>
-  <script src="app.js?v=img2gd-export-20261108-1" defer></script>
+  <script src="app.js?v=img2gd-upload-20261121-1" defer></script>
 
 </head>
 <body class="imgpage">
@@ -41,14 +41,14 @@
             <p class="step">01 / SOURCE</p>
             <h2>Choose an image</h2>
           </div>
-          <span class="formatnote">JPG · PNG · WEBP · SVG</span>
+          <span class="formatnote">JPG, PNG, WebP, GIF, SVG</span>
         </div>
 
         <label class="dropzone">
-          <input class="imagefile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.svg">
+          <input class="imagefile" type="file" aria-label="Choose an image" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.jpg,.jpeg,.png,.webp,.gif,.svg">
           <span class="uploadicon" aria-hidden="true">↑</span>
           <span class="droptitle">Drop an image here</span>
-          <span class="dropsubtitle">or click to browse from this device</span>
+          <span class="dropsubtitle" role="status">or click to browse from this device</span>
         </label>
 
         <div class="sourcebar">
