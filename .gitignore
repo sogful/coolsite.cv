@@ -5,27 +5,11 @@ __pycache__/
 /chuzzle/datainfo
 /tools/desktopdestroyer/data
 /tools/iwbtg/build/
+/tools/iwbtg/.compatibility.csv
 
 /ucg/game/index.pck
 
 # unfinished:
 /blog/
-/gd/tosfx/
+/gd/audio2sfx/
 /gd/cbf
-/gd/img2gd/*
-!/gd/img2gd/index.html
-!/gd/img2gd/index.css
-!/gd/img2gd/index.js
-!/gd/img2gd/src/
-!/gd/img2gd/assets/
-/gd/img2gd/assets/*
-!/gd/img2gd/assets/bg.png
-!/gd/img2gd/assets/objectatlas.png
-!/gd/img2gd/assets/objectatlas2.png
-!/gd/img2gd/assets/objectatlas.gz
-!/gd/img2gd/assets/objectorder.gz
-!/gd/img2gd/assets/objectsprites.png
-!/gd/img2gd/assets/soggycat.jpg
-/tools/iwbtg/assets/fonts/comic.woff
-/tools/iwbtg/assets/fonts/license.txt
-/tools/iwbtg/.compatibility.csv
