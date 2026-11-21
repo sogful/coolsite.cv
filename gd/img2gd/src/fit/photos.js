@@ -115,8 +115,8 @@ function photofocus(source, canvas, width, height, rejected) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-function photogradients(cells, source, width, count, levels, asset) {
-  if (!asset) return;
+function photogradients(cells, source, width, room, levels, asset) {
+  if (!asset || !room) return;
   const maxwidth = width * asset.naturalwidth / 245, maxheight = width * asset.naturalheight / 245;
   const options = [];
   for (const cell of cells) {
@@ -144,7 +144,6 @@ function photogradients(cells, source, width, count, levels, asset) {
       if (gain > 1200 * tiles) options.push({cell, vertical, start, end, tiles, benefit: gain / tiles});
     }
   }
-  let room = Math.floor(count * 0.13);
   for (const option of options.sort((a, b) => b.benefit - a.benefit)) {
     if (option.cell.gradient || option.tiles > room) continue;
     option.cell.gradient = option;
@@ -152,11 +151,10 @@ function photogradients(cells, source, width, count, levels, asset) {
   }
 }
 
-async function photoshapes(source, width, height, count, levels, assets, current, preview) {
-  const canvas = new Uint8ClampedArray(source.length);
+function photocoverage(source, width, height, blocks, gradients, levels, assets, canvas) {
   const shapes = [];
-  const cells = photocells(source, width, height, Math.max(8, Math.round(count * 0.32)));
-  photogradients(cells, source, width, count, levels, assets.get(1011));
+  const cells = photocells(source, width, height, blocks);
+  photogradients(cells, source, width, gradients, levels, assets.get(1011));
   for (const {l, t, r, b, color, gradient} of cells) {
     const [red, green, blue] = gradient?.start || color.map(value => quantize(value, levels));
     shapes.push({asset: assets.get(495), x: (l + r) / 2, y: (t + b) / 2, width: r - l, height: b - t,
@@ -168,6 +166,7 @@ async function photoshapes(source, width, height, count, levels, assets, current
         x: vertical ? l + (i + 0.5) * span : (l + r) / 2, y: vertical ? (t + b) / 2 : t + (i + 0.5) * span,
         width: span, height: vertical ? b - t : r - l, angle: vertical ? 0 : -90, red: end[0], green: end[1], blue: end[2]});
     }
+    if (!canvas) continue;
     for (let y = t; y < b; y += 1) {
       for (let x = l; x < r; x += 1) {
         const p = (y * width + x) * 4;
@@ -179,6 +178,13 @@ async function photoshapes(source, width, height, count, levels, assets, current
       }
     }
   }
+  return shapes;
+}
+
+async function photoshapes(source, width, height, count, levels, assets, current, preview) {
+  const canvas = new Uint8ClampedArray(source.length);
+  const shapes = photocoverage(source, width, height, Math.max(8, Math.round(count * 0.32)),
+    Math.floor(count * 0.13), levels, assets, canvas);
   preview(shapes);
   await yieldfittask();
   const stamp = photostamps(width, height, assets);
@@ -250,7 +256,7 @@ function photoproject(shapes, width, height) {
 async function photoedges(shapes, base, gridwidth, gridheight, assets, current) {
   const room = Math.min(120, Math.floor(shapes.length * 0.26));
   const {width, height} = previewsize();
-  if (width * height > 120000 || Math.min(width, height) < 30 || room < 12) return null;
+  if (width * height > 120000 || Math.min(width, height) < 30 || room < 8) return null;
   const kept = shapes.slice(0, -room);
   drawresult([...base, ...photoproject(kept, gridwidth, gridheight)]);
   const source = contourpixels(sourcecanvas, width, height);
@@ -288,8 +294,7 @@ async function photoedges(shapes, base, gridwidth, gridheight, assets, current) 
 }
 
 async function photobase(limit, revision) {
-  if (limit < 100 || limit > 500 || fitselect.value !== "auto" || !detailfit()
-    || !imageopaque) return null;
+  if (limit < 50 || limit > 500 || fitselect.value !== "auto" || !imageopaque) return null;
   if (!await opacitycheck || revision !== fitrevision) return null;
   const base = underlaycandidates(limit).candidates;
   const count = limit - base.length - visibilitycost;
@@ -306,12 +311,16 @@ async function photobase(limit, revision) {
   context.imageSmoothingQuality = "high";
   context.drawImage(sourceimage, 0, 0, width, height);
   const source = context.getImageData(0, 0, width, height).data;
+  const levels = Number(colourslider.value);
+  const gradients = assets.has(1011) ? Math.floor(count * 0.18) : 0;
+  const coverage = photocoverage(source, width, height, count - gradients, gradients, levels, assets);
   const current = () => revision === fitrevision;
-  const shapes = await photoshapes(source, width, height, count, Number(colourslider.value), assets, current,
-    objects => showfitprogress(revision, () => [...base, ...photoproject(objects, width, height)]));
+  if (!detailfit()) return {width, height, coverage, limit};
+  const preview = objects => showfitprogress(revision, () => [...base, ...photoproject(objects, width, height)]);
+  const shapes = await photoshapes(source, width, height, count, levels, assets, current, preview);
   if (!shapes || !current()) return null;
   const edges = await photoedges(shapes, base, width, height, assets, current);
-  return current() ? {width, height, shapes, edges, limit} : null;
+  return current() ? {width, height, coverage, shapes, edges, limit} : null;
 }
 
 function comparephotobase(proposal, revision) {
@@ -326,7 +335,7 @@ function comparephotobase(proposal, revision) {
   const edge = contouredgeerror(source, contourpixels(resultcanvas, width, height), width, height);
   let winner = original;
   try {
-    for (const objects of [proposal.shapes, proposal.edges]) {
+    for (const objects of [proposal.shapes, proposal.edges, proposal.coverage]) {
       if (!objects) continue;
       const shapes = [...base, ...photoproject(objects, proposal.width, proposal.height)];
       if (shapes.length + (visibilityrequired(shapes) ? visibilitycost : 0) > proposal.limit) continue;
