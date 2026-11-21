@@ -289,6 +289,7 @@ async function refinetransparentplan(groups, choices, limit, revision) {
       }
       groups[i] = prior;
     }
+    showfitprogress(revision, () => groups.flat());
     await yieldfittask();
   }
   const primitives = groups.flatMap((group, i) => group?.length === 1 && group[0].asset.id !== 694
@@ -310,6 +311,7 @@ async function refinetransparentplan(groups, choices, limit, revision) {
         groups[i] = [selected];
       }
     }
+    showfitprogress(revision, () => groups.flat());
     await yieldfittask();
     if (revision !== fitrevision) return false;
   }
@@ -331,10 +333,15 @@ async function fittransparentregions(limit, revision) {
     const groups = enclosingregions(analysis.regions, analysis.labels);
     const later = new Set(groups.map(group => group.id));
     const choices = [];
+    const partial = [];
     for (const group of groups) {
       later.delete(group.id);
       const loops = regioncontour(group, analysis.labels, true);
-      choices.push(transparentchoices(group, loops, analysis, later, budget));
+      const options = transparentchoices(group, loops, analysis, later, budget);
+      choices.push(options);
+      const first = options.find(option => option.objects.length && partial.length + option.objects.length <= budget);
+      if (first) partial.push(...first.objects);
+      showfitprogress(revision, partial);
       await yieldfittask();
       if (revision !== fitrevision) return false;
     }

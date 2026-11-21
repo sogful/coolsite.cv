@@ -27,6 +27,7 @@ async function runfitsearch(limit, trials, revision) {
   regionfitactive = false;
   updatefields();
   preparetarget();
+  startfitpreview();
   if (fitselect.value === "grid") {
     fitgrid(limit);
     return revision === fitrevision;
@@ -411,6 +412,7 @@ async function refinephotocontours(revision, fraction = 0.4) {
   let deadline = performance.now() + 12, failed = 0;
   for (let slot = 0; slot < room && failed < 128;) {
     if (performance.now() >= deadline) {
+      showfitprogress(revision, proposal);
       await yieldfittask();
       if (!current()) return false;
       deadline = performance.now() + 12;

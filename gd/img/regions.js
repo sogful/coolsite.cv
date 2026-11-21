@@ -565,6 +565,7 @@ async function refineregions(groups, analysis, tolerance, budget, revision) {
         length = objects.length;
       } else plan = previous;
     }
+    showfitprogress(revision);
     await yieldfittask();
     if (revision !== fitrevision) return;
   }
@@ -612,6 +613,7 @@ async function fitcolorregions(limit, revision) {
         plan.push(candidate);
       }
       renderstate.textContent = `REGIONS ${plan.length}/${limit}`;
+      showfitprogress(revision);
       await yieldfittask();
     }
     if (revision !== fitrevision) return false;

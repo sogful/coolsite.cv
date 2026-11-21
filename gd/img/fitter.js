@@ -135,6 +135,29 @@ function fitcandidate(candidate, step) {
   return benefit * step * step;
 }
 
+let nextlivepreview = 0;
+
+function startfitpreview() {
+  resizecanvases();
+  drawsource();
+  drawresult([]);
+  tilecount.textContent = "0";
+  gridcount.textContent = "--";
+  channelcount.textContent = "--";
+  sizecount.textContent = "--";
+  statuscopy.textContent = "Fitting the image. The preview updates as objects are placed.";
+  nextlivepreview = 0;
+}
+
+function showfitprogress(revision, objects = plan) {
+  if (revision !== fitrevision || performance.now() < nextlivepreview) return;
+  if (typeof objects === "function") objects = objects();
+  if (!objects.length) return;
+  nextlivepreview = performance.now() + 1000;
+  drawresult(objects);
+  tilecount.textContent = objects.length.toLocaleString();
+}
+
 function yieldfittask() {
   return new Promise(resolve => {
     const channel = new MessageChannel();
@@ -496,6 +519,7 @@ async function fitadaptive(limit, trials, revision, extraoffset = 0) {
     plan.push(bestcandidate);
     if (index % 4 === 3 || index + 1 === fitlimit) {
       renderstate.textContent = `SEARCH ${index + 1}/${fitlimit}`;
+      showfitprogress(revision);
       await yieldfittask();
     }
   }
@@ -545,8 +569,8 @@ function measurefittedpreview() {
 
 function measurepreviewerror() {
   let difference = 0;
-  sourcecomparecanvas.width = resultcanvas.width;
-  sourcecomparecanvas.height = resultcanvas.height;
+  if (sourcecomparecanvas.width !== resultcanvas.width) sourcecomparecanvas.width = resultcanvas.width;
+  if (sourcecomparecanvas.height !== resultcanvas.height) sourcecomparecanvas.height = resultcanvas.height;
   const comparecontext = sourcecomparecanvas.getContext("2d", {willReadFrequently: true});
   if (imageopaque) {
     comparecontext.imageSmoothingEnabled = true;
