@@ -2,6 +2,7 @@ const form = document.querySelector(".controlpanel");
 const imagefile = document.querySelector(".imagefile");
 const dropzone = document.querySelector(".dropzone");
 const dropsubtitle = document.querySelector(".dropsubtitle");
+const fitmessage = document.querySelector(".fitmessage");
 const examplebutton = document.querySelector(".examplebutton");
 const seedsearchfield = document.querySelector(".seedsearchfield");
 const seedsearchselect = document.querySelector(".seedsearchselect");
@@ -92,9 +93,7 @@ let backgroundtile = null;
 let backgroundtilepixels = null;
 let atlasready = false;
 const sampledtexture = [0, 0, 0, 0];
-let exportversion = 0;
 let fitting = false;
-let settingsdirty = false;
 let fitrevision = 0;
 let fitreadyrevision = -1;
 let fiterror = 0;
@@ -611,7 +610,6 @@ function enableexport(link, blob, filename) {
 }
 
 function invalidateexports() {
-  exportversion += 1;
   for (const link of [downloadlink, gdlvldownload, pngdownload]) {
     const url = link.getAttribute("href");
     if (url) URL.revokeObjectURL(url);
@@ -634,12 +632,7 @@ function prettysize(bytes) {
 }
 
 function updatestart() {
-  const valid = validrangevalues();
-  startbutton.disabled = fitting || !atlasready || !alphaready || !valid;
-  if (alphaready && !atlasready && renderstate.textContent !== "ERROR") statuscopy.textContent = "Loading objects...";
-  if (alphaready && atlasready && !fitting && settingsdirty) {
-    statuscopy.textContent = valid ? "Press Start..." : "Check slider values...";
-  }
+  startbutton.disabled = fitting || !atlasready || !alphaready || !validrangevalues();
 }
 
 function updatefields() {
@@ -652,7 +645,7 @@ function updatefields() {
   updatestart();
 }
 
-function updatepreview() {
+async function updatepreview() {
   if (fitreadyrevision !== fitrevision) return;
   resizecanvases();
   drawsource();
@@ -668,23 +661,17 @@ function updatepreview() {
   updatestat(sizecount, prettysize(level.size));
   renderstate.textContent = fitselect.value === "grid" ? "SPRITE MOSAIC" : "SPRITE FIT";
   statuscopy.textContent = "Preparing files...";
-  statuscopy.title = visibilitywarning().trim();
+  document.querySelector(".exportlinks").title = visibilitywarning().trim();
   comparison.hidden = false;
   enableexport(downloadlink, level, name + ".gmd");
-  prepareexports(result.raw, name);
+  await prepareexports(result.raw, name);
 }
 
 async function startfit() {
   if (startbutton.disabled) return;
-  const aspect = sourceimage.naturalWidth / sourceimage.naturalHeight;
-  if (Math.max(aspect, 1 / aspect) > sampleedge) {
-    statuscopy.textContent = "Image aspect ratio exceeds " + sampleedge + ":1.";
-    return;
-  }
-
   const revision = ++fitrevision;
   fitting = true;
-  settingsdirty = false;
+  fitmessage.textContent = "";
   if (advanceddialog.open) advanceddialog.close();
   form.inert = true;
   advancedopen.disabled = true;
@@ -692,7 +679,6 @@ async function startfit() {
   stats.hidden = false;
   clearlivevalues();
   invalidateexports();
-  statuscopy.title = "";
   renderstate.textContent = "FITTING";
   seedretryoffset = 0;
   const limit = objectlimit();
@@ -702,12 +688,13 @@ async function startfit() {
     if (!await runfitsearch(limit, fittrials(), revision)) return;
     if (!await finishcrop(revision, limit)) return;
     fitreadyrevision = revision;
-    updatepreview();
+    await updatepreview();
   } catch (error) {
     renderstate.textContent = "ERROR";
-    statuscopy.textContent = "Could not fit image.";
+    fitmessage.textContent = "Image fit failed.";
     console.error(error);
   } finally {
+    statuscopy.textContent = "";
     fitting = false;
     form.inert = false;
     advancedopen.disabled = false;
@@ -723,11 +710,6 @@ function updateswipe() {
 
 swipeslider.addEventListener("input", updateswipe);
 
-function changesettings() {
-  if (!fitting) settingsdirty = true;
-  updatefields();
-}
-
 function loadimage(url, name) {
   fitrevision += 1;
   imagerevision += 1;
@@ -740,18 +722,15 @@ function loadimage(url, name) {
   previewimage.hidden = true;
   sampledopaque = null;
   alphaready = false;
-  croptoggle.disabled = false;
-  settingsdirty = true;
-  statuscopy.title = "";
+  fitmessage.textContent = "";
   if (imageurl) URL.revokeObjectURL(imageurl);
   imageurl = url.startsWith("blob:") ? url : "";
   imagename = name;
-  dropsubtitle.hidden = true;
+  dropsubtitle.textContent = "";
   sourceimage.src = url;
   filecaption.textContent = name;
   dropzone.title = name;
   filedimensions.hidden = true;
-  statuscopy.textContent = "Loading image...";
   updatestart();
   invalidateexports();
   renderstate.textContent = "LOADING";
@@ -768,28 +747,20 @@ function loadupload(files) {
       return;
     }
   }
-  dropsubtitle.textContent = "Choose a JPG, PNG, WebP, GIF or SVG image.";
-  dropsubtitle.hidden = false;
+  dropsubtitle.textContent = "Unsupported image type.";
 }
 
 async function prepareexports(raw, name) {
-  const version = exportversion;
   const revision = fitrevision;
-  const current = () => version === exportversion && revision === fitrevision && fitreadyrevision === fitrevision;
   const zoom = cleannumber(previewsize().zoom);
-  resultcanvas.toBlob(blob => {
-    if (blob && current()) enableexport(pngdownload, blob, name + "-fit-" + zoom + "x.png");
-  }, "image/png");
-  try {
-    const contents = await gdlvldocument(raw, name);
-    if (!current()) return;
-    enableexport(gdlvldownload, new Blob([contents], {type: "application/octet-stream"}), name + ".gdlvl");
-    if (!settingsdirty) statuscopy.textContent = "Ready!";
-  } catch (error) {
-    if (!current()) return;
-    if (!settingsdirty) statuscopy.textContent = "GDLVL export failed.";
-    console.error(error);
-  }
+  const png = new Promise(resolve => resultcanvas.toBlob(resolve, "image/png"));
+  const [image, level] = await Promise.allSettled([png, gdlvldocument(raw, name)]);
+  if (revision !== fitrevision) return;
+  if (image.status === "fulfilled" && image.value) enableexport(pngdownload, image.value, name + "-fit-" + zoom + "x.png");
+  else fitmessage.textContent = "PNG export failed.";
+  if (level.status === "fulfilled") {
+    enableexport(gdlvldownload, new Blob([level.value], {type: "application/octet-stream"}), name + ".gdlvl");
+  } else fitmessage.textContent = "GDLVL export failed.";
 }
 
 const advanceddialog = document.querySelector(".advanceddialog");
@@ -805,20 +776,23 @@ sourceimage.addEventListener("load", async () => {
   filedimensions.textContent = "(" + sourceimage.naturalWidth + "x" + sourceimage.naturalHeight + ")";
   filedimensions.hidden = false;
   dropzone.title = imagename + " " + filedimensions.textContent;
+  const aspect = sourceimage.naturalWidth / sourceimage.naturalHeight;
+  if (Math.max(aspect, 1 / aspect) > sampleedge) {
+    dropsubtitle.textContent = "Image is too narrow or tall.";
+    renderstate.textContent = "ERROR";
+    return;
+  }
   opacitycheck = sourceisopaque() ? cropopaque(sourceimage, () => revision === imagerevision) : Promise.resolve(false);
   const opaque = await opacitycheck;
   if (revision !== imagerevision) return;
   sampledopaque = opaque;
-  croptoggle.disabled = !opaque;
-  if (!opaque) croptoggle.checked = false;
   alphaready = true;
   updatestart();
 });
 
 sourceimage.addEventListener("error", () => {
-  filecaption.textContent = "Could not read image";
   filedimensions.hidden = true;
-  statuscopy.textContent = "Choose a supported JPG, PNG, WEBP, GIF or SVG image.";
+  dropsubtitle.textContent = "Could not read image.";
   renderstate.textContent = "ERROR";
   updatestart();
 });
@@ -848,7 +822,7 @@ dropzone.addEventListener("drop", event => {
   loadupload(event.dataTransfer.files);
 });
 
-form.addEventListener("rangevaluechange", changesettings);
+form.addEventListener("rangevaluechange", updatefields);
 form.addEventListener("change", event => {
   if (!event.target.matches("select, .croptoggleinput")) return;
   regionfitactive = false;
@@ -856,7 +830,7 @@ form.addEventListener("change", event => {
     warpselect.value = "on";
     coverageselect.value = "2";
   }
-  changesettings();
+  updatefields();
 });
 form.addEventListener("submit", event => {
   event.preventDefault();
@@ -870,6 +844,6 @@ updatefields();
 loadnativeatlas().catch(error => {
   assetstatus.textContent = "ATLAS ERROR";
   renderstate.textContent = "ERROR";
-  statuscopy.textContent = "Object library failed.";
-  statuscopy.title = error.message;
+  fitmessage.textContent = "Object library failed.";
+  fitmessage.title = error.message;
 });

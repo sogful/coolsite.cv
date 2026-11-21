@@ -51,7 +51,7 @@ body.imgpage {
 
 .imgpage .gdbutton:not(.gdcircle) {
   min-block-size: 32px; padding: 4px 8px;
-  border-image-width: 10px;
+  --gdbuttonrim: 10px;
   font-size: clamp(1rem, 4vw, 1.3125rem);
 }
 
@@ -61,7 +61,7 @@ body.imgpage {
   align-items: center;
 }
 
-.sourcefields { min-inline-size: 0; }
+.sourcefields { min-inline-size: 0; position: relative; }
 
 .uploadrow {
   padding-inline-end: 4px; border-radius: 20px;
@@ -89,6 +89,7 @@ body.imgpage {
 .settingactions {
   display: flex; gap: 6px;
   justify-content: flex-end; margin-inline-start: auto;
+  position: relative;
 }
 
 .dropzone {
@@ -110,8 +111,11 @@ body.imgpage {
   outline: 2px solid var(--gdfocus); outline-offset: -2px;
 }
 
-.dropsubtitle {
-  font-size: var(--gdreadsize); color: var(--gdmuted);
+.controlerror {
+  position: absolute; inset-block-start: calc(100% + 2px);
+  inset-inline-start: 0; max-inline-size: 100%;
+  font-size: .8125rem; line-height: 1.1;
+  pointer-events: none; overflow-wrap: anywhere;
 }
 
 .toolbutton { white-space: nowrap; }
@@ -146,8 +150,6 @@ body.imgpage {
 }
 
 .advancedfields { grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); }
-
-.checklabel:has(input:disabled) { opacity: .68; }
 
 .previewzoomhelp {
   font-size: inherit; color: var(--gdmuted);
@@ -260,12 +262,13 @@ body.imgpage {
 
 .dialoghead {
   position: relative; justify-content: center;
-  padding: 10px 28px 5px; text-align: center;
+  padding: 10px 36px 5px; text-align: center;
 }
 
-.dialogclose {
-  position: absolute; inset-inline-start: -16px;
-  inset-block-start: -16px;
+.appdialog .dialogclose {
+  position: absolute; inset-inline-end: -14px;
+  inset-block-start: -14px; z-index: 1;
+  inline-size: 48px; block-size: 48px;
 }
 
 .dialogtitle {
@@ -274,7 +277,8 @@ body.imgpage {
 }
 
 .dialogbody {
-  padding: 12px; overflow: auto;
+  min-inline-size: 0; padding: 12px 16px;
+  overflow-x: hidden; overflow-y: auto;
   overscroll-behavior: contain;
 }
 
@@ -289,11 +293,16 @@ body.imgpage {
   .settingsrow {
     flex-flow: row wrap; align-items: center;
   }
+
+  .sourcefields { padding-block-end: 1rem; }
+
+  .dropsubtitle { inset-block-start: auto; inset-block-end: 0; }
 }
 
 @media (max-width: 360px) {
   .imgpage { --gdlogosize: 2rem; }
 
+  .workspace { grid-template-rows: auto minmax(126px, 1fr); }
   .uploadrow { gap: 5px; }
   .dropzone { padding-inline: 7px; }
   .examplebutton { padding-inline: 8px; }
@@ -301,8 +310,15 @@ body.imgpage {
 }
 
 @media (min-width: 450px) and (max-height: 590px) {
-  .controlpanel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .settingsrow { grid-column: 1 / -1; }
+  .controlpanel {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "picker ranges" "actions ranges";
+  }
+
+  .sourcefields { grid-area: picker; }
+  .basicfields { grid-area: ranges; }
+  .settingsrow { grid-area: actions; }
+  .workspace { grid-template-rows: auto minmax(126px, 1fr); }
 }
 
 @media (max-height: 430px) {

@@ -267,7 +267,7 @@ async function cropopaque(image, current) {
 /*//////////////////////////////////////////////////////////////////////*/
 
 async function finishcrop(revision, limit) {
-  if (!croptoggle.checked || croptoggle.disabled) return true;
+  if (!croptoggle.checked) return true;
   const current = () => revision === fitrevision;
   renderstate.textContent = "CROPPING";
   statuscopy.textContent = "Fitting edges...";
@@ -280,7 +280,7 @@ async function finishcrop(revision, limit) {
   } catch (error) {
     if (current()) {
       renderstate.textContent = "ERROR";
-      statuscopy.textContent = "Edge fit failed. Try without cropping.";
+      fitmessage.textContent = "Edge fit failed.";
       console.error(error);
     }
     return false;

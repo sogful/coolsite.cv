@@ -57,10 +57,10 @@
                 <span class="filecaption">Click to choose image...</span>
                 <span class="filedimensions" hidden></span>
               </span>
-              <span class="dropsubtitle" role="status" hidden>JPG, PNG, WebP, GIF, SVG</span>
             </label>
             <button class="gdbutton toolbutton examplebutton" type="button"><span class="gdplain">Example</span></button>
           </div>
+          <cr class="dropsubtitle controlerror" role="status"></cr>
         </div>
 
         <div class="basicfields">
@@ -82,10 +82,11 @@
             <input class="croptoggleinput gdcheck" type="checkbox" aria-describedby="crophelp">
             <span>Crop to edges</span>
           </label>
-          <span class="assistivetext" id="crophelp">Available for fully opaque images.</span>
+          <span class="assistivetext" id="crophelp">Keep objects inside the image bounds.</span>
           <div class="settingactions">
             <button class="gdbutton toolbutton advancedopen" type="button"><span class="gdplain">Advanced</span></button>
             <button class="gdbutton startbutton" type="submit" disabled><span class="gdplain">Start</span></button>
+            <cr class="fitmessage controlerror" role="status"></cr>
           </div>
         </div>
 
