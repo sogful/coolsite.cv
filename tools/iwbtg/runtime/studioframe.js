@@ -54,6 +54,8 @@ async function start(game, backup, callbacks) {
     finally {URL.revokeObjectURL(url);}
     runtime = await create({
         canvas,
+        getfullscreen: () => notify.fullscreen(),
+        setfullscreen: enabled => notify.setfullscreen(enabled),
         locateFile: () => new URL("../vendor/studio/runtime.wasm", import.meta.url).href,
         print: line => notify.log(String(line)),
         printErr: line => notify.log(String(line)),

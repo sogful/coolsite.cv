@@ -31,6 +31,19 @@ export async function playstudio(game, status, restart) {
     let runner;
     let monitor;
     let disposed = false;
+    let pendingfullscreen = false;
+
+    async function setfullscreen(enabled) {
+        pendingfullscreen = enabled;
+        if (!enabled) {
+            if (document.fullscreenElement === player) {await document.exitFullscreen().catch(() => {});}
+            return;
+        }
+        if (document.fullscreenElement === player || !player.requestFullscreen) {pendingfullscreen = false; return;}
+        if (!navigator.userActivation?.isActive) {return;}
+        pendingfullscreen = false;
+        await player.requestFullscreen().catch(() => {});
+    }
 
     function error(text) {
         const label = document.querySelector(".playerstatus");
@@ -60,6 +73,8 @@ export async function playstudio(game, status, restart) {
         if (!runner) {throw new Error("The Studio player could not initialize.");}
         const size = await runner.start(game, JSON.parse(save.backup()), {
             saves, error,
+            fullscreen: () => document.fullscreenElement === player,
+            setfullscreen,
             log(text) {
                 if (messages.length < 100) {messages.push(text.slice(0, 2000));}
                 report.textContent = messages.join("\n");
@@ -88,6 +103,7 @@ export async function playstudio(game, status, restart) {
                 event.preventDefault();
                 input.key(event.keyCode, type === "keydown");
                 runner.resume();
+                if (pendingfullscreen && event.isTrusted) {void setfullscreen(true);}
             }, options);
         }
         frame.contentWindow.addEventListener("blur", () => input.clear(), options);
@@ -105,7 +121,13 @@ export async function playstudio(game, status, restart) {
         const fullscreen = document.querySelector(".fullscreen");
         fullscreen.hidden = !player.requestFullscreen;
         fullscreen.addEventListener("click", () => {void player.requestFullscreen?.().catch(error);}, options);
-        for (const type of ["pointerdown", "keydown"]) {player.addEventListener(type, () => runner.resume(), options);}
+        window.addEventListener("keydown", event => {
+            if (pendingfullscreen && event.isTrusted) {void setfullscreen(true);}
+        }, options);
+        for (const type of ["pointerdown", "keydown"]) {player.addEventListener(type, event => {
+            runner.resume();
+            if (pendingfullscreen && event.isTrusted) {void setfullscreen(true);}
+        }, options);}
         status("running - experimental compatibility");
         monitor = metrics(() => runner.stats());
         return {
