@@ -253,20 +253,19 @@ function photoproject(shapes, width, height) {
   return shapes.map(object => ({...object, x: object.x * sx, y: object.y * sy, width: object.width * sx, height: object.height * sy}));
 }
 
-async function photoedges(shapes, base, gridwidth, gridheight, assets, current) {
-  const room = Math.min(120, Math.floor(shapes.length * 0.26));
+async function photoedges(shapes, count, base, gridwidth, gridheight, assets, current) {
   const {width, height} = previewsize();
-  if (width * height > 120000 || Math.min(width, height) < 30 || room < 8) return null;
-  const kept = shapes.slice(0, -room);
+  if (width * height > 120000 || Math.min(width, height) < 30 || count - shapes.length < 8) return null;
+  const kept = shapes.slice();
   drawresult([...base, ...photoproject(kept, gridwidth, gridheight)]);
   const source = contourpixels(sourcecanvas, width, height);
   const field = contourfield(source, width, height);
   const brush = contourbrush(source, contourpixels(resultcanvas, width, height), width, height, field, Number(colourslider.value));
   if (!batchfitter) batchfitter = createbatchfitter();
-  const stamps = contourstamps(width, [assets.get(497), assets.get(495)].filter(Boolean), true);
+  const stamps = contourstamps(width, assets, true);
   const scale = width / gridwidth, offset = (height - gridheight * scale) / 2;
   let deadline = performance.now() + 10, missed = 0;
-  while (kept.length < shapes.length && missed < 36) {
+  while (kept.length < count && missed < 36) {
     if (!current()) return null;
     const p = brush.focus();
     if (brush.costs[p] <= 0) break;
@@ -290,7 +289,7 @@ async function photoedges(shapes, base, gridwidth, gridheight, assets, current) 
       deadline = performance.now() + 10;
     }
   }
-  return kept.length > shapes.length - room ? kept : null;
+  return kept.length > shapes.length ? kept : null;
 }
 
 async function photobase(limit, revision) {
@@ -305,12 +304,15 @@ async function photobase(limit, revision) {
   const width = Math.max(1, Math.round(target.width * factor)), height = Math.max(1, Math.round(target.height * factor));
   if (Math.min(width, height) < 10) return null;
   const canvas = document.createElement("canvas");
-  canvas.width = width; canvas.height = height;
   const context = canvas.getContext("2d", {willReadFrequently: true});
-  context.imageSmoothingEnabled = samplerselect.value === "average";
-  context.imageSmoothingQuality = "high";
-  context.drawImage(sourceimage, 0, 0, width, height);
-  const source = context.getImageData(0, 0, width, height).data;
+  function sample(w, h) {
+    canvas.width = w; canvas.height = h;
+    context.imageSmoothingEnabled = samplerselect.value === "average";
+    context.imageSmoothingQuality = "high";
+    context.drawImage(sourceimage, 0, 0, w, h);
+    return context.getImageData(0, 0, w, h).data;
+  }
+  const source = sample(width, height);
   const levels = Number(colourslider.value);
   const gradients = assets.has(1011) ? Math.floor(count * 0.18) : 0;
   const coverage = photocoverage(source, width, height, count - gradients, gradients, levels, assets);
@@ -319,11 +321,38 @@ async function photobase(limit, revision) {
   const preview = objects => showfitprogress(revision, () => [...base, ...photoproject(objects, width, height)]);
   const shapes = await photoshapes(source, width, height, count, levels, assets, current, preview);
   if (!shapes || !current()) return null;
-  const edges = await photoedges(shapes, base, width, height, assets, current);
-  return current() ? {width, height, coverage, shapes, edges, limit} : null;
+  const room = Math.min(120, Math.floor(shapes.length * 0.26));
+  const edgeassets = [assets.get(497), assets.get(495)].filter(Boolean);
+  const edges = room >= 8 ? await photoedges(shapes.slice(0, -room), shapes.length, base, width, height, edgeassets, current) : null;
+  if (!current()) return null;
+  const densewidth = Math.round(148 * target.width / Math.max(target.width, target.height));
+  const denseheight = Math.round(148 * target.height / Math.max(target.width, target.height));
+  const hybridassets = [assets.get(497), assets.get(694)].filter(Boolean);
+  const tiles = Math.floor(count * 0.74);
+  const hybrid = maximumfit() && hybridassets.length && densewidth > width && denseheight > height
+    ? {width: densewidth, height: denseheight, assets: hybridassets,
+      base: photocoverage(sample(densewidth, denseheight), densewidth, denseheight, tiles, 0, levels, assets)}
+    : null;
+  return {width, height, coverage, shapes, edges, hybrid, limit};
 }
 
-function comparephotobase(proposal, revision) {
+function photogradienterror(source, rendered, width, height) {
+  const residual = new Int16Array(width * height);
+  for (let i = 0; i < residual.length; i += 1) {
+    const at = i * 4;
+    residual[i] = source[at] - rendered[at] + 2 * (source[at + 1] - rendered[at + 1]) + source[at + 2] - rendered[at + 2];
+  }
+  let error = 0;
+  for (let y = 1; y < height - 1; y += 1) {
+    for (let x = 1; x < width - 1; x += 1) {
+      const i = y * width + x;
+      error += Math.abs(residual[i + 1] - residual[i - 1]) + Math.abs(residual[i + width] - residual[i - width]);
+    }
+  }
+  return error;
+}
+
+async function comparephotobase(proposal, revision) {
   if (!proposal || revision !== fitrevision) return false;
   const {width, height} = previewsize();
   if (width * height > 400000) return false;
@@ -332,23 +361,56 @@ function comparephotobase(proposal, revision) {
   if (!base.length) return false;
   let score = measurefittedpreview();
   const source = contourpixels(sourcecomparecanvas, width, height);
-  const edge = contouredgeerror(source, contourpixels(resultcanvas, width, height), width, height);
+  const originalpx = contourpixels(resultcanvas, width, height);
+  const balanced = maximumfit();
+  const edge = contouredgeerror(source, originalpx, width, height);
+  const gradient = balanced ? photogradienterror(source, originalpx, width, height) : 0;
+  function edgespass() {
+    const pixels = contourpixels(resultcanvas, width, height);
+    return contouredgeerror(source, pixels, width, height) <= edge
+      && (!balanced || photogradienterror(source, pixels, width, height) <= gradient);
+  }
+  const options = [proposal.shapes, proposal.edges, balanced ? null : proposal.coverage]
+    .filter(Boolean).map(objects => photoproject(objects, proposal.width, proposal.height));
+  const current = () => revision === fitrevision;
+  let hybrid = null;
   let winner = original;
   try {
-    for (const objects of [proposal.shapes, proposal.edges, proposal.coverage]) {
-      if (!objects) continue;
-      const shapes = [...base, ...photoproject(objects, proposal.width, proposal.height)];
+    if (proposal.hybrid) {
+      statuscopy.textContent = "Refining photo contours...";
+      const {base: tiles, width: gridwidth, height: gridheight, assets} = proposal.hybrid;
+      const count = proposal.limit - base.length - visibilitycost;
+      const mixed = await photoedges(tiles, count, base, gridwidth, gridheight, assets, current);
+      if (!current()) return false;
+      if (mixed && mixed.length - tiles.length >= Math.max(8, Math.ceil(count * 0.1))) {
+        hybrid = photoproject(mixed, gridwidth, gridheight);
+        options.push(hybrid);
+      }
+    }
+    for (const objects of options) {
+      const shapes = [...base, ...objects];
       if (shapes.length + (visibilityrequired(shapes) ? visibilitycost : 0) > proposal.limit) continue;
       plan = shapes;
       drawresult();
       const color = measurepreviewerror();
-      if (color < score && contouredgeerror(source, contourpixels(resultcanvas, width, height), width, height) <= edge) {
+      if (color < score && edgespass()) {
         winner = shapes;
         score = color;
       }
     }
   } finally {
-    if (plan !== winner) {plan = winner; drawresult();}
+    if (current()) {plan = winner; drawresult();}
+  }
+  if (balanced && winner !== original && current()) {
+    const selectedhybrid = hybrid && winner[base.length] === hybrid[0];
+    if (selectedhybrid) {
+      const refined = await refinephotocontours(revision, 0.18);
+      if (!current()) return false;
+      if (refined && (!edgespass() || plan.length + (visibilityrequired(plan) ? visibilitycost : 0) > proposal.limit)) {
+        plan = winner;
+        drawresult();
+      }
+    } else await refinelayercolors(revision, edgespass);
   }
   return winner !== original;
 }
