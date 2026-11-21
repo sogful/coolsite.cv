@@ -1,12 +1,12 @@
 @font-face {
   font-family: "pusab";
-  src: url("../assets/fonts/pusab.woff2") format("woff2");
+  src: url("../../assets/fonts/pusab.woff2") format("woff2");
   font-display: swap;
 }
 
 @font-face {
   font-family: "aller";
-  src: url("../cbf/assets/fonts/aller.woff2") format("woff2");
+  src: url("../../cbf/assets/fonts/aller.woff2") format("woff2");
   font-display: swap;
 }
 

@@ -367,12 +367,12 @@ async function ungzipjson(path) {
 }
 
 async function loadnativeatlas() {
-  const metadata = await ungzipjson(`assets/gd-objects-v4/gd-object-atlas.json.gz?v=${catalogversion}`);
+  const metadata = await ungzipjson(`assets/atlas/gd-object-atlas.json.gz?v=${catalogversion}`);
   const [objectimages, spritepackage, backgroundimage, nativeorders] = await Promise.all([
-    Promise.all(metadata.atlases.map(path => loadlocalimage(`assets/gd-objects-v4/${path}?v=${catalogversion}`))),
-    ungzipjson(`assets/gd-objects-v4/${metadata.spriteArchive}?v=${catalogversion}`),
-    metadata.background ? loadlocalimage(`assets/gd-objects-v4/${metadata.background}?v=${catalogversion}`) : Promise.resolve(null),
-    ungzipjson(`assets/gd-objects-v4/gd-object-native-orders.json.gz?v=${catalogversion}`),
+    Promise.all(metadata.atlases.map(path => loadlocalimage(`assets/atlas/${path}?v=${catalogversion}`))),
+    ungzipjson(`assets/atlas/${metadata.spriteArchive}?v=${catalogversion}`),
+    metadata.background ? loadlocalimage(`assets/atlas/${metadata.background}?v=${catalogversion}`) : Promise.resolve(null),
+    ungzipjson(`assets/atlas/gd-object-native-orders.json.gz?v=${catalogversion}`),
   ]);
   atlasimages = objectimages;
   backgroundtile = tintbackgroundtile(backgroundimage);
