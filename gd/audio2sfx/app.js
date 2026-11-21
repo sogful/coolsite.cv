@@ -193,8 +193,7 @@ fetch("/api/status")
     const link = document.createElement("a");
     link.href = "http://127.0.0.1:8765/";
     link.textContent = "Open local converter";
-    link.style.color = "var(--lime)";
-    link.style.fontWeight = "700";
+    link.className = "locallink";
     catalog.append(link);
   });
 
@@ -248,7 +247,7 @@ form.addEventListener("submit", async event => {
     objectUrl && URL.revokeObjectURL(objectUrl);
     objectUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.className = "download-link";
+    link.className = "download-link gdbutton";
     link.href = objectUrl;
     link.download = filename;
     link.textContent = "↓  DOWNLOAD .GMD LEVEL";

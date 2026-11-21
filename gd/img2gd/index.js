@@ -660,6 +660,11 @@ function prettysize(bytes) {
 }
 
 function updatefields() {
+  for (const slider of [limitslider, trialslider, colourslider, previewzoomslider]) {
+    const min = Number(slider.min);
+    const fraction = (slider.valueAsNumber - min) / (Number(slider.max) - min);
+    slider.style.setProperty("--gdprogress", `${fraction * 100}%`);
+  }
   limitvalue.textContent = Number(limitslider.value).toLocaleString();
   trialvalue.textContent = trialslider.value;
   colourvalue.textContent = colourslider.value;
@@ -901,6 +906,7 @@ window.addEventListener("nativepreviewrestored", () => {
   if (["SPRITE FIT", "SPRITE MOSAIC"].includes(renderstate.textContent)) updatepreview();
 });
 
+updatefields();
 loadnativeatlas().catch(error => {
   assetstatus.textContent = "ATLAS ERROR";
   renderstate.textContent = "ERROR";
