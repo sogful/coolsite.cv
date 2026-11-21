@@ -56,11 +56,11 @@ body.imgpage {
 }
 
 .controlpanel {
-  display: grid; gap: 8px 24px;
+  display: grid; column-gap: 24px;
   grid-template-columns: minmax(0, 1.06fr) minmax(0, .94fr);
-  grid-template-rows: max-content 1fr;
-  grid-template-areas: "picker ranges" "actions ranges";
-  align-items: start;
+  grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
+  grid-template-areas: ". ranges" "picker ranges" "actions ranges" ". ranges";
+  align-items: center;
 }
 
 .sourcefields {
@@ -98,6 +98,7 @@ body.imgpage {
 .settingsrow {
   grid-area: actions; flex-wrap: wrap;
   justify-content: flex-start; align-items: center;
+  margin-block-start: 8px;
 }
 
 .settingactions {
@@ -254,6 +255,21 @@ body.imgpage {
   overscroll-behavior: contain;
 }
 
+.fileoverlay {
+  inset: 0; margin: 0;
+  inline-size: 100%; block-size: 100%;
+  max-inline-size: none; max-block-size: none;
+  padding: 24px; border: 0;
+  background: #0009; color: #fff;
+  pointer-events: none; text-align: center;
+}
+
+.fileoverlay:popover-open {
+  display: grid; place-items: center;
+  animation: backdropopen 150ms ease-out both;
+  font-size: var(--gdlabelsize);
+}
+
 /*//////////////////////////////////////////////////////////////////////*/
 
 @media (max-width: 840px) {
@@ -263,6 +279,8 @@ body.imgpage {
     grid-template-areas: "picker" "ranges" "actions";
     gap: 8px;
   }
+
+  .settingsrow { margin-block-start: 0; }
 }
 
 @media (max-width: 360px) {
@@ -278,9 +296,12 @@ body.imgpage {
 @media (min-width: 450px) and (max-height: 590px) {
   .controlpanel {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: max-content 1fr;
-    grid-template-areas: "picker ranges" "actions ranges";
+    grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
+    grid-template-areas: ". ranges" "picker ranges" "actions ranges" ". ranges";
+    row-gap: 0;
   }
+
+  .settingsrow { margin-block-start: 8px; }
 
   .workspace { grid-template-rows: auto minmax(126px, 1fr); }
 }
@@ -294,7 +315,7 @@ body.imgpage {
 
   .maincontent { --gap: 8px; }
 
-  .controlpanel { gap: 5px; }
+  .controlpanel { column-gap: 5px; }
 
   .panel { padding: 8px; }
 }

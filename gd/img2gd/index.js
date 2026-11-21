@@ -1,6 +1,5 @@
 const form = document.querySelector(".controlpanel");
 const imagefile = document.querySelector(".imagefile");
-const uploadrow = document.querySelector(".uploadrow");
 const dropzone = document.querySelector(".dropzone");
 const dropsubtitle = document.querySelector(".dropsubtitle");
 const fitmessage = document.querySelector(".fitmessage");
@@ -792,6 +791,7 @@ function loadimage(url, name) {
   clearlivevalues();
   previewimage.hidden = true;
   previewempty.hidden = true;
+  if (advanceddialog.open) advanceddialog.close();
   sampledopaque = null;
   alphaready = false;
   fitmessage.textContent = "";
@@ -894,25 +894,6 @@ imagefile.addEventListener("change", () => {
 });
 
 examplebutton.addEventListener("click", () => loadimage("assets/soggycat.jpg", "soggycat.jpg"));
-
-for (const name of ["dragenter", "dragover"]) {
-  uploadrow.addEventListener(name, event => {
-    if (!event.dataTransfer?.types.includes("Files")) return;
-    event.preventDefault();
-    uploadrow.classList.add("isdragging");
-  });
-}
-
-uploadrow.addEventListener("dragleave", event => {
-  if (event.relatedTarget instanceof Node && uploadrow.contains(event.relatedTarget)) return;
-  uploadrow.classList.remove("isdragging");
-});
-
-uploadrow.addEventListener("drop", event => {
-  event.preventDefault();
-  uploadrow.classList.remove("isdragging");
-  if (event.dataTransfer) loadupload(event.dataTransfer.files);
-});
 
 form.addEventListener("rangevaluechange", updatefields);
 form.addEventListener("change", event => {
