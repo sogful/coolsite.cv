@@ -1,6 +1,10 @@
 function photoproject(shapes, width, height) {
   const sx = target.width / width, sy = target.height / height;
-  return shapes.map(object => ({...object, x: object.x * sx, y: object.y * sy, width: object.width * sx, height: object.height * sy}));
+  return shapes.map(object => {
+    const projected = {...object, x: object.x * sx, y: object.y * sy, width: object.width * sx, height: object.height * sy};
+    if (projected.asset.id === 3958 && projected.macro) projected.macro = visibilityrequired([projected]);
+    return projected;
+  });
 }
 
 async function photobase(limit, revision) {
@@ -19,8 +23,11 @@ async function photobase(limit, revision) {
   const source = context.getImageData(0, 0, width, height).data;
   const current = () => revision === fitrevision;
   const preview = objects => showfitprogress(revision, () => photoproject(objects, width, height));
-  const paint = await photopaint(source, width, height, limit - visibilitycost, current, preview);
-  return paint && current() ? {width, height, paint, limit} : null;
+  const count = limit - visibilitycost;
+  const paint = await photopaint(source, width, height, count, current, preview);
+  if (!paint || !current()) return null;
+  const wide = maximumfit() ? await photopaint(source, width, height, count, current, preview, true) : null;
+  return current() ? {width, height, paint, wide, limit} : null;
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
@@ -61,34 +68,53 @@ function photocoarseerror(source, rendered, width, height, size) {
   return 100 * error / (width * height * 765);
 }
 
-function photopaintscore(source, pixels, width, height, color) {
+function photopaintmetrics(source, pixels, width, height, color) {
   const coarse = Math.max(2, Math.ceil(Math.max(width, height) / 26));
   const tone = photocoarseerror(source, pixels, width, height, coarse);
-  const texture = 100 * photogradienterror(source, pixels, width, height) / (width * height * 2040);
-  return color + 1.3 * tone + 0.5 * texture;
+  const gradient = photogradienterror(source, pixels, width, height);
+  const texture = 100 * gradient / (width * height * 2040);
+  let severe = 0;
+  for (let i = 0; i < source.length; i += 4) {
+    const difference = Math.abs(source[i] - pixels[i]) + Math.abs(source[i + 1] - pixels[i + 1])
+      + Math.abs(source[i + 2] - pixels[i + 2]);
+    if (difference > 120) severe++;
+  }
+  return {tone, gradient, severe, color, score: color + 1.3 * tone + 0.5 * texture};
 }
 
 function comparephotobase(proposal, revision) {
   if (!proposal || revision !== fitrevision) return false;
   const {width, height} = previewsize();
   if (width * height > 400000) return false;
-  const paint = photoproject(proposal.paint, proposal.width, proposal.height);
-  const helpers = opacitycost(paint) + (visibilityrequired(paint) ? visibilitycost : 0);
-  if (paint.length + helpers > proposal.limit) return false;
   const original = plan;
   const score = measurefittedpreview();
   const source = contourpixels(sourcecomparecanvas, width, height);
   const originalpx = contourpixels(resultcanvas, width, height);
-  const originalscore = photopaintscore(source, originalpx, width, height, score);
-  let accepted = false;
-  try {
-    plan = paint;
+  const baseline = photopaintmetrics(source, originalpx, width, height, score);
+  function render(objects) {
+    if (!objects) return null;
+    const projected = photoproject(objects, proposal.width, proposal.height);
+    const helpers = opacitycost(projected) + (visibilityrequired(projected) ? visibilitycost : 0);
+    if (projected.length + helpers > proposal.limit) return null;
+    plan = projected;
     drawresult();
     const color = measurepreviewerror();
     const pixels = contourpixels(resultcanvas, width, height);
-    accepted = color <= score * 1.08 && photopaintscore(source, pixels, width, height, color) < originalscore;
-    return accepted;
+    return {plan: projected, ...photopaintmetrics(source, pixels, width, height, color)};
+  }
+  function beatsbaseline(result) {
+    return result.color <= baseline.color * 1.08 && result.score < baseline.score;
+  }
+  let winner = original;
+  try {
+    const narrow = render(proposal.paint);
+    if (!narrow) return false;
+    if (beatsbaseline(narrow)) winner = narrow.plan;
+    const wide = render(proposal.wide);
+    if (wide && beatsbaseline(wide) && wide.score < narrow.score && wide.tone <= narrow.tone
+      && wide.gradient <= narrow.gradient && wide.severe <= narrow.severe * 1.05) winner = wide.plan;
+    return winner !== original;
   } finally {
-    if (!accepted) {plan = original; drawresult();}
+    if (plan !== winner) {plan = winner; drawresult();}
   }
 }

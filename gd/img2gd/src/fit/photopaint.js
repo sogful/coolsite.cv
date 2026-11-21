@@ -160,7 +160,7 @@ function paintsurface(width, height, background, levels) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-async function photopaint(rgba, width, height, count, current, preview) {
+async function photopaint(rgba, width, height, count, current, preview, wide = false) {
   const base = library.find(asset => asset.id === 211);
   const ellipse = library.find(asset => asset.id === 497);
   const softbrush = library.find(asset => asset.id === 3958);
@@ -189,7 +189,8 @@ async function photopaint(rgba, width, height, count, current, preview) {
   const surface = paintsurface(width, height, background, levels);
   const luma = new Float32Array(pixels);
   const scale = Math.min(width, height) / 108;
-  const softlimit = width * Math.min(softbrush.naturalwidth, softbrush.naturalheight) / 480;
+  const brushscale = wide ? 8 : 3;
+  const softlimit = width * Math.min(softbrush.naturalwidth, softbrush.naturalheight) * brushscale / 1440;
   let seed = 34783;
   function random() {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
@@ -239,7 +240,7 @@ async function photopaint(rgba, width, height, count, current, preview) {
       const angle = random() < 0.73
         ? painttangent(luma, width, height, x, y, Math.max(1, rx / 4)) + (random() - 0.5) * 0.65
         : random() * Math.PI;
-      const soft = i > capacity * 0.13 && random() < 0.4;
+      const soft = i > capacity * (wide ? 0.02 : 0.13) && random() < 0.4;
       const strength = Math.floor(random() * alpha.length);
       test({x, y, rx, ry, angle, soft, strength, alpha: alpha[strength]});
     }
@@ -258,7 +259,7 @@ async function photopaint(rgba, width, height, count, current, preview) {
       test(trial);
     }
     surface.stroke(best, true);
-    const object = {asset: best.soft ? softbrush : ellipse, macro: !best.soft, zlayer: layers[stage],
+    const object = {asset: best.soft ? softbrush : ellipse, macro: !best.soft || wide, zlayer: layers[stage],
       x: best.x, y: best.y, width: 2 * best.rx, height: 2 * best.ry, angle: best.angle * 180 / Math.PI,
       red: best.red, green: best.green, blue: best.blue, opacity: opacity[best.strength] / 255};
     if (best.soft) output.splice(softend++, 0, object);
