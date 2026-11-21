@@ -22,7 +22,7 @@ function visibilityrequired(candidates = plan) {
 }
 
 function visibilitycount() {
-  return Number(limitslider.value) > visibilitycost && visibilityrequired() ? visibilitycost : 0;
+  return objectlimit() > visibilitycost && visibilityrequired() ? visibilitycost : 0;
 }
 
 function visibilitywarning() {

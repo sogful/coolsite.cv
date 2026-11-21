@@ -1,0 +1,63 @@
+.previewport {
+  position: relative; container-type: size;
+  isolation: isolate; overflow: hidden;
+  direction: ltr; min-block-size: 106px;
+}
+
+.viewframe {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  overflow: hidden; touch-action: none;
+  cursor: grab; user-select: none;
+}
+
+.viewframe.dragging { cursor: grabbing; }
+
+.viewframe:focus-visible { outline: none; }
+
+.previewport .stats:focus-visible {
+  outline: 2px solid var(--gdfocus); outline-offset: -2px;
+}
+
+.previewimage {
+  --previewaspect: 1.5238; --sourcepart: 50%;
+  inline-size: min(100cqw, calc(100cqh * var(--previewaspect)));
+  aspect-ratio: var(--previewaspect); position: relative;
+  transform: translate(var(--viewx, 0px), var(--viewy, 0px)) scale(var(--viewzoom, 1));
+  transform-origin: center;
+}
+
+.previewimage.hasalpha {
+  background: repeating-conic-gradient(#eee 0 25%, #c9c9c9 0 50%) 0 0 / 24px 24px;
+}
+
+.previewimage.hasalpha:has(.comparison:not([hidden])) .resultcanvas {
+  clip-path: inset(0 0 0 var(--sourcepart));
+}
+
+.viewframe .swipeslider { --swipehit: calc(22px / var(--viewzoom, 1)); }
+
+.viewframe .swipebar { scale: calc(1 / var(--viewzoom, 1)) 1; }
+.viewframe .swipebar::after { scale: 1 calc(1 / var(--viewzoom, 1)); }
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.previewport .stats {
+  position: absolute; z-index: 1;
+  inset: var(--statsy, 8px) auto auto var(--statsx, 8px);
+  display: grid; align-content: start;
+  gap: 2px; padding: 5px 8px;
+  max-inline-size: calc(100% - 16px);
+  border-radius: 5px; background: rgba(0,0,0,.5);
+  color: #d4d4d4; font: 400 .875rem/1.2 aller, sans-serif;
+  cursor: grab; touch-action: none;
+  user-select: none;
+}
+
+.previewport .stats:active { cursor: grabbing; }
+
+.previewport .stats[hidden] { display: none; }
+
+.statrow > span { color: #fff; }
+.statrow[data-empty] { opacity: .5; }
+.statrow[data-empty] > span { color: inherit; }

@@ -8,11 +8,16 @@
 
   <link rel="icon" type="image/png" href="../icon.png">
   <link rel="preload" as="font" type="font/woff2" href="../assets/fonts/pusab.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="../assets/fonts/aller.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="../assets/fonts/oxygene.woff2" crossorigin>
 
   <link rel="stylesheet" href="../global.css">
   <link rel="stylesheet" href="../theme.css">
   <link rel="stylesheet" href="../controls.css">
+  <link rel="stylesheet" href="../options.css">
   <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="viewport.css">
+  <link rel="stylesheet" href="rangevalues.css">
   <link rel="stylesheet" href="../lettering.css">
 
   <script src="../global.js" defer></script>
@@ -31,6 +36,9 @@
   <script src="src/export/gmd.js" defer></script>
   <script src="src/export/gdlvl.js" defer></script>
   <script src="src/atlas.js" defer></script>
+  <script src="../options.js" defer></script>
+  <script src="src/render/viewport.js" defer></script>
+  <script src="src/rangevalues.js" defer></script>
   <script src="index.js" defer></script>
 
 </head>
@@ -43,40 +51,42 @@
       <form class="controlpanel panel gdpane" id="converter">
         <div class="sourcefields">
           <div class="uploadrow">
-            <label class="dropzone gdwell">
+            <label class="dropzone">
               <input class="imagefile" type="file" aria-label="Choose an image" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.jpg,.jpeg,.png,.webp,.gif,.svg">
-              <span class="droptitle">Choose image</span>
+              <span class="droptitle">
+                <span class="filecaption">Click to choose image...</span>
+                <span class="filedimensions" hidden></span>
+              </span>
               <span class="dropsubtitle" role="status" hidden>JPG, PNG, WebP, GIF, SVG</span>
             </label>
-            <button class="gdbutton gdsecondary toolbutton examplebutton" type="button"><span class="gdplain">Example</span></button>
+            <button class="gdbutton toolbutton examplebutton" type="button"><span class="gdplain">Example</span></button>
           </div>
-          <p class="sourcename">Loading example</p>
         </div>
 
         <div class="basicfields">
-          <label class="fieldlabel">
-            <span>Speed / accuracy</span>
-            <select class="presetselect gdinput">
-              <option value="fast">Fast</option>
-              <option value="balanced">Balanced</option>
-              <option value="detail" selected>Detail</option>
-              <option value="max">Maximum</option>
-            </select>
-          </label>
-          <label class="fieldlabel sliderlabel">
-            <span>Object limit <b class="limitvalue">1,500</b></span>
-            <span class="gdslider">
-              <input class="limitslider gdrange" type="range" min="0" max="1500" value="1500" step="1">
-            </span>
-          </label>
+          <div class="fieldlabel sliderlabel">
+            <label for="objectlimit">Object limit:</label>
+            <div class="gdslider">
+              <input class="limitslider gdrange" id="objectlimit" aria-label="Object limit" type="range" min="50" max="2500" value="1500" step="1" data-edit-max="5000" data-limit-messages>
+            </div>
+          </div>
+          <div class="fieldlabel sliderlabel">
+            <label for="effort">Effort:</label>
+            <div class="gdslider">
+              <input class="effortslider gdrange" id="effort" aria-label="Effort" type="range" min="0" max="100" value="75" step="1">
+            </div>
+          </div>
         </div>
         <div class="settingsrow">
           <label class="checklabel">
-            <input class="croptoggleinput gdcheck" type="checkbox" disabled aria-describedby="crophelp">
+            <input class="croptoggleinput gdcheck" type="checkbox" aria-describedby="crophelp">
             <span>Crop to edges</span>
           </label>
           <span class="assistivetext" id="crophelp">Available for fully opaque images.</span>
-          <button class="gdbutton gdsecondary toolbutton advancedopen" type="button"><span class="gdplain">Advanced</span></button>
+          <div class="settingactions">
+            <button class="gdbutton toolbutton advancedopen" type="button"><span class="gdplain">Advanced</span></button>
+            <button class="gdbutton startbutton" type="submit" disabled><span class="gdplain">Start</span></button>
+          </div>
         </div>
 
         <dialog class="gdpane appdialog advanceddialog" aria-labelledby="advancedtitle">
@@ -87,110 +97,97 @@
             </button>
           </div>
           <div class="dialogbody advancedfields">
-            <div class="compactfields"></div>
-            <label class="checklabel">
-              <input class="underlaytoggleinput gdcheck" type="checkbox" checked>
-              <span>Fill with the most common color</span>
-            </label>
-            <label class="fieldlabel">
-              <span>Base shape</span>
-              <select class="underlaystyle gdinput">
-                <option value="single" selected>One scaled rectangle</option>
-                <option value="tiled">Tiled rectangles</option>
-              </select>
-            </label>
-            <label class="fieldlabel">
-              <span>Search mode</span>
+            <div class="fieldlabel">
+              <span class="optionlabel">Search mode</span>
               <select class="fitselect gdinput">
                 <option value="auto" selected>Automatic</option>
                 <option value="adaptive">Texture search</option>
                 <option value="regions">Flat color regions</option>
                 <option value="grid">Object grid</option>
               </select>
-            </label>
-            <label class="fieldlabel">
-              <span>Trials per object <b class="trialvalue">96</b></span>
-              <span class="gdslider">
-                <input class="trialslider gdrange" type="range" min="4" max="768" value="96" step="4">
-              </span>
-            </label>
-            <label class="fieldlabel">
-              <span>Fitting coverage</span>
+            </div>
+            <div class="fieldlabel">
+              <span class="optionlabel">Fitting coverage</span>
               <select class="coverageselect gdinput">
                 <option value="1" selected>1 sample per pixel</option>
                 <option value="2">4 samples per pixel</option>
               </select>
-            </label>
-            <label class="fieldlabel seedsearchfield" hidden>
-              <span>Maximum seed search</span>
+            </div>
+            <div class="fieldlabel seedsearchfield" hidden>
+              <span class="optionlabel">Maximum seed search</span>
               <select class="seedsearchselect gdinput">
                 <option value="3" selected>3 starts</option>
                 <option value="6">6 starts</option>
               </select>
-            </label>
-            <label class="fieldlabel">
-              <span>Image sampling</span>
+            </div>
+            <div class="fieldlabel">
+              <span class="optionlabel">Image sampling</span>
               <select class="samplerselect gdinput">
                 <option value="average" selected>Area average</option>
                 <option value="nearest">Nearest pixel</option>
               </select>
-            </label>
-            <label class="fieldlabel">
-              <span>Color levels <b class="colourvalue">256</b></span>
-              <span class="gdslider">
-                <input class="colourslider gdrange" type="range" min="2" max="256" value="256" step="1">
-              </span>
-            </label>
-            <label class="fieldlabel">
-              <span>Preview zoom <b class="previewzoomvalue">0.35×</b></span>
-              <span class="gdslider">
-                <input class="previewzoomslider gdrange" type="range" min="0.15" max="0.60" value="0.35" step="0.01">
-              </span>
+            </div>
+            <div class="fieldlabel">
+              <label for="colourlevels">Color levels</label>
+              <div class="gdslider">
+                <input class="colourslider gdrange" id="colourlevels" aria-label="Color levels" type="range" min="2" max="256" value="256" step="1">
+              </div>
+            </div>
+            <div class="fieldlabel">
+              <label for="pngscale">PNG scale</label>
+              <div class="gdslider">
+                <input class="previewzoomslider gdrange" id="pngscale" aria-label="PNG scale" type="range" min="0.15" max="0.60" value="0.35" step="0.01">
+              </div>
               <small class="previewzoomhelp">PNG width 252 px</small>
-            </label>
-            <label class="fieldlabel">
-              <span>2.2 axis warp</span>
+            </div>
+            <div class="fieldlabel">
+              <span class="optionlabel">2.2 axis warp</span>
               <select class="warpselect gdinput">
-                <option value="off" selected>Off</option>
-                <option value="on">On</option>
+                <option value="off">Off</option>
+                <option value="on" selected>On</option>
               </select>
-            </label>
-            <label class="fieldlabel">
-              <span>Color mapping</span>
+            </div>
+            <div class="fieldlabel">
+              <span class="optionlabel">Color mapping</span>
               <select class="colourmode gdinput">
                 <option value="hsv" selected>HSV from red channel 999</option>
                 <option value="channels">Native color channels</option>
               </select>
-            </label>
+            </div>
           </div>
         </dialog>
       </form>
 
       <section class="previewpanel panel gdpane" aria-label="Generated level">
         <div class="previewport gdwell">
-          <div class="previewimage">
-            <canvas class="resultcanvas" width="640" height="420" aria-label="Generated level image"></canvas>
-            <div class="comparison" hidden>
-              <canvas class="sourcecanvas" width="640" height="420" aria-hidden="true"></canvas>
-              <span class="swipebar" aria-hidden="true"></span>
-              <input class="swipeslider" type="range" min="0" max="100" value="50" step="1"
-                aria-label="Compare source and level" aria-valuetext="50% source">
+          <div class="viewframe" tabindex="0" aria-label="Image view. Arrow keys pan, plus and minus zoom, Home resets.">
+            <div class="previewimage" hidden>
+              <canvas class="resultcanvas" width="640" height="420" aria-label="Generated level image"></canvas>
+              <div class="comparison" hidden>
+                <canvas class="sourcecanvas" width="640" height="420" aria-hidden="true"></canvas>
+                <span class="swipebar" aria-hidden="true"></span>
+                <input class="swipeslider" type="range" min="0" max="100" value="50" step="1"
+                  aria-label="Compare source and level" aria-valuetext="50% source">
+              </div>
+            </div>
+          </div>
+          <div class="stats" tabindex="0" role="group" aria-label="Fit statistics. Arrow keys move the panel." hidden>
+            <span class="statrow" data-empty><span class="tilecount">0</span> objects</span>
+            <span class="statrow" data-empty><span class="gridcount">--</span> <cr>R</cr><cg>G</cg><cl>B</cl> error</span>
+            <span class="statrow" data-empty><span class="channelcount">--</span> channels</span>
+            <span class="statrow" data-empty><span class="sizecount">--</span> size</span>
+          </div>
+          <div class="previewfooter">
+            <p class="statusline" role="status">
+              <span class="statuscopy gdplain"></span>
+            </p>
+            <div class="exportlinks">
+              <a class="gdbutton gdlvldownload" aria-label="Download GDLVL" aria-disabled="true" download><span class="gdplain">GDLVL</span></a>
+              <a class="gdbutton downloadlink" aria-label="Download GMD" aria-disabled="true" download><span class="gdplain">GMD</span></a>
+              <a class="gdbutton pngdownload" aria-label="Download PNG" aria-disabled="true" download><span class="gdplain">PNG</span></a>
             </div>
           </div>
         </div>
-        <div class="stats">
-          <span><b class="tilecount">0</b> objects</span>
-          <span><b class="gridcount">--</b> <cr>R</cr><cg>G</cg><cl>B</cl> error</span>
-          <span class="optionalstat"><b class="channelcount">0</b> channels</span>
-          <span class="optionalstat"><b class="sizecount">0 KB</b> GMD</span>
-        </div>
-        <div class="exportlinks">
-          <button class="gdbutton buildbutton" type="submit" form="converter"><span class="gdplain">Build level</span></button>
-          <a class="gdbutton gdsecondary downloadlink" hidden download><span class="gdplain">GMD</span></a>
-          <a class="gdbutton gdsecondary gdlvldownload" hidden download><span class="gdplain">GDLVL</span></a>
-          <a class="gdbutton gdsecondary pngdownload" hidden download><span class="gdplain">PNG</span></a>
-        </div>
-        <p class="statuscopy" aria-live="polite">Loading the example image.</p>
         <div class="assistivetext" aria-hidden="true">
           <span class="assetstatus">LOADING ATLAS</span>
           <span class="renderstate">WAITING</span>

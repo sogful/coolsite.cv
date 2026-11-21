@@ -266,35 +266,23 @@ async function cropopaque(image, current) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-let cropversion = 0;
-
-async function finishcrop(revision) {
-  const version = ++cropversion;
-  const current = () => revision === fitrevision && version === cropversion;
-  const enabled = croptoggle.checked && !croptoggle.disabled;
-  if (enabled && !croppedplan) {
-    fitreadyrevision = -1;
-    comparison.hidden = true;
-    invalidateexports();
-    pngdownload.hidden = true;
-    renderstate.textContent = "CROPPING";
-    statuscopy.textContent = "Fitting objects to the image edges.";
-    try {
-      const objects = await croprectangleasync(originalplan, Number(limitslider.value), current);
-      if (!objects || !current()) return false;
-      croppedplan = objects;
-    } catch (error) {
-      if (current()) {
-        renderstate.textContent = "ERROR";
-        statuscopy.textContent = "Could not fit the image edges. Turn off cropping to use the original fit.";
-        console.error(error);
-      }
-      return false;
+async function finishcrop(revision, limit) {
+  if (!croptoggle.checked || croptoggle.disabled) return true;
+  const current = () => revision === fitrevision;
+  renderstate.textContent = "CROPPING";
+  statuscopy.textContent = "Fitting edges...";
+  try {
+    const objects = await croprectangleasync(plan, limit, current);
+    if (!objects || !current()) return false;
+    plan = objects;
+    underlaycount = plan.filter(object => object.role === "underlay").length;
+    return true;
+  } catch (error) {
+    if (current()) {
+      renderstate.textContent = "ERROR";
+      statuscopy.textContent = "Edge fit failed. Try without cropping.";
+      console.error(error);
     }
+    return false;
   }
-  plan = enabled ? croppedplan : originalplan;
-  underlaycount = plan.filter(object => object.role === "underlay").length;
-  fitreadyrevision = revision;
-  updatepreview();
-  return true;
 }

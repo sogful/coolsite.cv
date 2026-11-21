@@ -1,0 +1,26 @@
+.gdslider:has(.rangevalueeditor) { margin-block-end: 1.4rem; }
+
+.rangevalueeditor {
+  position: absolute; inset-block-start: 100%;
+  inset-inline-start: var(--gdprogress); translate: -50%;
+  box-sizing: border-box; inline-size: 2.5rem;
+  block-size: 1.4rem; padding: 0;
+  border: 0; border-radius: 99px;
+  background: rgba(0,0,0,.5);
+  color: #fff; text-align: center;
+  font: 400 .875rem/1.2 aller, sans-serif; font-variant-numeric: tabular-nums;
+}
+
+.rangevalueeditor:focus-visible,
+.imgpage .gdrange:focus-visible { outline: none; }
+
+.rangevaluemessage:not([hidden]) {
+  display: flex; align-items: center;
+  gap: 4px; font: 400 .875rem/1.25 aller, sans-serif;
+  text-align: start;
+}
+
+.rangevaluemessage img {
+  flex: none; object-fit: contain;
+  inline-size: 1.3rem; block-size: 1.3rem;
+}

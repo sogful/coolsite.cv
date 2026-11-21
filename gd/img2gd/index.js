@@ -3,27 +3,22 @@ const imagefile = document.querySelector(".imagefile");
 const dropzone = document.querySelector(".dropzone");
 const dropsubtitle = document.querySelector(".dropsubtitle");
 const examplebutton = document.querySelector(".examplebutton");
-const presetselect = document.querySelector(".presetselect");
 const seedsearchfield = document.querySelector(".seedsearchfield");
 const seedsearchselect = document.querySelector(".seedsearchselect");
 const coverageselect = document.querySelector(".coverageselect");
 const limitslider = document.querySelector(".limitslider");
-const underlaytoggle = document.querySelector(".underlaytoggleinput");
 const croptoggle = document.querySelector(".croptoggleinput");
-const underlaystyle = document.querySelector(".underlaystyle");
-const trialslider = document.querySelector(".trialslider");
+const effortslider = document.querySelector(".effortslider");
 const colourslider = document.querySelector(".colourslider");
 const fitselect = document.querySelector(".fitselect");
 const samplerselect = document.querySelector(".samplerselect");
 const warpselect = document.querySelector(".warpselect");
 const colourmode = document.querySelector(".colourmode");
 const previewzoomslider = document.querySelector(".previewzoomslider");
-const previewzoomvalue = document.querySelector(".previewzoomvalue");
 const previewzoomhelp = document.querySelector(".previewzoomhelp");
-const limitvalue = document.querySelector(".limitvalue");
-const trialvalue = document.querySelector(".trialvalue");
-const colourvalue = document.querySelector(".colourvalue");
-const sourcename = document.querySelector(".sourcename");
+const filecaption = document.querySelector(".filecaption");
+const filedimensions = document.querySelector(".filedimensions");
+const stats = document.querySelector(".stats");
 const previewimage = document.querySelector(".previewimage");
 const comparison = document.querySelector(".comparison");
 const swipeslider = document.querySelector(".swipeslider");
@@ -53,12 +48,24 @@ const levelorigin = {x: 360, y: 300};
 
 const sourceimage = new Image();
 const background = [6, 18, 40];
-const presetdata = {
-  fast: {limit: 250, trials: 12, colours: 32, fit: "auto", sampler: "average", underlay: true, coverage: 1},
-  balanced: {limit: 800, trials: 40, colours: 128, fit: "auto", sampler: "average", underlay: true, coverage: 1},
-  detail: {limit: 1500, trials: 96, colours: 256, fit: "auto", sampler: "average", underlay: true, coverage: 1},
-  max: {limit: 1500, trials: 384, colours: 256, fit: "auto", sampler: "average", underlay: false, coverage: 2},
-};
+const startbutton = document.querySelector(".startbutton");
+
+function objectlimit() {
+  return rangevalue(limitslider);
+}
+
+function detailfit() {
+  return rangevalue(effortslider) >= 75;
+}
+
+function maximumfit() {
+  return rangevalue(effortslider) === 100;
+}
+
+function fittrials() {
+  const effort = rangevalue(effortslider);
+  return effort <= 75 ? Math.round(4 + 92 * effort / 75) : Math.round(96 + 288 * (effort - 75) / 25);
+}
 
 let imageurl = "";
 let imagename = "soggycat";
@@ -70,9 +77,6 @@ let sampledopaque = null;
 let opacitycheck = Promise.resolve(false);
 let imagerevision = 0;
 let alphaready = false;
-let originalplan = [];
-let croppedplan = null;
-let originalrevision = -1;
 let dominantcolor = null;
 let plan = [];
 let underlaycount = 0;
@@ -88,19 +92,13 @@ let backgroundtile = null;
 let backgroundtilepixels = null;
 let atlasready = false;
 const sampledtexture = [0, 0, 0, 0];
-let levelsource = "";
-let levelraw = "";
-let currentdownload = "";
-let currentgdlvldownload = "";
-let currentpngdownload = "";
 let exportversion = 0;
-let pngversion = 0;
-let refreshid = 0;
+let fitting = false;
+let settingsdirty = false;
 let fitrevision = 0;
 let fitreadyrevision = -1;
 let fiterror = 0;
 let seedretryoffset = 0;
-let fittime = 0;
 let batchfitter = null;
 let batchfitteractive = false;
 let fitpixels = 0;
@@ -142,7 +140,7 @@ function sourceisopaque() {
 
 function targetsize(width, height, limit, opaque) {
   const ratio = width / height;
-  const pixels = fitpixels || (presetselect.value === "max" && opaque
+  const pixels = fitpixels || (maximumfit() && opaque
     ? 5200
     : Math.max(1600, Math.min(2000, Math.max(limit, 1) * 2.5)));
   const columns = Math.round(Math.sqrt(pixels * ratio));
@@ -155,7 +153,7 @@ function targetsize(width, height, limit, opaque) {
 }
 
 function previewsize() {
-  const zoom = Number(previewzoomslider.value);
+  const zoom = rangevalue(previewzoomslider);
   const requested = Math.max(1, Math.round(720 * zoom));
   const ratio = target.height / target.width;
   const width = Math.max(1, Math.min(requested, 8192, Math.floor(8192 / ratio), Math.floor(Math.sqrt(4000000 / ratio))));
@@ -207,61 +205,25 @@ function sourcecommoncolor(levels) {
 }
 
 function underlaycandidates(limit) {
-  if (!underlaytoggle.checked) return {candidates: [], reason: "Dominant-color underlay is off."};
   if (!imageopaque) return {candidates: [], reason: "Transparent source: underlay skipped to preserve transparency."};
   if (!dominantcolor) return {candidates: [], reason: "Could not determine a dominant source color."};
   const asset = library.find(item => item.id === 211);
   if (!asset) return {candidates: [], reason: "Rectangle object 211 is unavailable; underlay skipped."};
-  if (underlaystyle.value === "single") {
-    if (limit < 1) return {candidates: [], reason: "Underlay needs one rectangle, more than the object limit; skipped."};
-    return {candidates: [{
-      asset,
-      role: "underlay",
-      x: target.width / 2,
-      y: target.height / 2,
-      width: target.width + 0.5,
-      height: target.height + 0.5,
-      angle: 0,
-      warpx: 0,
-      warpy: 0,
-      red: dominantcolor[0],
-      green: dominantcolor[1],
-      blue: dominantcolor[2],
-    }], reason: ""};
-  }
-  const pixelscale = 720 / target.width;
-  const maximumwidth = 3 * asset.naturalwidth / pixelscale;
-  const maximumheight = 3 * asset.naturalheight / pixelscale;
-  const columns = Math.max(1, Math.ceil(target.width / Math.max(1, maximumwidth - 1)));
-  const rows = Math.max(1, Math.ceil(target.height / Math.max(1, maximumheight - 1)));
-  const count = columns * rows;
-  if (count > limit) {
-    return {candidates: [], reason: `Underlay needs ${count} tiles, more than the ${limit}-object limit; skipped.`};
-  }
-  const cellwidth = target.width / columns;
-  const cellheight = target.height / rows;
-  const candidates = [];
-  for (let row = 0; row < rows; row += 1) {
-    for (let column = 0; column < columns; column += 1) {
-      const left = column * cellwidth;
-      const top = row * cellheight;
-      candidates.push({
-        asset,
-        role: "underlay",
-        x: left + cellwidth / 2,
-        y: top + cellheight / 2,
-        width: Math.min(maximumwidth, cellwidth + 0.5),
-        height: Math.min(maximumheight, cellheight + 0.5),
-        angle: 0,
-        warpx: 0,
-        warpy: 0,
-        red: dominantcolor[0],
-        green: dominantcolor[1],
-        blue: dominantcolor[2],
-      });
-    }
-  }
-  return {candidates, reason: ""};
+  if (limit < 1) return {candidates: [], reason: "Underlay needs one rectangle, more than the object limit; skipped."};
+  return {candidates: [{
+    asset,
+    role: "underlay",
+    x: target.width / 2,
+    y: target.height / 2,
+    width: target.width + 0.5,
+    height: target.height + 0.5,
+    angle: 0,
+    warpx: 0,
+    warpy: 0,
+    red: dominantcolor[0],
+    green: dominantcolor[1],
+    blue: dominantcolor[2],
+  }], reason: ""};
 }
 
 function installunderlay(limit) {
@@ -416,12 +378,12 @@ async function loadnativeatlas() {
   preparetexturepools();
   atlasready = true;
   assetstatus.textContent = `ATLAS ${library.length.toLocaleString()}`;
-  schedulepreview();
+  updatestart();
 }
 
 function preparetarget() {
   target = targetsize(sourceimage.naturalWidth, sourceimage.naturalHeight,
-    Number(limitslider.value), sourceisopaque());
+    objectlimit(), sourceisopaque());
   const samplecanvas = document.createElement("canvas");
   samplecanvas.width = target.width;
   samplecanvas.height = target.height;
@@ -465,16 +427,18 @@ function resizecanvases() {
   const longside = Math.max(520, Math.ceil(Math.max(ratio, 1 / ratio)));
   const width = ratio >= 1 ? longside : Math.max(1, Math.round(longside * ratio));
   const height = ratio >= 1 ? Math.max(1, Math.round(longside / ratio)) : longside;
-  const zoom = Number(previewzoomslider.value);
   const size = previewsize();
   previewimage.style.setProperty("--previewaspect", size.width / size.height);
   if (resultcanvas.width !== size.width) resultcanvas.width = size.width;
   if (resultcanvas.height !== size.height) resultcanvas.height = size.height;
   if (sourcecanvas.width !== width) sourcecanvas.width = width;
   if (sourcecanvas.height !== height) sourcecanvas.height = height;
-  previewzoomvalue.textContent = `${cleannumber(zoom)}×`;
   previewzoomhelp.textContent = size.limited
     ? `PNG limited to ${size.width} × ${size.height} px` : `PNG width ${size.width} px`;
+}
+
+function previewopaque() {
+  return imageopaque && sourceisopaque();
 }
 
 function drawsource(canvas = sourcecanvas) {
@@ -482,24 +446,31 @@ function drawsource(canvas = sourcecanvas) {
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.globalCompositeOperation = "source-over";
   context.globalAlpha = 1;
-  const screen = previewsize();
-  previewrenderer.paintbackground(context, canvas.width, canvas.height, screen.width,
-    screen.height, backgroundtile, backgroundtilepixels, background);
+  if (canvas !== sourcecanvas || previewopaque()) {
+    const screen = previewsize();
+    previewrenderer.paintbackground(context, canvas.width, canvas.height, screen.width,
+      screen.height, backgroundtile, backgroundtilepixels, background);
+  } else context.clearRect(0, 0, canvas.width, canvas.height);
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
   context.drawImage(sourceimage, 0, 0, canvas.width, canvas.height);
 }
 
-function drawresult(objects = plan) {
-  const context = resultcanvas.getContext("2d");
+function drawresult(objects = plan, canvas = resultcanvas) {
+  const context = canvas.getContext("2d");
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.globalCompositeOperation = "source-over";
   context.globalAlpha = 1;
-  previewrenderer.paintbackground(context, resultcanvas.width, resultcanvas.height, resultcanvas.width,
-    resultcanvas.height, backgroundtile, backgroundtilepixels, background);
-  const scalex = resultcanvas.width / target.width;
+  const onscreen = canvas === resultcanvas;
+  const opaque = !onscreen || previewopaque();
+  if (onscreen) previewimage.classList.toggle("hasalpha", !opaque);
+  if (opaque) {
+    previewrenderer.paintbackground(context, canvas.width, canvas.height, canvas.width,
+      canvas.height, backgroundtile, backgroundtilepixels, background);
+  } else context.clearRect(0, 0, canvas.width, canvas.height);
+  const scalex = canvas.width / target.width;
   context.save();
-  context.translate(0, (resultcanvas.height - target.height * scalex) / 2);
+  context.translate(0, (canvas.height - target.height * scalex) / 2);
   previewrenderer.renderpreview(context, objects, scalex, scalex, spriteatlasimages, spriteatlasdimensions);
   context.restore();
 }
@@ -633,51 +604,52 @@ function levelname() {
   return name || "Image mosaic";
 }
 
-function updatepngdownload() {
-  const version = ++pngversion;
-  pngdownload.hidden = true;
-  resultcanvas.toBlob(blob => {
-    if (!blob || version !== pngversion || fitreadyrevision !== fitrevision) return;
-    if (currentpngdownload) URL.revokeObjectURL(currentpngdownload);
-    currentpngdownload = URL.createObjectURL(blob);
-    pngdownload.href = currentpngdownload;
-    pngdownload.download = `${levelname()}-fit-${cleannumber(previewsize().zoom)}x.png`;
-    pngdownload.hidden = false;
-  }, "image/png");
+function enableexport(link, blob, filename) {
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.removeAttribute("aria-disabled");
 }
 
 function invalidateexports() {
   exportversion += 1;
-  downloadlink.hidden = true;
-  gdlvldownload.hidden = true;
-  downloadlink.removeAttribute("href");
-  gdlvldownload.removeAttribute("href");
-  if (currentdownload) URL.revokeObjectURL(currentdownload);
-  if (currentgdlvldownload) URL.revokeObjectURL(currentgdlvldownload);
-  currentdownload = "";
-  currentgdlvldownload = "";
+  for (const link of [downloadlink, gdlvldownload, pngdownload]) {
+    const url = link.getAttribute("href");
+    if (url) URL.revokeObjectURL(url);
+    link.removeAttribute("href");
+    link.setAttribute("aria-disabled", "true");
+  }
+}
+
+function updatestat(element, value) {
+  element.textContent = value;
+  element.parentElement.toggleAttribute("data-empty", value === "--");
+}
+
+function clearlivevalues() {
+  for (const value of [tilecount, gridcount, channelcount, sizecount]) updatestat(value, "--");
 }
 
 function prettysize(bytes) {
-  return bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB`;
+  return bytes < 1024 ? bytes + "b" : (bytes / 1024).toFixed(1) + "kb";
+}
+
+function updatestart() {
+  const valid = validrangevalues();
+  startbutton.disabled = fitting || !atlasready || !alphaready || !valid;
+  if (alphaready && !atlasready && renderstate.textContent !== "ERROR") statuscopy.textContent = "Loading objects...";
+  if (alphaready && atlasready && !fitting && settingsdirty) {
+    statuscopy.textContent = valid ? "Press Start..." : "Check slider values...";
+  }
 }
 
 function updatefields() {
-  for (const slider of [limitslider, trialslider, colourslider, previewzoomslider]) {
-    const min = Number(slider.min);
-    const fraction = (slider.valueAsNumber - min) / (Number(slider.max) - min);
-    slider.parentElement.style.setProperty("--gdprogress", `${fraction * 100}%`);
-  }
-  limitvalue.textContent = Number(limitslider.value).toLocaleString();
-  trialvalue.textContent = trialslider.value;
-  colourvalue.textContent = colourslider.value;
-  previewzoomvalue.textContent = `${cleannumber(Number(previewzoomslider.value))}×`;
-  seedsearchfield.hidden = presetselect.value !== "max" || Number(trialslider.value) < 384
+  seedsearchfield.hidden = !maximumfit()
     || fitselect.value === "regions" || fitselect.value === "grid" || regionfitactive;
-  underlaystyle.disabled = !underlaytoggle.checked;
-  coverageselect.disabled = !["detail", "max"].includes(presetselect.value)
+  coverageselect.disabled = !detailfit()
     || fitselect.value === "regions" || fitselect.value === "grid" || regionfitactive;
   warpselect.disabled = fitselect.value === "regions" || regionfitactive;
+  updateoptions();
+  updatestart();
 }
 
 function updatepreview() {
@@ -688,88 +660,100 @@ function updatepreview() {
   fiterror = measurepreviewerror();
   const result = buildsource();
   invalidateexports();
-  levelraw = result.raw;
-  levelsource = gmddocument(levelraw, levelname());
-  updatepngdownload();
-  tilecount.textContent = result.objects.toLocaleString();
-  gridcount.textContent = `${fiterror.toFixed(1)}%`;
-  channelcount.textContent = result.channels.toLocaleString();
-  sizecount.textContent = prettysize(new Blob([levelsource]).size);
+  const name = levelname();
+  const level = new Blob([gmddocument(result.raw, name)], {type: "application/xml"});
+  updatestat(tilecount, result.objects.toLocaleString());
+  updatestat(gridcount, fiterror.toFixed(1) + "%");
+  updatestat(channelcount, result.channels.toLocaleString());
+  updatestat(sizecount, prettysize(level.size));
   renderstate.textContent = fitselect.value === "grid" ? "SPRITE MOSAIC" : "SPRITE FIT";
-  statuscopy.textContent = `Fit ready.${visibilitywarning()}`;
+  statuscopy.textContent = "Preparing files...";
+  statuscopy.title = visibilitywarning().trim();
   comparison.hidden = false;
+  enableexport(downloadlink, level, name + ".gmd");
+  prepareexports(result.raw, name);
 }
 
-async function refresh(revision = fitrevision) {
-  if (revision !== fitrevision) return false;
-  updatefields();
-  if (!alphaready || !sourceimage.naturalWidth || !sourceimage.naturalHeight) return false;
+async function startfit() {
+  if (startbutton.disabled) return;
   const aspect = sourceimage.naturalWidth / sourceimage.naturalHeight;
   if (Math.max(aspect, 1 / aspect) > sampleedge) {
-    renderstate.textContent = "ERROR";
-    statuscopy.textContent = `This image is too narrow to fit. Use an aspect ratio up to ${sampleedge} to 1 in either direction.`;
-    return false;
+    statuscopy.textContent = "Image aspect ratio exceeds " + sampleedge + ":1.";
+    return;
   }
-  if (!atlasready) {
-    renderstate.textContent = "WAITING";
-    statuscopy.textContent = "Loading the medium native object atlas in the background.";
-    return false;
-  }
+
+  const revision = ++fitrevision;
+  fitting = true;
+  settingsdirty = false;
+  if (advanceddialog.open) advanceddialog.close();
+  form.inert = true;
+  advancedopen.disabled = true;
+  comparison.hidden = true;
+  stats.hidden = false;
+  clearlivevalues();
   invalidateexports();
-  pngdownload.hidden = true;
+  statuscopy.title = "";
   renderstate.textContent = "FITTING";
-  const started = performance.now();
   seedretryoffset = 0;
-  const limit = Number(limitslider.value);
-  if (!await runfitsearch(limit, Number(trialslider.value), revision)) return false;
-  if (revision !== fitrevision) return false;
-  originalplan = plan;
-  originalrevision = revision;
-  croppedplan = null;
-  fittime = performance.now() - started;
-  return finishcrop(revision);
+  const limit = objectlimit();
+  updatestart();
+
+  try {
+    if (!await runfitsearch(limit, fittrials(), revision)) return;
+    if (!await finishcrop(revision, limit)) return;
+    fitreadyrevision = revision;
+    updatepreview();
+  } catch (error) {
+    renderstate.textContent = "ERROR";
+    statuscopy.textContent = "Could not fit image.";
+    console.error(error);
+  } finally {
+    fitting = false;
+    form.inert = false;
+    advancedopen.disabled = false;
+    updatefields();
+  }
 }
 
 function updateswipe() {
   const share = swipeslider.valueAsNumber;
-  comparison.style.setProperty("--sourcepart", share + "%");
+  previewimage.style.setProperty("--sourcepart", share + "%");
   swipeslider.setAttribute("aria-valuetext", share + "% source");
 }
 
 swipeslider.addEventListener("input", updateswipe);
 
-function schedulepreview() {
-  const revision = ++fitrevision;
-  comparison.hidden = true;
+function changesettings() {
+  if (!fitting) settingsdirty = true;
   updatefields();
-  if (!sourceimage.naturalWidth) return;
-  invalidateexports();
-  pngdownload.hidden = true;
-  renderstate.textContent = atlasready ? "QUEUED" : "WAITING";
-  window.clearTimeout(refreshid);
-  refreshid = window.setTimeout(() => refresh(revision), 120);
 }
 
 function loadimage(url, name) {
   fitrevision += 1;
   imagerevision += 1;
   comparison.hidden = true;
+  stats.hidden = true;
   swipeslider.value = "50";
   updateswipe();
+  resetpreviewview();
+  clearlivevalues();
+  previewimage.hidden = true;
   sampledopaque = null;
   alphaready = false;
-  croptoggle.disabled = true;
-  originalplan = [];
-  croppedplan = null;
-  window.clearTimeout(refreshid);
+  croptoggle.disabled = false;
+  settingsdirty = true;
+  statuscopy.title = "";
   if (imageurl) URL.revokeObjectURL(imageurl);
   imageurl = url.startsWith("blob:") ? url : "";
   imagename = name;
   dropsubtitle.hidden = true;
   sourceimage.src = url;
-  sourcename.textContent = `${name} · loading preview`;
+  filecaption.textContent = name;
+  dropzone.title = name;
+  filedimensions.hidden = true;
+  statuscopy.textContent = "Loading image...";
+  updatestart();
   invalidateexports();
-  pngdownload.hidden = true;
   renderstate.textContent = "LOADING";
 }
 
@@ -788,63 +772,28 @@ function loadupload(files) {
   dropsubtitle.hidden = false;
 }
 
-async function downloadlevel() {
-  if (!levelsource || fitreadyrevision !== fitrevision) return;
-  invalidateexports();
+async function prepareexports(raw, name) {
   const version = exportversion;
   const revision = fitrevision;
-  const raw = levelraw;
-  const name = levelname();
-  currentdownload = URL.createObjectURL(new Blob([levelsource], {type: "application/xml"}));
-  downloadlink.href = currentdownload;
-  downloadlink.download = `${name}.gmd`;
-  downloadlink.hidden = false;
-  statuscopy.textContent = "Preparing GDLVL.";
+  const current = () => version === exportversion && revision === fitrevision && fitreadyrevision === fitrevision;
+  const zoom = cleannumber(previewsize().zoom);
+  resultcanvas.toBlob(blob => {
+    if (blob && current()) enableexport(pngdownload, blob, name + "-fit-" + zoom + "x.png");
+  }, "image/png");
   try {
     const contents = await gdlvldocument(raw, name);
-    if (version !== exportversion || revision !== fitrevision || fitreadyrevision !== fitrevision) return;
-    currentgdlvldownload = URL.createObjectURL(new Blob([contents], {type: "application/octet-stream"}));
-    gdlvldownload.href = currentgdlvldownload;
-    gdlvldownload.download = `${name}.gdlvl`;
-    gdlvldownload.hidden = false;
-    statuscopy.textContent = `Level files ready.${visibilitywarning()}`;
+    if (!current()) return;
+    enableexport(gdlvldownload, new Blob([contents], {type: "application/octet-stream"}), name + ".gdlvl");
+    if (!settingsdirty) statuscopy.textContent = "Ready!";
   } catch (error) {
-    if (version !== exportversion || revision !== fitrevision || fitreadyrevision !== fitrevision) return;
-    statuscopy.textContent = `GMD ready. GDLVL export failed: ${error.message}${visibilitywarning()}`;
+    if (!current()) return;
+    if (!settingsdirty) statuscopy.textContent = "GDLVL export failed.";
+    console.error(error);
   }
-}
-
-function applypreset() {
-  const preset = presetdata[presetselect.value];
-  limitslider.value = preset.limit;
-  trialslider.value = preset.trials;
-  colourslider.value = preset.colours;
-  fitselect.value = preset.fit;
-  samplerselect.value = preset.sampler;
-  underlaytoggle.checked = preset.underlay;
-  coverageselect.value = preset.coverage;
-  schedulepreview();
 }
 
 const advanceddialog = document.querySelector(".advanceddialog");
 const advancedopen = document.querySelector(".advancedopen");
-const compactfields = document.querySelector(".compactfields");
-const compactlayout = matchMedia("(max-height: 590px), (max-width: 390px) and (max-height: 760px)");
-const compactcontrols = [document.querySelector(".basicfields"), croptoggle.closest("label"), examplebutton]
-  .map(control => ({control, parent: control.parentElement, next: control.nextElementSibling}));
-
-function updatesettingslayout() {
-  const compact = compactlayout.matches;
-  for (const {control, parent, next} of compactcontrols) {
-    if (compact) compactfields.append(control);
-    else parent.insertBefore(control, next);
-  }
-  form.classList.toggle("compact", compact);
-  advancedopen.querySelector(".gdplain").textContent = compact ? "Settings" : "Advanced";
-}
-
-updatesettingslayout();
-compactlayout.addEventListener("change", updatesettingslayout);
 advancedopen.addEventListener("click", () => advanceddialog.showModal());
 document.querySelectorAll(".dialogclose").forEach(button => {
   button.addEventListener("click", () => button.closest(".appdialog").close());
@@ -853,24 +802,25 @@ document.querySelectorAll(".dialogclose").forEach(button => {
 sourceimage.addEventListener("load", async () => {
   const revision = ++imagerevision;
   sampledopaque = null;
-  alphaready = !croptoggle.checked;
-  sourcename.textContent = `${imagename} · ${sourceimage.naturalWidth} × ${sourceimage.naturalHeight}`;
-  if (alphaready) schedulepreview();
+  filedimensions.textContent = "(" + sourceimage.naturalWidth + "x" + sourceimage.naturalHeight + ")";
+  filedimensions.hidden = false;
+  dropzone.title = imagename + " " + filedimensions.textContent;
   opacitycheck = sourceisopaque() ? cropopaque(sourceimage, () => revision === imagerevision) : Promise.resolve(false);
   const opaque = await opacitycheck;
   if (revision !== imagerevision) return;
+  sampledopaque = opaque;
   croptoggle.disabled = !opaque;
   if (!opaque) croptoggle.checked = false;
-  if (!alphaready) {
-    alphaready = true;
-    schedulepreview();
-  }
+  alphaready = true;
+  updatestart();
 });
 
 sourceimage.addEventListener("error", () => {
-  sourcename.textContent = "Could not read that image";
+  filecaption.textContent = "Could not read image";
+  filedimensions.hidden = true;
   statuscopy.textContent = "Choose a supported JPG, PNG, WEBP, GIF or SVG image.";
   renderstate.textContent = "ERROR";
+  updatestart();
 });
 
 imagefile.addEventListener("change", () => {
@@ -898,51 +848,28 @@ dropzone.addEventListener("drop", event => {
   loadupload(event.dataTransfer.files);
 });
 
-presetselect.addEventListener("change", applypreset);
-limitslider.addEventListener("input", schedulepreview);
-croptoggle.addEventListener("change", () => {
-  if (originalrevision === fitrevision) finishcrop(fitrevision);
-});
-underlaytoggle.addEventListener("change", () => {
-  updatefields();
-  schedulepreview();
-});
-underlaystyle.addEventListener("change", schedulepreview);
-trialslider.addEventListener("input", schedulepreview);
-seedsearchselect.addEventListener("change", schedulepreview);
-coverageselect.addEventListener("change", schedulepreview);
-colourslider.addEventListener("input", schedulepreview);
-previewzoomslider.addEventListener("input", () => {
-  updatefields();
-  if (atlasready && sourceimage.naturalWidth && target.width) updatepreview();
-});
-previewzoomslider.addEventListener("change", schedulepreview);
-fitselect.addEventListener("change", () => {
-  if (fitselect.value === "regions") {
+form.addEventListener("rangevaluechange", changesettings);
+form.addEventListener("change", event => {
+  if (!event.target.matches("select, .croptoggleinput")) return;
+  regionfitactive = false;
+  if (event.target === fitselect && fitselect.value === "regions") {
     warpselect.value = "on";
     coverageselect.value = "2";
   }
-  schedulepreview();
+  changesettings();
 });
-samplerselect.addEventListener("change", schedulepreview);
-warpselect.addEventListener("change", schedulepreview);
-colourmode.addEventListener("change", schedulepreview);
 form.addEventListener("submit", event => {
   event.preventDefault();
-  if (!levelsource || fitreadyrevision !== fitrevision || !["SPRITE FIT", "SPRITE MOSAIC"].includes(renderstate.textContent)) {
-    statuscopy.textContent = "Wait for the image fit to finish before exporting.";
-    return;
-  }
-  downloadlevel();
+  startfit();
 });
 window.addEventListener("nativepreviewrestored", () => {
-  if (["SPRITE FIT", "SPRITE MOSAIC"].includes(renderstate.textContent)) updatepreview();
+  if (fitreadyrevision === fitrevision) drawresult();
 });
 
 updatefields();
 loadnativeatlas().catch(error => {
   assetstatus.textContent = "ATLAS ERROR";
   renderstate.textContent = "ERROR";
-  statuscopy.textContent = error.message;
+  statuscopy.textContent = "Object library failed.";
+  statuscopy.title = error.message;
 });
-loadimage("assets/soggycat.jpg", "soggycat.jpg");

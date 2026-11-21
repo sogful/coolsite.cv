@@ -141,11 +141,9 @@ function startfitpreview() {
   resizecanvases();
   drawsource();
   drawresult([]);
-  tilecount.textContent = "0";
-  gridcount.textContent = "--";
-  channelcount.textContent = "--";
-  sizecount.textContent = "--";
-  statuscopy.textContent = "Fitting the image. The preview updates as objects are placed.";
+  previewimage.hidden = false;
+  clearlivevalues();
+  statuscopy.textContent = "Fitting...";
   nextlivepreview = 0;
 }
 
@@ -155,7 +153,7 @@ function showfitprogress(revision, objects = plan) {
   if (!objects.length) return;
   nextlivepreview = performance.now() + 1000;
   drawresult(objects);
-  tilecount.textContent = objects.length.toLocaleString();
+  updatestat(tilecount, objects.length.toLocaleString());
 }
 
 function yieldfittask() {
@@ -469,12 +467,12 @@ function fallbackcandidate(focus) {
 
 async function fitadaptive(limit, trials, revision, extraoffset = 0) {
   const random = randomseed(extraoffset);
-  const buckets = presetselect.value !== "fast" && trials >= 32 ? createassetbuckets(extraoffset) : null;
+  const buckets = trials >= 32 ? createassetbuckets(extraoffset) : null;
   const baseobjects = installunderlay(limit);
   if (batchfitteractive) batchfitter.reset(fitcoverage);
   const fitlimit = limit - baseobjects - visibilitycount();
   const rejected = new Set();
-  const retrylimit = fitretries || (presetselect.value === "detail" ? 4 : 1);
+  const retrylimit = fitretries || (detailfit() && !maximumfit() ? 4 : 1);
   for (let index = 0; index < fitlimit; index += 1) {
     if (revision !== fitrevision) return false;
     const focus = findfocus(rejected);
@@ -572,13 +570,16 @@ function measurepreviewerror() {
   if (sourcecomparecanvas.width !== resultcanvas.width) sourcecomparecanvas.width = resultcanvas.width;
   if (sourcecomparecanvas.height !== resultcanvas.height) sourcecomparecanvas.height = resultcanvas.height;
   const comparecontext = sourcecomparecanvas.getContext("2d", {willReadFrequently: true});
-  if (imageopaque) {
+  const opaque = previewopaque();
+  if (opaque) {
     comparecontext.imageSmoothingEnabled = true;
     comparecontext.imageSmoothingQuality = "high";
     comparecontext.drawImage(sourcecanvas, 0, 0, sourcecomparecanvas.width, sourcecomparecanvas.height);
   } else drawsource(sourcecomparecanvas);
   const source = comparecontext.getImageData(0, 0, sourcecomparecanvas.width, sourcecomparecanvas.height).data;
-  const result = resultcanvas.getContext("2d", {willReadFrequently: true}).getImageData(0, 0, resultcanvas.width, resultcanvas.height).data;
+  if (!opaque) drawresult(plan, sourcecomparecanvas);
+  const resultcontext = opaque ? resultcanvas.getContext("2d") : comparecontext;
+  const result = resultcontext.getImageData(0, 0, resultcanvas.width, resultcanvas.height).data;
   for (let index = 0; index < source.length; index += 4) {
     difference += Math.abs(source[index] - result[index]) + Math.abs(source[index + 1] - result[index + 1]) + Math.abs(source[index + 2] - result[index + 2]);
   }

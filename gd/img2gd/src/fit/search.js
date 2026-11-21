@@ -41,15 +41,15 @@ async function runfitsearch(limit, trials, revision) {
   if (revision !== fitrevision) return false;
   if (!await fitadaptive(limit, trials, revision)) return false;
   if (revision !== fitrevision) return false;
-  const detailed = presetselect.value === "detail" || presetselect.value === "max";
-  const maxseedsearch = presetselect.value === "max" && trials >= 384 && limit > 0;
+  const detailed = detailfit();
+  const maxseedsearch = maximumfit() && limit > 0;
   let best = capturefit(detailed ? measurefittedpreview() : measuretargeterror());
   try {
     if (maxseedsearch) {
       const offsets = Number(seedsearchselect.value) >= 6 ? [1, 17, 64, 65, 81] : [1, 17];
       for (const [index, offset] of offsets.entries()) {
         if (revision !== fitrevision) return false;
-        statuscopy.textContent = `Comparing search ${index + 2} of ${offsets.length + 1}.`;
+        statuscopy.textContent = `Search ${index + 2} of ${offsets.length + 1}...`;
         preparetarget();
         if (!await fitadaptive(limit, trials, revision, offset)) return false;
         searchcount += 1;
@@ -75,7 +75,7 @@ async function runfitsearch(limit, trials, revision) {
       }
     }
     if (detailed && limit > 0) {
-      const pools = presetselect.value === "max"
+      const pools = maximumfit()
         ? [{pixels: 2000, native: false}, {pixels: 2000, native: true}, {pixels: 5200, native: true}]
         : [{pixels: 5200, native: true}];
       if (Number(coverageselect.value) === 2) pools.push({pixels: 5200, native: true, coverage: 2});
@@ -83,7 +83,7 @@ async function runfitsearch(limit, trials, revision) {
         coverage: Number(coverageselect.value) === 2 ? 2 : 1, pool: "white"});
       for (const [index, pool] of pools.entries()) {
         if (revision !== fitrevision) return false;
-        statuscopy.textContent = `Comparing candidate pool ${index + 1} of ${pools.length}.`;
+        statuscopy.textContent = `Pool ${index + 1} of ${pools.length}...`;
         fitpixels = pool.pixels;
         fitretries = 4;
         fitcoverage = pool.coverage || 1;
@@ -103,16 +103,16 @@ async function runfitsearch(limit, trials, revision) {
     if (revision !== fitrevision) return false;
     restorefit(best);
     if (detailed && plan.length) {
-      statuscopy.textContent = "Refining object colors.";
+      statuscopy.textContent = "Refining colors...";
       await refinelayercolors(revision);
       if (revision === fitrevision && imageopaque && plan.length >= 128) {
-        statuscopy.textContent = "Refining image contours.";
+        statuscopy.textContent = "Refining contours...";
         if (await refinephotocontours(revision, 0.4) && revision === fitrevision) {
           await refinephotocontours(revision, 0.18);
         }
       }
       if (revision === fitrevision && imageopaque && plan.length >= 80) {
-        statuscopy.textContent = "Refining smooth areas.";
+        statuscopy.textContent = "Smoothing...";
         await refinesmoothareas(revision);
       }
     }

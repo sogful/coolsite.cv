@@ -288,8 +288,8 @@ async function photoedges(shapes, base, gridwidth, gridheight, assets, current) 
 }
 
 async function photobase(limit, revision) {
-  if (limit < 100 || limit > 500 || fitselect.value !== "auto" || !["detail", "max"].includes(presetselect.value)
-    || !imageopaque || !underlaytoggle.checked) return null;
+  if (limit < 100 || limit > 500 || fitselect.value !== "auto" || !detailfit()
+    || !imageopaque) return null;
   if (!await opacitycheck || revision !== fitrevision) return null;
   const base = underlaycandidates(limit).candidates;
   const count = limit - base.length - visibilitycost;
