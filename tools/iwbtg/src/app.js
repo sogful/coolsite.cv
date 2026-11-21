@@ -18,6 +18,7 @@ let generation = 0;
 const status = text => {document.querySelector(".status").textContent = text;};
 const fileinput = document.querySelector(".gamefile");
 const selection = document.querySelector(".selection");
+const folderinput = document.querySelector(".gamefolder");
 const decoder = new TextDecoder();
 
 function cancel() {
@@ -27,6 +28,7 @@ function cancel() {
     busy = false;
     selection.hidden = true;
     fileinput.disabled = false;
+    folderinput.disabled = false;
 }
 
 async function showlibrary() {
@@ -114,14 +116,16 @@ function begin(path) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-fileinput.addEventListener("change", async () => {
-    const file = fileinput.files[0];
+async function open(files, folder = false) {
+    const file = files[0];
     if (!file || busy) {return;}
     cancel();
-    if (file.size > 128 * 1024 * 1024) {status("choose a file smaller than 128 MB."); return;}
-    if (!/\.(zip|exe|rar|7z|cab|gmk|gm81)$/i.test(file.name)) {status("choose a game archive, exe, gmk or gm81 file."); return;}
+    if (files.length > 4096) {status("choose a folder with at most 4096 files."); return;}
+    if (files.some(file => file.size > 256 * 1024 * 1024) || files.reduce((total, file) => total + file.size, 0) > 512 * 1024 * 1024) {status("choose up to 512 MB of game files, with each file smaller than 256 MB."); return;}
+    if (!folder && !/\.(zip|exe|rar|7z|cab|gmk|gm81|win|unx)$/i.test(file.name)) {status("choose a game archive, exe or data file."); return;}
     busy = true;
     fileinput.disabled = true;
+    folderinput.disabled = true;
     status("reading game files...");
     worker = new Worker(new URL("./converter.js", import.meta.url), {type: "module"});
     worker.onerror = event => {cancel(); status("conversion failed: " + event.message);};
@@ -156,10 +160,16 @@ fileinput.addEventListener("change", async () => {
     };
     timeout = setTimeout(() => {cancel(); status("reading the game timed out.");}, 30000);
     try {
-        const bytes = await file.arrayBuffer();
-        worker?.postMessage({type: "open", name: file.name, bytes}, [bytes]);
+        if (folder) {worker?.postMessage({type: "folder", files: files.map(file => ({path: file.webkitRelativePath || file.name, file}))});}
+        else {
+            const bytes = await file.arrayBuffer();
+            worker?.postMessage({type: "open", name: file.name, bytes}, [bytes]);
+        }
     } catch (error) {cancel(); status(error.message);}
-});
+}
+
+fileinput.addEventListener("change", () => {void open([...fileinput.files]);});
+folderinput.addEventListener("change", () => {void open([...folderinput.files], true);});
 
 document.querySelector(".exitgame").addEventListener("click", () => {void closegame().catch(error => status(error.message));});
 
@@ -183,7 +193,7 @@ document.querySelector(".importsave").addEventListener("change", async event => 
 /*//////////////////////////////////////////////////////////////////////*/
 
 const assets = [
-    "logo.webp", "src/appearance.js", "src/interface.js", "assets/button.png", "favicon.ico",
+    "logo.webp", "src/appearance.js", "src/interface.js", "src/metrics.js", "assets/button.png", "favicon.ico",
     "assets/fonts/comic.png", "assets/fonts/comic.json",
     "src/classic/binary.js", "src/classic/resources.js", "src/classic/convert.js",
     "isolation.js", "src/isolation.js", "src/opengmk.js", "src/upx.js", "index.css", "src/app.js", "src/player.js", "src/storage.js", "src/controls.js", "src/compatibility.js", "src/archive.js", "src/converter.js", "src/studio.js", "runtime/studio.html", "runtime/studioframe.js",

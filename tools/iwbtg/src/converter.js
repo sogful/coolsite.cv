@@ -5,7 +5,8 @@ import {unzipSync} from "../vendor/zip.js";
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-const limit = 128 * 1024 * 1024;
+const limit = 256 * 1024 * 1024;
+const totalmaximum = 512 * 1024 * 1024;
 let files = new Map();
 let nesting = 0;
 
@@ -18,8 +19,8 @@ function normalize(path) {
 }
 
 async function unpack(bytes, name, depth = 0) {
-    if (bytes.length > limit) {throw new Error("Choose a file smaller than 128 MB.");}
-    if (/\.(gmk|gm81)$/i.test(name)) {return new Map([[normalize(name), bytes]]);}
+    if (bytes.length > limit) {throw new Error("Choose a file smaller than 256 MB.");}
+    if (/\.(gmk|gm81|win|unx)$/i.test(name)) {return new Map([[normalize(name), bytes]]);}
     if (name.toLowerCase().endsWith(".exe")) {
         const embedded = archivepayload(bytes);
         return embedded ? openarchive(embedded, normalize) : new Map([[name, bytes]]);
@@ -32,8 +33,8 @@ async function unpack(bytes, name, depth = 0) {
         entries++;
         total += entry.originalSize;
         const path = normalize(entry.name).toLowerCase();
-        if (entries > 4096 || total > limit * 4 || entry.originalSize > limit) {
-            throw new Error("The expanded zip is too large (512 MB total, 128 MB per file, 4096 entries).");
+        if (entries > 4096 || total > totalmaximum || entry.originalSize > limit) {
+            throw new Error("The expanded zip is too large (512 MB total, 256 MB per file, 4096 entries).");
         }
         if (paths.has(path)) {throw new Error("The zip contains duplicate file paths.");}
         paths.add(path);
@@ -45,6 +46,27 @@ async function unpack(bytes, name, depth = 0) {
         if (nested.length === 1) {return unpack(nested[0][1], nested[0][0], depth + 1);}
     }
     return entriesmap;
+}
+
+function studioname(bytes, path, parent) {
+    const executables = [...files.keys()].filter(name => name.startsWith(parent) && !name.slice(parent.length).includes("/") && /\.exe$/i.test(name) && !/unins|setup|crashhandler/i.test(name));
+    if (executables.length === 1) {return executables[0].slice(parent.length).replace(/\.exe$/i, "");}
+    if (parent) {return parent.split("/").filter(Boolean).pop();}
+    if (bytes.length >= 120 && new TextDecoder().decode(bytes.subarray(8, 12)) === "GEN8") {
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const end = 16 + view.getUint32(12, true);
+        for (const offset of [116, 56]) {
+            if (offset + 4 > end) {continue;}
+            const pointer = view.getUint32(offset, true);
+            if (pointer < end || pointer >= bytes.length) {continue;}
+            const tail = bytes.subarray(pointer, Math.min(pointer + 1024, bytes.length));
+            const zero = tail.indexOf(0);
+            if (zero <= 0) {continue;}
+            const name = new TextDecoder().decode(tail.subarray(0, zero)).trim();
+            if (name && !/[\u0000-\u001f\ufffd]/u.test(name)) {return name;}
+        }
+    }
+    return path.split("/").pop().replace(/\.(exe|win|unx)$/i, "");
 }
 
 async function convert(path) {
@@ -59,7 +81,7 @@ async function convert(path) {
             for (const existing of merged.keys()) {if (existing.toLowerCase() === name.toLowerCase()) {merged.delete(existing);}}
             merged.set(name, bytes);
         }
-        if (merged.size > 4096 || [...merged.values()].reduce((total, bytes) => total + bytes.length, 0) > limit * 4) {throw new Error("The expanded game package is too large.");}
+        if (merged.size > 4096 || [...merged.values()].reduce((total, bytes) => total + bytes.length, 0) > totalmaximum) {throw new Error("The expanded game package is too large.");}
         files = merged;
         const executables = [...extracted.keys()].filter(name => /\.exe$/i.test(name));
         if (!executables.length) {throw new Error("No game executable was found in the embedded archive.");}
@@ -69,16 +91,16 @@ async function convert(path) {
     }
     if (/\.(gmk|gm81)$/i.test(path)) {throw new Error("GameMaker project files are not supported yet. Choose a compiled EXE.");}
     const parent = path.includes("/") ? path.slice(0, path.lastIndexOf("/") + 1) : "";
-    const studio = [...files].find(([name, bytes]) => name.toLowerCase() === (parent + "data.win").toLowerCase() && new TextDecoder().decode(bytes.subarray(0, 4)) === "FORM");
+    const studio = [...files].find(([name, bytes]) => (name.toLowerCase() === path.toLowerCase() && /\.(win|unx)$/i.test(path) || name.toLowerCase() === (parent + "data.win").toLowerCase()) && new TextDecoder().decode(bytes.subarray(0, 4)) === "FORM");
     if (studio) {
         const bytes = studio[1];
         const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map(value => value.toString(16).padStart(2, "0")).join("");
         const version = bytes[17];
         const supported = version >= 8 && version <= 17;
         if (!supported) {throw new Error("This Studio bytecode version is not supported: " + version);}
-        const converted = [...files].filter(([name]) => name.startsWith(parent) && !/\.(exe|dll)$/i.test(name)).map(([name, data]) => [name.toLowerCase() === (parent + "data.win").toLowerCase() ? "data.win" : name.slice(parent.length), data]);
+        const converted = [...files].filter(([name]) => name.startsWith(parent) && !/\.(exe|dll)$/i.test(name)).map(([name, data]) => [name === studio[0] ? "data.win" : name.slice(parent.length), data]);
         converted.push(["manifest.json", new TextEncoder().encode(JSON.stringify({format_version: 1, engine_family: "studio", source_hash: hash, bytecode_version: version, compatibility: "partial"}))]);
-        self.postMessage({type: "ready", files: converted, name: path.split("/").pop().replace(/\.exe$/i, "")}, [...new Set(converted.map(([, data]) => data.buffer))]);
+        self.postMessage({type: "ready", files: converted, name: studioname(bytes, path, parent)}, [...new Set(converted.map(([, data]) => data.buffer))]);
         return;
     }
     const bytes = files.get(path);
@@ -96,7 +118,7 @@ async function convert(path) {
             const target = parent + normalize(name);
             if (![...files.keys()].some(existing => existing.toLowerCase() === target.toLowerCase())) {files.set(target, data);}
         }
-        if (files.size > 4096 || [...files.values()].reduce((total, data) => total + data.length, 0) > limit * 4) {throw new Error("The expanded game package is too large.");}
+        if (files.size > 4096 || [...files.values()].reduce((total, data) => total + data.length, 0) > totalmaximum) {throw new Error("The expanded game package is too large.");}
     }
     const entry = path.slice(parent.length);
     const converted = [...files].filter(([name]) => name.startsWith(parent) && name.slice(parent.length) !== "manifest.json").map(([name, data]) => [name.slice(parent.length), data]);
@@ -106,15 +128,31 @@ async function convert(path) {
 
 self.onmessage = async event => {
     try {
-        if (event.data.type === "open") {
-            files = await unpack(new Uint8Array(event.data.bytes), event.data.name);
+        if (event.data.type === "open" || event.data.type === "folder") {
+            if (event.data.type === "folder") {
+                if (event.data.files.length > 4096) {throw new Error("The folder contains too many files.");}
+                files = new Map();
+                const paths = new Set();
+                let total = 0;
+                for (const entry of event.data.files) {
+                    const file = entry.file || entry;
+                    const name = normalize(entry.path || file.webkitRelativePath || file.name);
+                    total += file.size;
+                    if (file.size > limit || total > totalmaximum) {throw new Error("The folder is too large (512 MB total, 256 MB per file).");}
+                    if (paths.has(name.toLowerCase())) {throw new Error("The folder contains duplicate file paths.");}
+                    paths.add(name.toLowerCase());
+                    files.set(name, new Uint8Array(await file.arrayBuffer()));
+                }
+            } else {files = await unpack(new Uint8Array(event.data.bytes), event.data.name);}
             if (files.has("manifest.json") && (files.has("logic.lowered.json") || /"engine_family"\s*:\s*"(opengmk|studio)"/.test(new TextDecoder().decode(files.get("manifest.json"))))) {
                 const entries = [...files];
                 self.postMessage({type: "ready", files: entries, name: event.data.name.replace(/\.zip$/i, "")}, [...new Set(entries.map(([, bytes]) => bytes.buffer))]);
                 return;
             }
-            let executables = [...files.keys()].filter(path => /\.(exe|gmk|gm81)$/i.test(path) && !path.startsWith("__MACOSX/") && !path.split("/").pop().startsWith("._"));
-            if (executables.some(path => /\.exe$/i.test(path))) {executables = executables.filter(path => /\.exe$/i.test(path));}
+            let executables = [...files.keys()].filter(path => /\.(exe|gmk|gm81|win|unx)$/i.test(path) && !path.startsWith("__MACOSX/") && !path.split("/").pop().startsWith("._"));
+            const datafiles = executables.filter(path => /\.(win|unx)$/i.test(path));
+            if (datafiles.length) {executables = datafiles;}
+            else if (executables.some(path => /\.exe$/i.test(path))) {executables = executables.filter(path => /\.exe$/i.test(path));}
             if (!executables.length) {
                 if ([...files.keys()].some(path => /\.(gmk|gm81|gm6|gmd|yyp|gmx)$/i.test(path))) {throw new Error("This GameMaker project version is not supported yet.");}
                 throw new Error("No supported game was found in this archive.");

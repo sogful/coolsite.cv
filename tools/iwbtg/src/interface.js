@@ -32,7 +32,6 @@ export function setup() {
     const player = document.querySelector(".player");
     const panel = document.querySelector(".gameoptions");
     const dialog = document.querySelector(".prompt");
-    const buttons = document.querySelector(".promptbuttons");
     const desktop = matchMedia("(hover: hover) and (pointer: fine)");
     let timer;
     function awake() {
@@ -46,33 +45,38 @@ export function setup() {
     desktop.addEventListener("change", awake);
     new MutationObserver(awake).observe(player, {attributes: true, attributeFilter: ["hidden"]});
     new MutationObserver(awake).observe(panel, {attributes: true, attributeFilter: ["hidden"]});
-    function select(button, focus = false) {
-        for (const item of buttons.querySelectorAll("button")) {item.classList.toggle("selected", item === button);}
-        if (focus) {button?.focus({preventScroll: true});}
+    const credits = document.querySelector(".creditsdialog");
+    document.querySelector(".creditsbutton").addEventListener("click", () => credits.showModal());
+    for (const dialog of document.querySelectorAll(".prompt, .creditsdialog")) {
+        const buttons = dialog.querySelector(".promptbuttons");
+        function select(button, focus = false) {
+            for (const item of buttons.querySelectorAll("button")) {item.classList.toggle("selected", item === button);}
+            if (focus) {button?.focus({preventScroll: true});}
+        }
+        function refresh() {
+            if (!dialog.open) {return;}
+            const active = document.activeElement;
+            const first = buttons.querySelector("[data-primary]") || buttons.querySelector("button");
+            select(buttons.contains(active) && active.matches("button") ? active : first);
+        }
+        new MutationObserver(() => {awake(); refresh();}).observe(dialog, {attributes: true, attributeFilter: ["open"]});
+        new MutationObserver(refresh).observe(buttons, {childList: true});
+        buttons.addEventListener("focusin", event => {if (event.target.matches("button")) {select(event.target);}});
+        dialog.addEventListener("keydown", event => {
+            const editing = event.target.matches("input, textarea, select");
+            const arrows = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+            if (editing && event.key !== "Enter") {return;}
+            if (!arrows.includes(event.key) && event.key !== "Enter" && event.key !== "Shift") {return;}
+            const entries = [...buttons.querySelectorAll("button:not(:disabled)")];
+            if (!entries.length) {return;}
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const current = Math.max(0, entries.findIndex(button => button.classList.contains("selected")));
+            if (arrows.includes(event.key)) {
+                const direction = event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 1;
+                select(entries[(current + direction + entries.length) % entries.length], true);
+            } else if (!event.repeat) {entries[current].click();}
+        }, true);
     }
-    function refresh() {
-        if (!dialog.open) {return;}
-        const active = document.activeElement;
-        const first = buttons.querySelector("[data-primary]") || buttons.querySelector("button");
-        select(buttons.contains(active) && active.matches("button") ? active : first);
-    }
-    new MutationObserver(() => {awake(); refresh();}).observe(dialog, {attributes: true, attributeFilter: ["open"]});
-    new MutationObserver(refresh).observe(buttons, {childList: true});
-    buttons.addEventListener("focusin", event => {if (event.target.matches("button")) {select(event.target);}});
-    dialog.addEventListener("keydown", event => {
-        const editing = event.target.matches("input, textarea, select");
-        const arrows = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
-        if (editing && event.key !== "Enter") {return;}
-        if (!arrows.includes(event.key) && event.key !== "Enter" && event.key !== "Shift") {return;}
-        const entries = [...buttons.querySelectorAll("button:not(:disabled)")];
-        if (!entries.length) {return;}
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        const current = Math.max(0, entries.findIndex(button => button.classList.contains("selected")));
-        if (arrows.includes(event.key)) {
-            const direction = event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 1;
-            select(entries[(current + direction + entries.length) % entries.length], true);
-        } else if (!event.repeat) {entries[current].click();}
-    }, true);
     awake();
 }

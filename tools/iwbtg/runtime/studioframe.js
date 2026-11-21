@@ -95,6 +95,15 @@ function resume() {
     for (const device of window.miniaudio?.devices || []) {void device?.webaudio?.resume?.();}
 }
 
+function stats() {
+    return {
+        fps: runtime?._framerate?.() || 0,
+        cheating: !!runtime?._cheating(),
+        width: canvas.width,
+        height: canvas.height
+    };
+}
+
 async function stop() {
     clearInterval(timer);
     try {runtime?._requestRunnerExit();} catch {}
@@ -103,4 +112,4 @@ async function stop() {
     for (const device of window.miniaudio?.devices || []) {void device?.webaudio?.close?.();}
 }
 
-window.runner = {start, key, resume, stop};
+window.runner = {start, key, resume, stop, stats};

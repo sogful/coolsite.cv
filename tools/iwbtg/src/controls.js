@@ -9,9 +9,9 @@ export function controls(canvas, update) {
     const keys = new Map([
         ["ArrowLeft", 37], ["ArrowRight", 39], ["ArrowUp", 38], ["ArrowDown", 40],
         ["ShiftLeft", 16], ["ShiftRight", 16], ["ControlLeft", 17], ["ControlRight", 17],
-        ["Enter", 13], ["Space", 32], ["Escape", 27], ["Backspace", 8], ["Tab", 9]
+        ["Enter", 13], ["Space", 32], ["Escape", 27], ["Backspace", 8], ["Tab", 9], ["F2", 113]
     ]);
-    const gamekeys = new Set([8, 13, 16, 17, 27, 32, 37, 38, 39, 40, 82, 90, 88, 67]);
+    const gamekeys = new Set([8, 13, 16, 17, 27, 32, 37, 38, 39, 40, 82, 90, 88, 67, 113]);
 
     function publish() {
         const held = [...new Set([...keyboard, ...pointers.values()])];

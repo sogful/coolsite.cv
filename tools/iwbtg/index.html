@@ -1,25 +1,28 @@
 <!doctype html>
 <html lang="en">
 <head>
+
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <title>fangame player</title>
+
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../base.css">
     <link rel="stylesheet" href="../branding.css">
     <link rel="stylesheet" href="index.css">
+
 </head>
 <body>
     <main class="toolmain">
         <h1 class="toolheading"><img class="toollogo fangamelogo" src="logo.webp" alt="fangame player" width="548" height="208"></h1>
         <div class="upload">
-            <p class="importrow"><label class="filebutton"><span>choose game</span><input class="gamefile fileinput" type="file" accept=".zip,.exe,.rar,.7z,.cab"></label></p>
+            <p class="importrow"><label class="filebutton"><span>choose game</span><input class="gamefile fileinput" type="file" accept=".zip,.exe,.rar,.7z,.cab,.win,.unx"></label> <label class="filebutton"><span>choose folder</span><input class="gamefolder fileinput" type="file" webkitdirectory multiple></label></p>
             <div class="selection" hidden>
                 <label>game <select class="executables"></select></label>
                 <button class="convert" type="button">convert</button>
             </div>
         </div>
-        <p class="status" role="status" aria-live="polite">choose an executable/compressed archive</p>
+        <p class="status" role="status" aria-live="polite"></p>
         <p class="hint">(gamemaker 6, 8.0, 8.1, 8.2 and studio 1.x/2.x supported)</p>
         <section class="player" aria-label="game" hidden>
             <div class="stage">
@@ -27,7 +30,7 @@
                 <div class="touch" aria-label="touch controls">
                     <div class="directions">
                         <button class="touchbutton" type="button" data-key="37" aria-label="left"><img class="buttonimage" src="assets/controls/left.png" alt="" draggable="false"></button>
-                        <button class="touchbutton" type="button" data-key="39" aria-label="right"><img class="buttonimage" src="assets/controls/right.png" alt="" draggable="false"></button>
+                  just       <button class="touchbutton" type="button" data-key="39" aria-label="right"><img class="buttonimage" src="assets/controls/right.png" alt="" draggable="false"></button>
                     </div>
                     <div class="actions">
                         <button class="touchbutton shoot" type="button" data-key="90" aria-label="shoot"><img class="buttonimage" src="assets/controls/shoot.png" alt="" draggable="false"></button>
@@ -54,7 +57,6 @@
                     <button class="fullscreen" type="button">fullscreen</button>
                 </div>
                 <details class="report"><summary>conversion report</summary><pre class="diagnostics"></pre></details>
-                <p class="licenses"><a href="vendor/licenses.txt" target="_blank" rel="noopener">licenses</a> <a href="vendor/source.zip">converter source</a> <a href="vendor/opengmk/source.zip">opengmk source</a> <a href="vendor/studio/source.zip">studio source</a> <a href="vendor/archive/source.zip">archive source</a> <a href="vendor/upx/source.zip">unpacker source</a></p>
             </section>
             <dialog class="prompt">
                 <p class="prompttext"></p>
@@ -65,6 +67,12 @@
             <h2>saved games</h2>
             <div class="games"></div>
         </section>
+        <button class="creditsbutton" type="button">credits</button>
+        <dialog class="creditsdialog" aria-label="credits">
+            <h2>credits</h2>
+            <p class="licenses"><a href="vendor/licenses.txt" target="_blank" rel="noopener">licenses</a> <a href="vendor/source.zip">converter source</a> <a href="vendor/opengmk/source.zip">opengmk source</a> <a href="vendor/studio/source.zip">studio source</a> <a href="vendor/archive/source.zip">archive source</a> <a href="vendor/upx/source.zip">unpacker source</a></p>
+            <form method="dialog" class="promptbuttons creditsbuttons"><button type="submit">close</button></form>
+        </dialog>
     </main>
     <script type="module" src="src/appearance.js"></script>
     <script type="module" src="src/app.js"></script>

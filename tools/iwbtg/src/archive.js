@@ -53,7 +53,7 @@ export async function openarchive(bytes, validate, factory) {
         const size = Number(fields.Size || 0);
         total += size;
         count++;
-        if (count > 4096 || size > 128 * 1024 * 1024 || total > 512 * 1024 * 1024) {throw new Error("The expanded archive is too large.");}
+        if (count > 4096 || size > 256 * 1024 * 1024 || total > 512 * 1024 * 1024) {throw new Error("The expanded archive is too large.");}
         if (fields.Encrypted === "+") {throw new Error("Extract password-protected archives before choosing the game.");}
     }
     if (!count) {throw new Error("No files were found in this archive.");}

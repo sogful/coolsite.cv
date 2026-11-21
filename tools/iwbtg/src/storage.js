@@ -34,20 +34,26 @@ export async function library() {
 
 export async function getgame(id) {
     const connection = await database();
-    try {return await request(connection.transaction("games").objectStore("games").get(id));}
+    let game;
+    try {game = await request(connection.transaction("games").objectStore("games").get(id));}
     finally {connection.close();}
+    if (game) {game.files = await Promise.all(game.files.map(async ([name, bytes]) => [name, bytes instanceof Blob ? new Uint8Array(await bytes.arrayBuffer()) : bytes]));}
+    return game;
 }
 
 export async function remember(game) {
+    const stored = {...game, files: game.files.map(([name, bytes]) => [name, new Blob([bytes])])};
     const connection = await database();
     try {
         await new Promise((resolve, reject) => {
             const transaction = connection.transaction(["games", "entries"], "readwrite");
-            transaction.objectStore("games").put(game);
-            transaction.objectStore("entries").put({id: game.id, name: game.name});
+            const games = transaction.objectStore("games");
+            const entries = transaction.objectStore("entries");
             transaction.oncomplete = resolve;
-            transaction.onerror = () => reject(transaction.error);
+            transaction.onerror = event => reject(event.target.error || transaction.error || new Error("Could not store the game."));
             transaction.onabort = () => reject(transaction.error || new Error("Game storage was interrupted."));
+            entries.put({id: game.id, name: game.name});
+            games.put(stored);
         });
     } finally {connection.close();}
 }

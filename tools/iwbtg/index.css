@@ -61,7 +61,7 @@ a, p, ul, li, h1, h2, h3, h4, h5, h6, sup, sub {color: white}
     width: min(640px,calc(100% - 44px)); color: #fff;
     text-align: left;
 }
-.prompt {
+.prompt, .creditsdialog {
     background: #000; color: #fff;
     border: 2px solid #aaa; text-align: center;
 }
@@ -94,7 +94,7 @@ a, p, ul, li, h1, h2, h3, h4, h5, h6, sup, sub {color: white}
 /*//////////////////////////////////////////////////////////////////////*/
 
 .savedgame button, .gameoptions button, .gameoptions .filebutton {zoom: 0.5}
-.prompt {
+.prompt, .creditsdialog {
     padding: 12px; white-space: normal;
 }
 .prompttext {
@@ -221,7 +221,7 @@ a, p, ul, li, h1, h2, h3, h4, h5, h6, sup, sub {color: white}
     font-size: 0.8em;
 }
 .status {overflow-wrap: anywhere}
-.prompt {
+.prompt, .creditsdialog {
     max-width: 85vw; white-space: pre-wrap;
 }
 .promptbuttons {
@@ -309,4 +309,33 @@ a, p, ul, li, h1, h2, h3, h4, h5, h6, sup, sub {color: white}
 .fading {opacity: 0}
 .gamecanvas:focus, .gamecanvas:focus-visible, .studioframe:focus, .studioframe:focus-visible {
     outline: none; box-shadow: none;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.toolmain .creditsbutton:not(.imagebutton):not(.touchbutton) {
+    position: fixed; left: max(12px,env(safe-area-inset-left));
+    bottom: max(12px,env(safe-area-inset-bottom)); zoom: 0.5;
+}
+.playing .creditsbutton {display: none}
+.creditsdialog {
+    width: min(560px,calc(100% - 48px)); max-height: calc(100dvh - 48px);
+    padding: 20px; overflow: auto;
+    white-space: normal;
+}
+.creditsdialog h2 {margin: 0 0 16px}
+.creditsdialog .licenses {
+    justify-content: center; margin: 0 0 24px;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.metrics {
+    position: absolute; z-index: 2;
+    pointer-events: none; color: #fff;
+    background: rgba(0,0,0,0.7); padding: 2px 4px;
+    white-space: nowrap; line-height: 1;
+}
+.metrictext {
+    display: block; zoom: 0.5;
 }

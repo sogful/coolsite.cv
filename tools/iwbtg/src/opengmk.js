@@ -2,6 +2,7 @@ import {controls} from "./controls.js";
 import {savehost} from "./storage.js";
 import plugin from "../vendor/opengmk/host.js";
 import {ignored} from "./interface.js";
+import {metrics} from "./metrics.js";
 
 /*//////////////////////////////////////////////////////////////////////*/
 
@@ -24,6 +25,7 @@ export async function playopengmk(game, status, restart) {
     let runner;
     let input;
     let timer;
+    let monitor;
     let stopped = false;
     let answer;
     let paused = false;
@@ -99,6 +101,7 @@ export async function playopengmk(game, status, restart) {
         if (stopped) {return;}
         stopped = true;
         cancelAnimationFrame(timer);
+        monitor?.dispose();
         input?.dispose();
         if (dialog.open) {dialog.close("-1");}
         restorepause();
@@ -172,6 +175,11 @@ export async function playopengmk(game, status, restart) {
             timer = requestAnimationFrame(tick);
         }
         timer = requestAnimationFrame(tick);
+        let sample;
+        monitor = metrics(() => {
+            if (!dialog.open) {sample = runner.stats();}
+            return {...sample, width, height};
+        });
         status("running");
         return {save, snapshot: () => runner.stats(), dispose};
     } catch (failed) {dispose(); throw new Error(failed.detail || failed.message || String(failed));}

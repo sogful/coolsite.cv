@@ -8,5 +8,7 @@ let runtime;
 try {runtime = await import(url);}
 finally {URL.revokeObjectURL(url);}
 const message = runtime.onMessage;
-export {message as onMessage};
+const cheating = runtime.cheating;
+const cheatstate = runtime.cheatstate;
+export {message as onMessage, cheating, cheatstate};
 export default runtime.default;

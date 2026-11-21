@@ -1,6 +1,7 @@
 import {controls} from "./controls.js";
 import {savehost} from "./storage.js";
 import {warning} from "./interface.js";
+import {metrics} from "./metrics.js";
 
 /*//////////////////////////////////////////////////////////////////////*/
 
@@ -28,6 +29,7 @@ export async function playstudio(game, status, restart) {
     const held = new Set();
     let input;
     let runner;
+    let monitor;
     let disposed = false;
 
     function error(text) {
@@ -105,6 +107,7 @@ export async function playstudio(game, status, restart) {
         fullscreen.addEventListener("click", () => {void player.requestFullscreen?.().catch(error);}, options);
         for (const type of ["pointerdown", "keydown"]) {player.addEventListener(type, () => runner.resume(), options);}
         status("running - experimental compatibility");
+        monitor = metrics(() => runner.stats());
         return {
             save,
             snapshot: () => ({engine: "studio", width: size.width, height: size.height}),
@@ -112,6 +115,7 @@ export async function playstudio(game, status, restart) {
                 if (disposed) {return;}
                 disposed = true;
                 controller.abort();
+                monitor.dispose();
                 input.dispose();
                 await runner.stop();
                 frame.remove();
@@ -121,6 +125,7 @@ export async function playstudio(game, status, restart) {
         };
     } catch (failure) {
         controller.abort();
+        monitor?.dispose();
         input?.dispose();
         if (runner) {await runner.stop().catch(() => {});}
         frame.remove();
