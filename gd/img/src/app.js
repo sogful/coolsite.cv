@@ -2,7 +2,6 @@ const form = document.querySelector(".controlpanel");
 const imagefile = document.querySelector(".imagefile");
 const dropzone = document.querySelector(".dropzone");
 const dropsubtitle = document.querySelector(".dropsubtitle");
-const browsehint = dropsubtitle.textContent;
 const examplebutton = document.querySelector(".examplebutton");
 const presetselect = document.querySelector(".presetselect");
 const seedsearchfield = document.querySelector(".seedsearchfield");
@@ -40,12 +39,6 @@ const downloadlink = document.querySelector(".downloadlink");
 const gdlvldownload = document.querySelector(".gdlvldownload");
 const pngdownload = document.querySelector(".pngdownload");
 const statuscopy = document.querySelector(".statuscopy");
-const cataloggrid = document.querySelector(".cataloggrid");
-const catalogsearch = document.querySelector(".catalogsearch");
-const catalogcount = document.querySelector(".catalogcount");
-const catalogintro = document.querySelector(".catalogintro");
-const catalogheading = document.querySelector(".catalogheading");
-const catalogmore = document.querySelector(".catalogmore");
 const catalogversion = "img2gd-native-batches-20261028-23";
 const uploadtypes = new Map([
   ["jpg", "image/jpeg"], ["jpeg", "image/jpeg"], ["png", "image/png"],
@@ -90,10 +83,7 @@ let spriteatlasimages = [];
 let spriteatlasdimensions = [];
 let backgroundtile = null;
 let backgroundtilepixels = null;
-let catalogresults = [];
-const cataloguses = new Map();
 let atlasready = false;
-let cataloglimit = 72;
 const sampledtexture = [0, 0, 0, 0];
 let levelsource = "";
 let levelraw = "";
@@ -422,74 +412,8 @@ async function loadnativeatlas() {
   preparetexturepools();
   atlasready = true;
   assetstatus.textContent = `ATLAS ${library.length.toLocaleString()}`;
-  catalogheading.textContent = `${library.length.toLocaleString()} stable native object visuals`;
-  catalogintro.textContent = "Search by object ID, dimensions or sprite count.";
-  rendercatalog(true);
+  if (catalogdialog.open) rendercatalog(true);
   schedulepreview();
-}
-
-function catalogdescription(asset) {
-  const uses = cataloguses.get(asset.id) || 0;
-  return `${Math.round(asset.naturalwidth)} × ${Math.round(asset.naturalheight)} · ${asset.spritecount} sprite${asset.spritecount === 1 ? "" : "s"}${uses ? ` · used ${uses}×` : ""}`;
-}
-
-function catalogmatches(asset, query) {
-  if (!query) return true;
-  return `${asset.id} ${asset.naturalwidth} ${asset.naturalheight} ${asset.spritecount} ${asset.content}`.toLowerCase().includes(query);
-}
-
-function makecatalogcard(asset) {
-  const card = document.createElement("article");
-  card.className = "catalogcard";
-  const thumb = document.createElement("canvas");
-  thumb.className = "catalogthumb";
-  thumb.width = 176;
-  thumb.height = 72;
-  const context = thumb.getContext("2d");
-  const [left, top, width, height] = asset.source;
-  const scale = Math.min(156 / width, 54 / height);
-  const drawwidth = width * scale;
-  const drawheight = height * scale;
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = "high";
-  context.drawImage(atlasimages[asset.page], left, top, width, height,
-    (thumb.width - drawwidth) / 2, (thumb.height - drawheight) / 2, drawwidth, drawheight);
-  const id = document.createElement("span");
-  id.className = "catalogid";
-  id.textContent = `OBJECT ${asset.id}`;
-  const meta = document.createElement("span");
-  meta.className = "catalogmeta";
-  meta.textContent = catalogdescription(asset);
-  card.append(thumb, id, meta);
-  return card;
-}
-
-function rendercatalog(reset = false) {
-  if (!atlasready || !cataloggrid) return;
-  if (reset) {
-    const query = catalogsearch.value.trim().toLowerCase();
-    catalogresults = library.filter(asset => catalogmatches(asset, query));
-    cataloglimit = Math.min(72, catalogresults.length);
-    cataloggrid.replaceChildren();
-  }
-  const existing = cataloggrid.childElementCount;
-  for (const asset of catalogresults.slice(existing, cataloglimit)) cataloggrid.append(makecatalogcard(asset));
-  catalogcount.textContent = catalogresults.length === library.length
-    ? `${library.length.toLocaleString()} native object IDs · showing ${Math.min(cataloglimit, catalogresults.length).toLocaleString()}`
-    : `${catalogresults.length.toLocaleString()} matches · showing ${Math.min(cataloglimit, catalogresults.length).toLocaleString()}`;
-  catalogmore.hidden = cataloglimit >= catalogresults.length;
-}
-
-function updatecatalogusage() {
-  cataloguses.clear();
-  for (const object of plan) {
-    const id = object.asset.id;
-    cataloguses.set(id, (cataloguses.get(id) || 0) + 1);
-  }
-  cataloggrid.querySelectorAll(".catalogmeta").forEach((meta, index) => {
-    const text = catalogdescription(catalogresults[index]);
-    if (meta.textContent !== text) meta.textContent = text;
-  });
 }
 
 function preparetarget() {
@@ -546,8 +470,7 @@ function resizecanvases() {
   if (sourcecanvas.height !== height) sourcecanvas.height = height;
   previewzoomvalue.textContent = `${cleannumber(zoom)}×`;
   previewzoomhelp.textContent = size.limited
-    ? `Preview and PNG limited to ${size.width} × ${size.height} px at ${cleannumber(size.zoom)}×. The level is 720 units wide.`
-    : `At ${cleannumber(zoom)}×, the 720-unit image is ${size.width} px wide. PNG export uses the preview's pixel scale.`;
+    ? `PNG limited to ${size.width} × ${size.height} px` : `PNG width ${size.width} px`;
 }
 
 function drawsource(canvas = sourcecanvas) {
@@ -764,18 +687,7 @@ function updatepreview(updatecatalog = false) {
   channelcount.textContent = result.channels.toLocaleString();
   sizecount.textContent = prettysize(new Blob([levelsource]).size);
   renderstate.textContent = fitselect.value === "grid" ? "SPRITE MOSAIC" : "SPRITE FIT";
-  const mapping = colourmode.value === "hsv" ? "one HSV-red channel 999"
-    : result.overflow ? "native base/detail colour channels with HSV for extra colours" : "native base/detail colour channels";
-  const method = regionfitactive ? "clean color regions" : fitselect.value === "grid"
-    ? "native shape cells" : `${trialslider.value} sprite trials per object`;
-  const transforms = warpselect.value === "on" ? "rotation, XY scale and axis warp" : "rotation and XY scale";
-  const fittedcount = plan.length - underlaycount;
-  const objectsummary = underlaycount
-    ? `${underlaycount.toLocaleString()} dominant-color base object${underlaycount === 1 ? "" : "s"} + ${fittedcount.toLocaleString()} fitted sprites (${underlaymessage})`
-    : `${fittedcount.toLocaleString()} fitted sprites (${underlaymessage})`;
-  const seednote = searchcount > 1 ? ` · best of ${searchcount} searches` : "";
-  const helpernote = result.helpers ? ` + ${result.helpers} ${result.opacityhelpers ? "setup" : "visibility"} helper${result.helpers === 1 ? "" : "s"}` : "";
-  statuscopy.textContent = `${objectsummary}${helpernote} · ${result.objects.toLocaleString()} objects total${seednote}. ${method}, ${transforms}, ${mapping}, ${fiterror.toFixed(1)}% preview mean RGB error vs source at ${cleannumber(previewsize().zoom)}× editor zoom in ${Math.max(1, Math.round(fittime))} ms.${visibilitywarning()}`;
+  statuscopy.textContent = `Fit ready.${visibilitywarning()}`;
   if (updatecatalog) updatecatalogusage();
 }
 
@@ -832,7 +744,7 @@ function loadimage(url, name) {
   if (imageurl) URL.revokeObjectURL(imageurl);
   imageurl = url.startsWith("blob:") ? url : "";
   imagename = name;
-  dropsubtitle.textContent = browsehint;
+  dropsubtitle.hidden = true;
   sourceimage.src = url;
   sourcename.textContent = `${name} · loading preview`;
   invalidateexports();
@@ -852,6 +764,7 @@ function loadupload(files) {
     }
   }
   dropsubtitle.textContent = "Choose a JPG, PNG, WebP, GIF or SVG image.";
+  dropsubtitle.hidden = false;
 }
 
 async function downloadlevel() {
@@ -865,7 +778,7 @@ async function downloadlevel() {
   downloadlink.href = currentdownload;
   downloadlink.download = `${name}.gmd`;
   downloadlink.hidden = false;
-  statuscopy.textContent = "GMD ready. Preparing GDLVL...";
+  statuscopy.textContent = "Preparing GDLVL.";
   try {
     const contents = await gdlvldocument(raw, name);
     if (version !== exportversion || revision !== fitrevision || fitreadyrevision !== fitrevision) return;
@@ -873,9 +786,7 @@ async function downloadlevel() {
     gdlvldownload.href = currentgdlvldownload;
     gdlvldownload.download = `${name}.gdlvl`;
     gdlvldownload.hidden = false;
-    const objects = tilecount.textContent;
-    const channels = channelcount.textContent;
-    statuscopy.textContent = `GMD and GDLVL ready. ${objects} object${objects === "1" ? "" : "s"}, ${channels} colour channel${channels === "1" ? "" : "s"}.${visibilitywarning()}`;
+    statuscopy.textContent = `Level files ready.${visibilitywarning()}`;
   } catch (error) {
     if (version !== exportversion || revision !== fitrevision || fitreadyrevision !== fitrevision) return;
     statuscopy.textContent = `GMD ready. GDLVL export failed: ${error.message}${visibilitywarning()}`;
@@ -893,6 +804,12 @@ function applypreset() {
   coverageselect.value = preset.coverage;
   schedulepreview();
 }
+
+const advanceddialog = document.querySelector(".advanceddialog");
+document.querySelector(".advancedopen").addEventListener("click", () => advanceddialog.showModal());
+document.querySelectorAll(".dialogclose").forEach(button => {
+  button.addEventListener("click", () => button.closest(".appdialog").close());
+});
 
 sourceimage.addEventListener("load", async () => {
   const revision = ++imagerevision;
@@ -943,11 +860,6 @@ dropzone.addEventListener("drop", event => {
 });
 
 presetselect.addEventListener("change", applypreset);
-catalogsearch.addEventListener("input", () => rendercatalog(true));
-catalogmore.addEventListener("click", () => {
-  cataloglimit = Math.min(catalogresults.length, cataloglimit + 72);
-  rendercatalog();
-});
 limitslider.addEventListener("input", schedulepreview);
 croptoggle.addEventListener("change", () => {
   if (originalrevision === fitrevision) finishcrop(fitrevision);
