@@ -266,10 +266,8 @@ body.imgpage {
   display: grid; grid-template-rows: auto minmax(0, 1fr);
 }
 
-.appdialog::backdrop { background: #1d110d4b; }
-
-@media (prefers-reduced-motion: no-preference) {
-  .appdialog[open]::backdrop { animation: backdropopen 140ms linear both; }
+.appdialog::backdrop {
+  background: #1d110d59; animation: backdropopen 140ms linear both;
 }
 
 @keyframes backdropopen {

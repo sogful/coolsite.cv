@@ -1,6 +1,5 @@
 (() => {
   const controls = ".gdbutton, .optionarrow";
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
   const accelerate = "cubic-bezier(.333333, 0, .666667, .333333)";
   const decelerate = "cubic-bezier(.333333, .666667, .666667, 1)";
   const bounce = [
@@ -26,7 +25,7 @@
     const from = parseFloat(getComputedStyle(button).scale) || 1;
     const to = selected ? 1.26 : 1;
     reset(button);
-    if (reduced.matches || from === to) return;
+    if (from === to) return;
     const keyframes = bounce.map(([offset, progress, easing]) => ({
       offset, easing, scale: String(from + (to - from) * progress),
     }));
