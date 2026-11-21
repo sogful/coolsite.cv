@@ -4,6 +4,10 @@ function opacitybyte(candidate) {
   return Math.round(255 * (candidate.opacity ?? 1));
 }
 
+function exportedopacity(alpha) {
+  return cleannumber(alpha / 255, 6);
+}
+
 function opacitycost(candidates) {
   return new Set(candidates.map(opacitybyte).filter(alpha => alpha < 255)).size;
 }

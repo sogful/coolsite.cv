@@ -155,11 +155,7 @@ function creategpupreview(fallback) {
         filters[page] = filter;
       }
       gl.blendFunc(sprite.blendSource ?? gl.ONE, sprite.blendDestination ?? gl.ONE_MINUS_SRC_ALPHA);
-      const color = sprite.role === "fixed" ? sprite.fixedColor || [255, 255, 255]
-        : sprite.role === "detail" && Array.isArray(candidate.detailRGB) ? candidate.detailRGB
-          : sprite.role !== "detail" && Array.isArray(candidate.baseRGB) ? candidate.baseRGB
-            : [candidate.red, candidate.green, candidate.blue];
-      gl.uniform4f(tint, color[0] / 255, color[1] / 255, color[2] / 255, sprite.opacity * (candidate.opacity ?? 1));
+      gl.uniform4fv(tint, spritetint(candidate, sprite));
       for (const [index, sourceindex] of [0, 1, 3, 2].entries()) {
         const [x, y] = sprite.vertices[sourceindex];
         const localx = (x - candidate.asset.centrex) * candidate.width / candidate.asset.naturalwidth;

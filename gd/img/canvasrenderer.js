@@ -13,11 +13,28 @@ function preparecanvascandidate(candidate) {
   candidate.matrixdeterminant = candidate.matrix00 * candidate.matrix11 - candidate.matrix01 * candidate.matrix10;
 }
 
+function spritetint(candidate, sprite) {
+  const color = sprite.role === "fixed" ? sprite.fixedColor || [255, 255, 255]
+    : sprite.role === "detail" && Array.isArray(candidate.detailRGB) ? candidate.detailRGB
+      : sprite.role !== "detail" && Array.isArray(candidate.baseRGB) ? candidate.baseRGB
+        : [candidate.red, candidate.green, candidate.blue];
+  if (!(candidate.opacity < 1)) return [color[0] / 255, color[1] / 255, color[2] / 255, sprite.opacity];
+  const levelalpha = Math.fround(Number(exportedopacity(opacitybyte(candidate))));
+  const groupalpha = Math.floor(Math.fround(levelalpha * 255));
+  const alpha = Math.floor(groupalpha * sprite.opacity);
+  if (!alpha) return [0, 0, 0, 0];
+  const tintchannel = channel => Math.floor(channel * alpha / 255) / alpha;
+  return [tintchannel(color[0]), tintchannel(color[1]), tintchannel(color[2]), alpha / 255];
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
 function createcanvaspreview() {
   const tintcanvas = document.createElement("canvas");
   const tintcontext = tintcanvas.getContext("2d", {willReadFrequently: true});
 
-  function paintbackground(context, width, height, screenwidth, screenheight, tile, tilepixels, color) {
+  function paintbackground(context, width, height, screenwidth, screenheight, tile, tilepixels, color,
+    cropwidth = screenwidth, cropheight = screenheight) {
     context.save();
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.globalCompositeOperation = "source-over";
@@ -31,8 +48,8 @@ function createcanvaspreview() {
       const destination = pixels.data;
       const source = tilepixels;
       const wrap = (value, size) => (value % size + size) % size;
-      const phasecenterx = 255.6;
-      const phasecentery = 384.3;
+      const phasecenterx = 255.6 + (Math.floor(cropwidth / 2) - cropwidth / 2) * screenwidth / cropwidth;
+      const phasecentery = 384.3 + (Math.floor(cropheight / 2) - cropheight / 2) * screenheight / cropheight;
       for (let y = 0; y < height; y += 1) {
         const screeny = phasecentery + (y + 0.5 - height / 2) * screenheight / height;
         const sourcey = wrap(screeny * tileheight / 576 - 0.5, tileheight);
@@ -84,14 +101,7 @@ function createcanvaspreview() {
     });
     for (const entry of meshes) {
       const sprite = entry.sprite;
-      const fallback = [candidate.red, candidate.green, candidate.blue];
-      const tint = sprite.role === "fixed"
-        ? (sprite.fixedColor || [255, 255, 255])
-        : sprite.role === "detail" && Array.isArray(candidate.detailRGB)
-          ? candidate.detailRGB
-          : sprite.role !== "detail" && Array.isArray(candidate.baseRGB)
-            ? candidate.baseRGB
-            : fallback;
+      const tint = spritetint(candidate, sprite);
       const page = spriteimages[sprite.page];
       const [left, top, width, height] = sprite.source;
       const [pagewidth, pageheight] = spritedimensions[sprite.page];
@@ -120,9 +130,7 @@ function createcanvaspreview() {
       tintcontext.drawImage(page, left, top, width, height, 0, 0, width, height);
       const tinted = tintcontext.getImageData(0, 0, width, height);
       const data = tinted.data;
-      const red = tint[0] / 255;
-      const green = tint[1] / 255;
-      const blue = tint[2] / 255;
+      const [red, green, blue] = tint;
       for (let offset = 0; offset < data.length; offset += 4) {
         data[offset] = Math.round(data[offset] * red);
         data[offset + 1] = Math.round(data[offset + 1] * green);
@@ -160,7 +168,7 @@ function createcanvaspreview() {
         context.closePath();
         context.clip();
         context.globalCompositeOperation = sprite.blendDestination === 1 ? "lighter" : "source-over";
-        context.globalAlpha = sprite.opacity * (candidate.opacity ?? 1);
+        context.globalAlpha = tint[3];
         context.imageSmoothingEnabled = sprite.sampler !== "nearest" && candidate.smoothingquality !== "nearest";
         context.imageSmoothingQuality = candidate.smoothingquality || "medium";
         context.transform(a, b, c, d, e, f);

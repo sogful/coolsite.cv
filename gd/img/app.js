@@ -668,7 +668,7 @@ function buildsource() {
   if (redchannel) colorlines.push("1_255_2_0_3_0_4_-1_6_999_7_1");
   const opacityhelpers = opacitygroups.size;
   for (const [group, alpha] of opacitygroups) {
-    helpers.push(["1", "1007", "2", "15", "3", "120", "10", "0", "35", cleannumber(alpha / 255, 6), "51", group].join(","));
+    helpers.push(["1", "1007", "2", "15", "3", "120", "10", "0", "35", exportedopacity(alpha), "51", group].join(","));
   }
   const header = ["kA2", "0", "kA3", "0", "kA4", "0", "kA6", "1", "kA7", "1", "kA8", "0", "kA9", "0", "kA10", "0", "kA11", "0", "kA13", "0", "kA22", "0", "kA40", "1", "kS38", `${colorlines.join("|")}|`];
   return {raw: `${header.join(",")};${[...parts, ...helpers].join(";")};`,
