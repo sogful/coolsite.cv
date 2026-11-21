@@ -50,8 +50,7 @@
 .gdplain::before,
 .gdgold::before,
 .gdlogo::before,
-.gdlogo::after,
-.gdlogoface::before {
+.gdlogo::after {
   content: attr(data-text) / "";
   position: absolute; inset: 0;
   pointer-events: none; user-select: none;
@@ -73,34 +72,33 @@
 
 .gdlogo {
   font-family: gdoxygene, sans-serif; text-transform: uppercase;
-  word-spacing: .26em; color: #ccff55;
+  word-spacing: .335em; color: #ccff55;
 }
 
 .gdlogo[data-text] {
-  filter: drop-shadow(.055em .045em 0 #0005);
+  filter: drop-shadow(.0574em .032em 0 #0000004d);
 }
 
 .gdlogo::before,
 .gdlogo::after {
   z-index: -2; color: #fff;
-  filter: drop-shadow(0 .085em 0 currentColor);
-  -webkit-text-stroke: .138em currentColor;
+  -webkit-text-stroke: .116em currentColor;
 }
 
 .gdlogo::after {
   z-index: -1; color: #000;
-  -webkit-text-stroke-width: .092em;
+  -webkit-text-stroke-width: .078em;
 }
 
 .gdlogoface {
-  background-image: linear-gradient(to bottom, #ffffaa 0 .13em,
-    #ccff55 .13em .52em, #88ff33 .52em); background-clip: text;
-  color: transparent;
+  display: block; color: transparent;
+  background: linear-gradient(to bottom, #ccff55 0 .486em, #88ff33 .486em);
+  background-clip: text; filter: url(#gdlogobevel);
 }
 
-.gdlogoface::before {
-  z-index: -1; color: #66aa22;
-  transform: translateY(.085em);
+.gdletterfilters {
+  position: absolute; pointer-events: none;
+  inline-size: 0; block-size: 0;
 }
 
 @media (forced-colors: active) {
@@ -114,8 +112,8 @@
   .gdplain::before,
   .gdgold::before,
   .gdlogo::before,
-  .gdlogo::after,
-  .gdlogoface::before { display: none; }
+  .gdlogo::after { display: none; }
 
-  .gdlogo[data-text] { filter: none; }
+  .gdlogo[data-text],
+  .gdlogoface { filter: none; }
 }
