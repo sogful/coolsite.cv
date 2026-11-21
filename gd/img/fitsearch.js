@@ -109,6 +109,10 @@ async function runfitsearch(limit, trials, revision) {
           await refinephotocontours(revision, 0.18);
         }
       }
+      if (revision === fitrevision && imageopaque && plan.length >= 80) {
+        statuscopy.textContent = "Refining smooth areas.";
+        await refinesmoothareas(revision);
+      }
     }
     return revision === fitrevision;
   } finally {
@@ -278,13 +282,14 @@ async function contourpriorities(objects, source, screen, width, height, scale, 
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-function contourstamps(width, assets, broad) {
+function contourstamps(width, assets, broad, directions = null) {
   const catalog = Array.from({length: 16}, () => []);
   const factor = Math.max(0.7, Math.min(1.7, width / 252));
   const sizes = [[2, 1.1], [4, 1.2], [7, 1.4], [12, 1.3], [19, 1.7], [29, 1.8],
     [5, 2.5], [9, 2.8], [16, 3.4], [6, 4], [11, 5.5], [17, 7], [4, 4], [8, 8]];
   if (broad) sizes.push([27, 10], [34, 17], [20, 14], [32, 3], [28, 5]);
   for (let angle = 0; angle < 16; angle++) {
+    if (directions && !directions.includes(angle)) continue;
     const theta = angle * Math.PI / 16, cos = Math.cos(theta), sin = Math.sin(theta);
     for (const asset of assets) {
       const entry = batchfitter.meshgroups(asset).flat()[0];
@@ -365,7 +370,7 @@ function contourbrush(source, screen, width, height, field, levels) {
       costs[p] = focuscost(p);
     }
   }
-  return {focus, score, paint, costs};
+  return {focus, score, paint, costs, pixels};
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
@@ -455,4 +460,144 @@ async function refinephotocontours(revision, fraction = 0.4) {
     await refinelayercolors(revision, () => contouredgeerror(source, contourpixels(resultcanvas, width, height), width, height) < edge, frozen);
   }
   return accepted;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+function smoothfield(source, width, height) {
+  const quiet = new Uint8Array(width * height).fill(1);
+  const weight = new Float32Array(width * height).fill(1);
+  const steps = [2, 2 * width, 2 * width + 2, 2 * width - 2];
+  for (let y = 2; y < height - 2; y++) {
+    for (let x = 2; x < width - 2; x++) {
+      const p = y * width + x, i = p * 4;
+      let span = 0;
+      for (const step of steps) {
+        for (let c = 0; c < 3; c++) {
+          span = Math.max(span, Math.abs(source[i + c] - source[i + c - 4 * step]),
+            Math.abs(source[i + c] - source[i + c + 4 * step]));
+        }
+      }
+      if (span <= 16) quiet[p] = 0;
+    }
+  }
+  return {quiet, weight, steps};
+}
+
+function smoothresiduals(source, screen, field, width) {
+  const peaks = [];
+  let roughness = 0, spikes = 0;
+  for (let p = 0; p < field.quiet.length; p++) {
+    if (field.quiet[p]) continue;
+    const i = p * 4;
+    let error = 0, contrast = 0;
+    for (let c = 0; c < 3; c++) {
+      const residual = screen[i + c] - source[i + c];
+      error = Math.max(error, Math.abs(residual));
+      for (const step of [4, width * 4]) {
+        roughness += Math.abs(residual - (screen[i + c + step] - source[i + c + step]));
+      }
+    }
+    if (error < 16) continue;
+    for (const step of field.steps) {
+      let center = 0, slope = 0;
+      for (let c = 0; c < 3; c++) {
+        const a = i + c - step * 4, b = i + c + step * 4;
+        const left = screen[a] - source[a], right = screen[b] - source[b];
+        center = Math.max(center, Math.abs(screen[i + c] - source[i + c] - (left + right) / 2));
+        slope = Math.max(slope, Math.abs(left - right));
+      }
+      contrast = Math.max(contrast, center - slope / 4);
+    }
+    const severity = Math.min(error, contrast);
+    if (severity < 16) continue;
+    const x = p % width, y = Math.floor(p / width);
+    const bottom = Math.min(field.quiet.length / width - 1, y + 4);
+    const right = Math.min(width - 1, x + 4);
+    let smooth = 0, samples = 0;
+    for (let row = Math.max(0, y - 4); row <= bottom; row += 2) {
+      for (let col = Math.max(0, x - 4); col <= right; col += 2) {
+        if (!field.quiet[row * width + col]) smooth++;
+        samples++;
+      }
+    }
+    peaks.push({p, severity: severity * (0.3 + 0.7 * smooth / samples)});
+    spikes += severity * severity;
+  }
+  peaks.sort((a, b) => b.severity - a.severity);
+  return {peaks, spikes, roughness};
+}
+
+async function refinesmoothareas(revision) {
+  const original = plan, zoom = previewzoomslider.value;
+  const current = () => revision === fitrevision && plan === original && zoom === previewzoomslider.value;
+  if (!current() || !imageopaque || !sourceisopaque()) return false;
+  const {width, height} = previewsize();
+  if (width * height > 150000 || Math.min(width, height) < 12) return false;
+  const asset = library.find(item => item.id === 497);
+  if (!asset) return false;
+  const before = measurefittedpreview();
+  const source = contourpixels(sourcecomparecanvas, width, height);
+  const screen = contourpixels(resultcanvas, width, height);
+  const field = smoothfield(source, width, height);
+  const prior = smoothresiduals(source, screen, field, width);
+  if (!prior.peaks.length) return false;
+  const edge = contouredgeerror(source, screen, width, height);
+  const scale = width / target.width, offset = (height - target.height * scale) / 2;
+  if (!batchfitter) batchfitter = createbatchfitter();
+  const priority = await contourpriorities(original, source, screen, width, height, scale, offset, field, current);
+  if (!priority || !current()) return false;
+  const sorted = original.map((item, i) => i).filter(i => Number.isFinite(priority[i])
+    && original[i].role !== "underlay" && !original[i].macro).sort((a, b) => priority[a] - priority[b]);
+  const budget = Math.min(sorted.length, prior.peaks.length, 40, Math.ceil(original.length * 0.03));
+  if (!budget) return false;
+  const directions = [0, 4, 8, 12];
+  const stamps = contourstamps(width, [asset], false, directions).flat();
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d", {willReadFrequently: true});
+  for (const room of [...new Set([budget, Math.ceil(budget / 4)])]) {
+    const removed = new Set(sorted.slice(0, room));
+    const proposal = original.filter((item, i) => !removed.has(i));
+    previewrenderer.paintbackground(context, width, height, width, height, backgroundtile, backgroundtilepixels, background);
+    context.save();
+    context.translate(0, offset);
+    previewrenderer.renderpreview(context, proposal, scale, scale, spriteatlasimages, spriteatlasdimensions);
+    context.restore();
+    const brush = contourbrush(source, contourpixels(canvas, width, height), width, height, field, Number(colourslider.value));
+    let used = 0, deadline = performance.now() + 12;
+    for (const {p} of prior.peaks.slice(0, room * 24)) {
+      if (performance.now() >= deadline) {
+        await yieldfittask();
+        if (!current()) return false;
+        deadline = performance.now() + 12;
+      }
+      const i = p * 4;
+      if (Math.max(Math.abs(source[i] - brush.pixels[i]), Math.abs(source[i + 1] - brush.pixels[i + 1]),
+        Math.abs(source[i + 2] - brush.pixels[i + 2])) < 16) continue;
+      const best = {gain: 0};
+      for (const stamp of stamps) brush.score(stamp, p, best);
+      if (!best.stamp) continue;
+      const {stamp, red, green, blue} = best;
+      brush.paint(best);
+      proposal.push({asset, x: (p % width + 0.5) / scale, y: (Math.floor(p / width) + 0.5 - offset) / scale,
+        width: stamp.w / scale, height: stamp.h / scale, angle: stamp.angle, warpx: 0, warpy: 0, red, green, blue});
+      if (++used === room) break;
+    }
+    if (!used || !current()) continue;
+    let accepted = false;
+    try {
+      plan = proposal;
+      const color = measurefittedpreview();
+      const rendered = contourpixels(resultcanvas, width, height);
+      const next = smoothresiduals(source, rendered, field, width);
+      accepted = color <= before && next.roughness <= prior.roughness && next.spikes < prior.spikes
+        && contouredgeerror(source, rendered, width, height) <= edge;
+      if (accepted) return true;
+    } finally {
+      if (!accepted) {plan = original; drawresult();}
+    }
+  }
+  return false;
 }
