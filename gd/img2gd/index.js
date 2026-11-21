@@ -625,8 +625,9 @@ function buildsource() {
     const warpx = Number(cleannumber(candidate.warpx || 0));
     const warpy = Number(cleannumber(candidate.warpy || 0));
     const angle = warpx === warpy && warpx ? warpx : candidate.angle;
+    const layer = candidate.zlayer ?? (candidate.role === "underlay" ? 3 : 5);
     const fields = [
-      "1", candidate.asset.id, "2", cleannumber(position.x), "3", cleannumber(position.y), "20", "5", "21", basechannel, "22", detailchannel, "96", "1", "64", "1", "67", "1", "121", "1", "24", candidate.role === "underlay" ? "3" : "5", "25", index + 1, "128", cleannumber(scalex), "129", cleannumber(scaley), "6", cleannumber(angle),
+      "1", candidate.asset.id, "2", cleannumber(position.x), "3", cleannumber(position.y), "20", "5", "21", basechannel, "22", detailchannel, "96", "1", "64", "1", "67", "1", "121", "1", "24", layer, "25", index + 1, "128", cleannumber(scalex), "129", cleannumber(scaley), "6", cleannumber(angle),
     ];
     if (warpx !== warpy) {
       if (warpy) fields.push("131", cleannumber(warpy));
