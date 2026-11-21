@@ -160,7 +160,7 @@ function createcanvaspreview() {
         context.closePath();
         context.clip();
         context.globalCompositeOperation = sprite.blendDestination === 1 ? "lighter" : "source-over";
-        context.globalAlpha = sprite.opacity;
+        context.globalAlpha = sprite.opacity * (candidate.opacity ?? 1);
         context.imageSmoothingEnabled = sprite.sampler !== "nearest" && candidate.smoothingquality !== "nearest";
         context.imageSmoothingQuality = candidate.smoothingquality || "medium";
         context.transform(a, b, c, d, e, f);

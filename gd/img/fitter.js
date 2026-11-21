@@ -548,11 +548,11 @@ function measurepreviewerror() {
   sourcecomparecanvas.width = resultcanvas.width;
   sourcecomparecanvas.height = resultcanvas.height;
   const comparecontext = sourcecomparecanvas.getContext("2d", {willReadFrequently: true});
-  comparecontext.fillStyle = `rgb(${background.join(",")})`;
-  comparecontext.fillRect(0, 0, sourcecomparecanvas.width, sourcecomparecanvas.height);
-  comparecontext.imageSmoothingEnabled = true;
-  comparecontext.imageSmoothingQuality = "high";
-  comparecontext.drawImage(sourcecanvas, 0, 0, sourcecomparecanvas.width, sourcecomparecanvas.height);
+  if (imageopaque) {
+    comparecontext.imageSmoothingEnabled = true;
+    comparecontext.imageSmoothingQuality = "high";
+    comparecontext.drawImage(sourcecanvas, 0, 0, sourcecomparecanvas.width, sourcecomparecanvas.height);
+  } else drawsource(sourcecomparecanvas);
   const source = comparecontext.getImageData(0, 0, sourcecomparecanvas.width, sourcecomparecanvas.height).data;
   const result = resultcanvas.getContext("2d", {willReadFrequently: true}).getImageData(0, 0, resultcanvas.width, resultcanvas.height).data;
   for (let index = 0; index < source.length; index += 4) {

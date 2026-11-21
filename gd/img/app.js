@@ -525,16 +525,17 @@ function resizecanvases() {
     : `At ${cleannumber(zoom)}×, the 720-unit image is ${size.width} px wide. PNG export uses the preview's pixel scale.`;
 }
 
-function drawsource() {
-  const context = sourcecanvas.getContext("2d");
+function drawsource(canvas = sourcecanvas) {
+  const context = canvas.getContext("2d");
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.globalCompositeOperation = "source-over";
   context.globalAlpha = 1;
-  previewrenderer.paintbackground(context, sourcecanvas.width, sourcecanvas.height, sourcecanvas.width,
-    sourcecanvas.height, backgroundtile, backgroundtilepixels, background);
+  const screen = previewsize();
+  previewrenderer.paintbackground(context, canvas.width, canvas.height, screen.width,
+    screen.height, backgroundtile, backgroundtilepixels, background);
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
-  context.drawImage(sourceimage, 0, 0, sourcecanvas.width, sourcecanvas.height);
+  context.drawImage(sourceimage, 0, 0, canvas.width, canvas.height);
 }
 
 function drawresult() {
@@ -606,6 +607,7 @@ function buildsource() {
   const pixelscale = 720 / Math.max(target.width, 1);
   const parts = [];
   const helpers = visibilityobjects();
+  const opacitygroups = new Map();
   for (let index = 0; index < plan.length; index += 1) {
     const candidate = plan[index];
     const tint = [candidate.red, candidate.green, candidate.blue];
@@ -652,15 +654,26 @@ function buildsource() {
       fields.push("44", candidate.detailhsv);
     }
     for (const [key, value] of Object.entries(candidate.asset.gmdfields || {})) fields.push(key, value);
-    if (helpers.length) fields.push("57", "5001");
+    const groups = helpers.length ? ["5001"] : [];
+    const alpha = opacitybyte(candidate);
+    if (alpha < 255) {
+      const group = 5002 + alpha;
+      groups.push(group);
+      opacitygroups.set(group, alpha);
+    }
+    if (groups.length) fields.push("57", groups.join("."));
     fields.push("372", "1");
     parts.push(fields.join(","));
   }
   if (redchannel) colorlines.push("1_255_2_0_3_0_4_-1_6_999_7_1");
+  const opacityhelpers = opacitygroups.size;
+  for (const [group, alpha] of opacitygroups) {
+    helpers.push(["1", "1007", "2", "15", "3", "120", "10", "0", "35", cleannumber(alpha / 255, 6), "51", group].join(","));
+  }
   const header = ["kA2", "0", "kA3", "0", "kA4", "0", "kA6", "1", "kA7", "1", "kA8", "0", "kA9", "0", "kA10", "0", "kA11", "0", "kA13", "0", "kA22", "0", "kA40", "1", "kS38", `${colorlines.join("|")}|`];
   return {raw: `${header.join(",")};${[...parts, ...helpers].join(";")};`,
     channels: colors.size + Number(redchannel), overflow: redchannel && !hsvmode,
-    objects: parts.length + helpers.length, helpers: helpers.length};
+    objects: parts.length + helpers.length, helpers: helpers.length, opacityhelpers};
 }
 
 function levelname() {
@@ -736,7 +749,7 @@ function updatepreview(updatecatalog = false) {
     ? `${underlaycount.toLocaleString()} dominant-color base object${underlaycount === 1 ? "" : "s"} + ${fittedcount.toLocaleString()} fitted sprites (${underlaymessage})`
     : `${fittedcount.toLocaleString()} fitted sprites (${underlaymessage})`;
   const seednote = searchcount > 1 ? ` · best of ${searchcount} searches` : "";
-  const helpernote = result.helpers ? ` + ${result.helpers} visibility helpers` : "";
+  const helpernote = result.helpers ? ` + ${result.helpers} ${result.opacityhelpers ? "setup" : "visibility"} helper${result.helpers === 1 ? "" : "s"}` : "";
   statuscopy.textContent = `${objectsummary}${helpernote} · ${result.objects.toLocaleString()} objects total${seednote}. ${method}, ${transforms}, ${mapping}, ${fiterror.toFixed(1)}% preview mean RGB error vs source at ${cleannumber(previewsize().zoom)}× editor zoom in ${Math.max(1, Math.round(fittime))} ms.${visibilitywarning()}`;
   if (updatecatalog) rendercatalog(true);
 }

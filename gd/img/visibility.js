@@ -1,5 +1,13 @@
 const visibilitycost = 5;
 
+function opacitybyte(candidate) {
+  return Math.round(255 * (candidate.opacity ?? 1));
+}
+
+function opacitycost(candidates) {
+  return new Set(candidates.map(opacitybyte).filter(alpha => alpha < 255)).size;
+}
+
 function visibilityrequired(candidates = plan) {
   const pixelscale = 720 / Math.max(target.width, 1);
   return candidates.some(candidate => {
