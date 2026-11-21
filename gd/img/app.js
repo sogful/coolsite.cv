@@ -75,6 +75,7 @@ let imagerevision = 0;
 let alphaready = false;
 let originalplan = [];
 let croppedplan = null;
+let originalrevision = -1;
 let dominantcolor = null;
 let plan = [];
 let underlaycount = 0;
@@ -764,14 +765,6 @@ function updatepreview(updatecatalog = false) {
   if (updatecatalog) rendercatalog(true);
 }
 
-function applycrop() {
-  if (croptoggle.checked && !croptoggle.disabled) {
-    croppedplan ??= croprectangle(originalplan, Number(limitslider.value));
-    plan = croppedplan;
-  } else plan = originalplan;
-  underlaycount = plan.filter(object => object.role === "underlay").length;
-}
-
 async function refresh(revision = fitrevision) {
   if (revision !== fitrevision) return false;
   updatefields();
@@ -796,12 +789,10 @@ async function refresh(revision = fitrevision) {
   if (!await runfitsearch(limit, Number(trialslider.value), revision)) return false;
   if (revision !== fitrevision) return false;
   originalplan = plan;
+  originalrevision = revision;
   croppedplan = null;
-  applycrop();
   fittime = performance.now() - started;
-  fitreadyrevision = revision;
-  updatepreview(true);
-  return true;
+  return finishcrop(revision);
 }
 
 function schedulepreview() {
@@ -944,9 +935,7 @@ catalogmore.addEventListener("click", () => {
 });
 limitslider.addEventListener("input", schedulepreview);
 croptoggle.addEventListener("change", () => {
-  if (fitreadyrevision !== fitrevision) return;
-  applycrop();
-  updatepreview(true);
+  if (originalrevision === fitrevision) finishcrop(fitrevision);
 });
 underlaytoggle.addEventListener("change", () => {
   updatefields();

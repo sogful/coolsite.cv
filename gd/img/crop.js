@@ -168,10 +168,14 @@ function croptriangles(object, polygon, slots) {
   return [];
 }
 
-function croprectangle(objects, limit) {
+function* cropsteps(objects, limit) {
   if (!objects.length || !limit) return [];
   const alternatives = [];
-  const groups = objects.map((object, index) => {
+  function clip(object, index) {
+    const {asset} = object;
+    const radius = object.width * (0.5 + 2 * Math.abs(asset.centrex) / asset.naturalwidth)
+      + object.height * (0.5 + 2 * Math.abs(asset.centrey) / asset.naturalheight) + cropmargin(object);
+    if (object.x >= radius && object.y >= radius && object.x + radius <= target.width && object.y + radius <= target.height) return [object];
     const bounds = cropbounds(object);
     if (cropinside(bounds) && cropinside(cropbounds(object, true))) return [object];
     const margin = cropmargin(object);
@@ -186,13 +190,19 @@ function croprectangle(objects, limit) {
       if (object.asset.id === 694 || !aligned) alternatives.push({index, object, polygon, area});
     }
     return [choice];
-  });
+  }
+  const groups = [];
+  for (const object of objects) {
+    groups.push(clip(object, groups.length));
+    yield;
+  }
   const used = groups.flat();
   const opacity = opacitycost(used);
   let remaining = limit - used.length - opacity;
   let needsvisibility = limit > visibilitycost && visibilityrequired(used);
   if (needsvisibility) remaining -= visibilitycost;
   for (const {index, object, polygon} of alternatives.sort((a, b) => b.area - a.area)) {
+    yield;
     const pieces = croptriangles(object, polygon, remaining + 1);
     if (!pieces.length) continue;
     const setup = !needsvisibility && limit > visibilitycost && visibilityrequired(pieces) ? visibilitycost : 0;
@@ -203,6 +213,27 @@ function croprectangle(objects, limit) {
     if (setup) needsvisibility = true;
   }
   return groups.flat();
+}
+
+function croprectangle(objects, limit) {
+  const steps = cropsteps(objects, limit);
+  let step;
+  do {step = steps.next();} while (!step.done);
+  return step.value;
+}
+
+async function croprectangleasync(objects, limit, current) {
+  const steps = cropsteps(objects, limit);
+  let deadline = performance.now() + 8;
+  while (current()) {
+    const step = steps.next();
+    if (step.done) return step.value;
+    if (performance.now() >= deadline) {
+      await yieldfittask();
+      deadline = performance.now() + 8;
+    }
+  }
+  return null;
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
@@ -230,5 +261,39 @@ async function cropopaque(image, current) {
       }
     }
   }
+  return true;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+let cropversion = 0;
+
+async function finishcrop(revision) {
+  const version = ++cropversion;
+  const current = () => revision === fitrevision && version === cropversion;
+  const enabled = croptoggle.checked && !croptoggle.disabled;
+  if (enabled && !croppedplan) {
+    fitreadyrevision = -1;
+    invalidateexports();
+    pngdownload.hidden = true;
+    renderstate.textContent = "CROPPING";
+    statuscopy.textContent = "Fitting objects to the image edges.";
+    try {
+      const objects = await croprectangleasync(originalplan, Number(limitslider.value), current);
+      if (!objects || !current()) return false;
+      croppedplan = objects;
+    } catch (error) {
+      if (current()) {
+        renderstate.textContent = "ERROR";
+        statuscopy.textContent = "Could not fit the image edges. Turn off cropping to use the original fit.";
+        console.error(error);
+      }
+      return false;
+    }
+  }
+  plan = enabled ? croppedplan : originalplan;
+  underlaycount = plan.filter(object => object.role === "underlay").length;
+  fitreadyrevision = revision;
+  updatepreview(true);
   return true;
 }
