@@ -29,6 +29,7 @@
   <script src="src/fit/pools.js" defer></script>
   <script src="src/fit/regions.js" defer></script>
   <script src="src/fit/transparency.js" defer></script>
+  <script src="src/fit/pixelart.js" defer></script>
   <script src="src/export/visibility.js" defer></script>
   <script src="src/fit/crop.js" defer></script>
   <script src="src/fit/photos.js" defer></script>
@@ -114,49 +115,55 @@
           <div class="dialogbody advancedfields">
             <div class="fieldlabel">
               <span class="optionlabel">Search mode</span>
-              <select class="fitselect gdinput">
+              <select class="fitselect gdinput" aria-describedby="search-help">
                 <option value="auto" selected>Automatic</option>
                 <option value="adaptive">Texture search</option>
                 <option value="regions">Flat color regions</option>
-                <option value="grid">Object grid</option>
+                <option value="pixelart">Pixel art</option>
               </select>
+              <small class="settinghelp" id="search-help">Pixel art matches the source pixels with sharp rectangles.</small>
             </div>
             <div class="fieldlabel">
               <span class="optionlabel">Fitting coverage</span>
-              <select class="coverageselect gdinput">
+              <select class="coverageselect gdinput" aria-describedby="coverage-help">
                 <option value="1" selected>1 sample per pixel</option>
                 <option value="2">4 samples per pixel</option>
               </select>
+              <small class="settinghelp" id="coverage-help">More samples can improve fine edges and take longer.</small>
             </div>
-            <div class="fieldlabel seedsearchfield" hidden>
+            <div class="fieldlabel">
               <span class="optionlabel">Max seed search</span>
-              <select class="seedsearchselect gdinput">
+              <select class="seedsearchselect gdinput" aria-describedby="seeds-help" disabled>
                 <option value="3" selected>3 starts</option>
                 <option value="6">6 starts</option>
               </select>
+              <small class="settinghelp" id="seeds-help">Try more starting points when Effort is 100.</small>
             </div>
             <div class="fieldlabel">
               <span class="optionlabel">Sampling</span>
-              <select class="samplerselect gdinput">
+              <select class="samplerselect gdinput" aria-describedby="sampling-help">
                 <option value="average" selected>Area average</option>
                 <option value="nearest">Nearest pixel</option>
               </select>
+              <small class="settinghelp" id="sampling-help">Area average blends source pixels. Nearest pixel keeps their colors.</small>
             </div>
             <div class="fieldlabel sliderlabel colourlevelsfield">
               <span class="rangecaption" id="colourlevels-label">Color levels</span>
               <div class="gdslider">
-                <input class="colourslider gdrange" id="colourlevels" type="range" min="2" max="256" value="256" step="1" aria-labelledby="colourlevels-label">
+                <input class="colourslider gdrange" id="colourlevels" type="range" min="2" max="256" value="256" step="1" aria-labelledby="colourlevels-label" aria-describedby="colors-help">
                 <input class="rangevalueeditor" type="text" inputmode="numeric" value="256" autocomplete="off" spellcheck="false" aria-label="Color levels value" aria-describedby="colourlevels-error">
               </div>
               <span class="rangevaluemessage" id="colourlevels-error" role="status" hidden><cr></cr></span>
+              <small class="settinghelp" id="colors-help">Lower values limit the shades the search can use.</small>
             </div>
             <div class="fieldlabel sliderlabel pngscalefield">
               <span class="rangecaption" id="pngscale-label">PNG scale</span>
               <div class="gdslider">
-                <input class="previewzoomslider gdrange" id="pngscale" type="range" min="0.15" max="0.60" value="0.35" step="0.01" aria-labelledby="pngscale-label">
+                <input class="previewzoomslider gdrange" id="pngscale" type="range" min="0.15" max="0.60" value="0.35" step="0.01" aria-labelledby="pngscale-label" aria-describedby="png-help">
                 <input class="rangevalueeditor" type="text" inputmode="decimal" value="0.35" autocomplete="off" spellcheck="false" aria-label="PNG scale value" aria-describedby="pngscale-error">
               </div>
               <span class="rangevaluemessage" id="pngscale-error" role="status" hidden><cr></cr></span>
+              <small class="settinghelp" id="png-help">Changes PNG size for regular fits. Pixel art keeps its source size.</small>
             </div>
             <div class="fieldlabel">
               <span class="optionlabel">Color channels</span>
@@ -165,6 +172,10 @@
                 <option value="channels">Separate</option>
               </select>
             </div>
+            <label class="checklabel">
+              <input class="pixelaskskip gdcheck" type="checkbox">
+              <span>Skip the pixel art prompt</span>
+            </label>
           </div>
         </dialog>
       </form>
@@ -211,6 +222,21 @@
       </section>
     </section>
   </main>
+  <dialog class="gdpane appdialog pixelartdialog" aria-labelledby="pixelarttitle" aria-describedby="pixelarthelp" closedby="any">
+    <div class="dialoghead">
+      <h2 class="dialogtitle" id="pixelarttitle"><gold>Use pixel art mode?</gold></h2>
+      <button class="gdbutton gdcircle dialogclose" type="button" aria-label="Close pixel art prompt">
+        <span class="gdcloseicon" aria-hidden="true"></span>
+      </button>
+    </div>
+    <div class="dialogbody pixelartchoice">
+      <p id="pixelarthelp">Match each source pixel with sharp rectangles.</p>
+      <div class="pixelartactions">
+        <button class="gdbutton pixelartno" type="button" autofocus><gold>No</gold></button>
+        <button class="gdbutton pixelartyes" type="button"><gold>Yes</gold></button>
+      </div>
+    </div>
+  </dialog>
   <div class="fileoverlay" popover="manual" aria-hidden="true">
     <span class="gdplain">Drag the file here!</span>
   </div>

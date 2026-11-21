@@ -4,7 +4,6 @@ const dropzone = document.querySelector(".dropzone");
 const dropsubtitle = document.querySelector(".dropsubtitle");
 const fitmessage = document.querySelector(".fitmessage");
 const examplebutton = document.querySelector(".examplebutton");
-const seedsearchfield = document.querySelector(".seedsearchfield");
 const seedsearchselect = document.querySelector(".seedsearchselect");
 const coverageselect = document.querySelector(".coverageselect");
 const limitslider = document.querySelector(".limitslider");
@@ -81,6 +80,8 @@ let sampledopaque = null;
 let opacitycheck = Promise.resolve(false);
 let imagerevision = 0;
 let alphaready = false;
+let pixelartactive = false;
+let pixelartchoice = false;
 let dominantcolor = null;
 let plan = [];
 let underlaycount = 0;
@@ -99,8 +100,8 @@ const sampledtexture = [0, 0, 0, 0];
 let fitting = false;
 let fitrevision = 0;
 let fitreadyrevision = -1;
-let fitstarttime;
 let fiterror = 0;
+let fitstarttime;
 let seedretryoffset = 0;
 let batchfitter = null;
 let batchfitteractive = false;
@@ -156,6 +157,7 @@ function targetsize(width, height, limit, opaque) {
 }
 
 function previewsize() {
+  if (pixelartactive) return {width: target.width, height: target.height, zoom: 1};
   const zoom = rangevalue(previewzoomslider);
   const requested = Math.max(1, Math.round(720 * zoom));
   const ratio = target.height / target.width;
@@ -249,16 +251,6 @@ function installunderlay(limit) {
   underlaycount = plan.length;
   underlaymessage = `Dominant-color base #${dominantcolor.map(value => value.toString(16).padStart(2, "0")).join("").toUpperCase()}.`;
   return underlaycount;
-}
-
-function gridsize(width, height, limit) {
-  if (!limit || !width || !height) return {columns: 0, rows: 0};
-  const ratio = width / height;
-  let columns = Math.max(1, Math.round(Math.sqrt(limit * ratio)));
-  let rows = Math.max(1, Math.floor(limit / columns));
-  while ((columns + 1) * rows <= limit && Math.abs((columns + 1) / rows - ratio) < Math.abs(columns / rows - ratio)) columns += 1;
-  while (columns * (rows + 1) <= limit && Math.abs(columns / (rows + 1) - ratio) < Math.abs(columns / rows - ratio)) rows += 1;
-  return {columns, rows};
 }
 
 function randomseed(extraoffset = 0) {
@@ -430,9 +422,9 @@ const overflowcanvas = previewimage.querySelector(".overflowcanvas");
 function resizecanvases() {
   const ratio = sourceimage.naturalWidth / sourceimage.naturalHeight;
   const longside = Math.max(520, Math.ceil(Math.max(ratio, 1 / ratio)));
-  const width = ratio >= 1 ? longside : Math.max(1, Math.round(longside * ratio));
-  const height = ratio >= 1 ? Math.max(1, Math.round(longside / ratio)) : longside;
   const size = previewsize();
+  const width = pixelartactive ? size.width : ratio >= 1 ? longside : Math.max(1, Math.round(longside * ratio));
+  const height = pixelartactive ? size.height : ratio >= 1 ? Math.max(1, Math.round(longside / ratio)) : longside;
   previewimage.style.setProperty("--previewaspect", size.width / size.height);
   if (resultcanvas.width !== size.width) resultcanvas.width = size.width;
   if (resultcanvas.height !== size.height) resultcanvas.height = size.height;
@@ -445,6 +437,7 @@ function previewopaque() {
 }
 
 function drawsource(canvas = sourcecanvas) {
+  if (pixelartactive) return drawpixelartsource(canvas);
   const context = canvas.getContext("2d");
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.globalCompositeOperation = "source-over";
@@ -527,6 +520,7 @@ function drawoverhang(context, objects, scale, yoffset) {
 }
 
 function drawresult(objects = plan, canvas = resultcanvas) {
+  if (pixelartactive) return drawpixelartresult(canvas, objects);
   const context = canvas.getContext("2d");
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.globalCompositeOperation = "source-over";
@@ -629,8 +623,12 @@ function buildsource() {
     const warpy = Number(cleannumber(candidate.warpy || 0));
     const angle = warpx === warpy && warpx ? warpx : candidate.angle;
     const layer = candidate.zlayer ?? (candidate.role === "underlay" ? 3 : 5);
+    const precision = pixelartactive ? 6 : 3;
     const fields = [
-      "1", candidate.asset.id, "2", cleannumber(position.x), "3", cleannumber(position.y), "20", "5", "21", basechannel, "22", detailchannel, "96", "1", "64", "1", "67", "1", "121", "1", "24", layer, "25", index + 1, "128", cleannumber(scalex), "129", cleannumber(scaley), "6", cleannumber(angle),
+      "1", candidate.asset.id, "2", cleannumber(position.x, precision), "3", cleannumber(position.y, precision),
+      "20", "5", "21", basechannel, "22", detailchannel,
+      "96", "1", "64", "1", "67", "1", "121", "1", "24", layer, "25", index + 1,
+      "128", cleannumber(scalex, precision), "129", cleannumber(scaley, precision), "6", cleannumber(angle),
     ];
     if (warpx !== warpy) {
       if (warpy) fields.push("131", cleannumber(warpy));
@@ -661,7 +659,8 @@ function buildsource() {
   if (redchannel) colorlines.push("1_255_2_0_3_0_4_-1_6_999_7_1");
   const opacityhelpers = opacitygroups.size;
   for (const [group, alpha] of opacitygroups) {
-    helpers.push(["1", "1007", "2", "15", "3", "120", "10", "0", "35", exportedopacity(alpha), "51", group].join(","));
+    const opacity = pixelartactive ? pixelartopacity(alpha) : exportedopacity(alpha);
+    helpers.push(["1", "1007", "2", "15", "3", "120", "10", "0", "35", opacity, "51", group].join(","));
   }
   const header = ["kA2", "0", "kA3", "0", "kA4", "0", "kA6", "1", "kA7", "1", "kA8", "0", "kA9", "0", "kA10", "0", "kA11", "0", "kA13", "0", "kA22", "0", "kA40", "1", "kS38", `${colorlines.join("|")}|`];
   return {raw: `${header.join(",")};${[...parts, ...helpers].join(";")};`,
@@ -708,11 +707,20 @@ function updatestart() {
   startbutton.disabled = fitting || !atlasready || !alphaready || !validrangevalues();
 }
 
+function selectedpixelart() {
+  return fitselect.value === "pixelart" || fitselect.value === "auto" && pixelartchoice;
+}
+
 function updatefields() {
-  seedsearchfield.hidden = !maximumfit()
-    || fitselect.value === "regions" || fitselect.value === "grid" || regionfitactive;
-  coverageselect.disabled = !detailfit()
-    || fitselect.value === "regions" || fitselect.value === "grid" || regionfitactive;
+  const exact = selectedpixelart();
+  const textures = !exact && fitselect.value !== "regions" && !regionfitactive;
+  seedsearchselect.disabled = !textures || !maximumfit();
+  coverageselect.disabled = !textures || !detailfit();
+  samplerselect.disabled = exact;
+  for (const slider of [colourslider, previewzoomslider]) {
+    slider.disabled = exact;
+    slider.parentElement.querySelector(".rangevalueeditor").disabled = exact;
+  }
   updateoptions();
   updatestart();
 }
@@ -730,9 +738,9 @@ async function updatepreview() {
   updatestat(tilecount, result.objects.toLocaleString());
   updatestat(gridcount, fiterror.toFixed(1) + "%");
   updatestat(channelcount, result.channels.toLocaleString());
-  updatestat(shapecount, new Set(plan.map(object => object.asset.id)).size.toLocaleString());
   updatestat(sizecount, prettysize(level.size));
-  renderstate.textContent = fitselect.value === "grid" ? "SPRITE MOSAIC" : "SPRITE FIT";
+  updatestat(shapecount, new Set(plan.map(object => object.asset.id)).size.toLocaleString());
+  renderstate.textContent = pixelartactive ? "PIXEL ART" : "SPRITE FIT";
   statuscopy.textContent = "Preparing files...";
   document.querySelector(".exportlinks").title = visibilitywarning().trim();
   comparison.hidden = false;
@@ -747,6 +755,9 @@ async function startfit() {
   if (startbutton.disabled) return;
   const revision = ++fitrevision;
   fitting = true;
+  pixelartactive = false;
+  regionfitactive = false;
+  previewimage.classList.remove("ispixelart");
   fitstarttime = performance.now();
   fitmessage.textContent = "";
   if (advanceddialog.open) advanceddialog.close();
@@ -754,8 +765,8 @@ async function startfit() {
   advancedopen.disabled = true;
   comparison.hidden = true;
   stats.hidden = false;
-  updatestat(dimensionscount, sourceimage.naturalWidth + "x" + sourceimage.naturalHeight);
   clearlivevalues();
+  updatestat(dimensionscount, sourceimage.naturalWidth + "x" + sourceimage.naturalHeight);
   invalidateexports();
   renderstate.textContent = "FITTING";
   seedretryoffset = 0;
@@ -763,8 +774,12 @@ async function startfit() {
   updatestart();
 
   try {
-    if (!await runfitsearch(limit, fittrials(), revision)) return;
-    if (!await finishcrop(revision, limit)) return;
+    if (selectedpixelart()) {
+      if (!await fitpixelart(limit, revision)) return;
+    } else {
+      if (!await runfitsearch(limit, fittrials(), revision)) return;
+      if (!await finishcrop(revision, limit)) return;
+    }
     fitreadyrevision = revision;
     await updatepreview();
   } catch (error) {
@@ -790,7 +805,12 @@ function loadimage(url, name) {
   resetpreviewview();
   clearlivevalues();
   previewimage.hidden = true;
+  previewimage.classList.remove("ispixelart");
   previewempty.hidden = true;
+  pixelartactive = false;
+  pixelartchoice = false;
+  regionfitactive = false;
+  if (pixelartdialog.open) pixelartdialog.close();
   if (advanceddialog.open) advanceddialog.close();
   sampledopaque = null;
   alphaready = false;
@@ -803,7 +823,7 @@ function loadimage(url, name) {
   filecaption.textContent = name;
   dropzone.title = name;
   filedimensions.hidden = true;
-  updatestart();
+  updatefields();
   invalidateexports();
   renderstate.textContent = "LOADING";
 }
@@ -837,22 +857,39 @@ async function prepareexports(raw, name) {
 
 const advanceddialog = document.querySelector(".advanceddialog");
 const advancedopen = document.querySelector(".advancedopen");
-let advancedmotion;
+const pixelartdialog = document.querySelector(".pixelartdialog");
+const pixelartyes = document.querySelector(".pixelartyes");
+const pixelartno = document.querySelector(".pixelartno");
+const pixelaskskip = document.querySelector(".pixelaskskip");
+const pixelaskkey = "img2gd.skip-pixel-art-prompt";
 
-advancedopen.addEventListener("click", () => {
-  if (advanceddialog.open) return;
-  advancedmotion?.cancel();
-  advanceddialog.showModal();
+function showdialog(dialog) {
+  if (dialog.open) return;
+  dialog.showModal();
   const keyframes = Array.from({length: 121}, (_, frame) => {
     const time = frame / 120;
     const scale = time === 1 ? 1 : 1 - .9 * 2 ** (-10 * time) * Math.cos(time * 2 * Math.PI / .6);
     return {scale: String(scale)};
   });
-  advancedmotion = advanceddialog.animate(keyframes, 500);
-});
+  const motion = dialog.animate(keyframes, 500);
+  dialog.addEventListener("close", () => motion.cancel(), {once: true});
+}
 
-advanceddialog.addEventListener("close", () => {
-  if (!advanceddialog.open) advancedmotion?.cancel();
+advancedopen.addEventListener("click", () => showdialog(advanceddialog));
+pixelartno.addEventListener("click", () => pixelartdialog.close());
+pixelartyes.addEventListener("click", () => {
+  pixelartchoice = true;
+  pixelartdialog.close();
+  updatefields();
+});
+try {
+  pixelaskskip.checked = localStorage.getItem(pixelaskkey) === "1";
+} catch {}
+
+pixelaskskip.addEventListener("change", () => {
+  try {
+    localStorage.setItem(pixelaskkey, pixelaskskip.checked ? "1" : "0");
+  } catch {}
 });
 
 document.querySelectorAll(".dialogclose").forEach(button => {
@@ -878,6 +915,8 @@ sourceimage.addEventListener("load", async () => {
   sampledopaque = opaque;
   alphaready = true;
   updatestart();
+  if (!pixelaskskip.checked && fitselect.value === "auto"
+    && sourceimage.naturalWidth < 150 && sourceimage.naturalHeight < 150) showdialog(pixelartdialog);
 });
 
 sourceimage.addEventListener("error", () => {

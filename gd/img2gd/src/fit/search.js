@@ -28,10 +28,6 @@ async function runfitsearch(limit, trials, revision) {
   updatefields();
   preparetarget();
   startfitpreview();
-  if (fitselect.value === "grid") {
-    fitgrid(limit);
-    return revision === fitrevision;
-  }
   if (["auto", "regions"].includes(fitselect.value)) {
     const result = await fitcolorregions(limit, revision);
     if (result !== null) return result;

@@ -103,6 +103,6 @@ const {rangevalue, validrangevalues} = (() => {
 
   return {
     rangevalue: slider => controls.get(slider)?.value ?? slider.valueAsNumber,
-    validrangevalues: () => Array.from(controls.values()).every(control => control.valid),
+    validrangevalues: () => Array.from(controls).every(([slider, control]) => slider.disabled || control.valid),
   };
 })();

@@ -524,40 +524,6 @@ async function fitadaptive(limit, trials, revision, extraoffset = 0) {
   return revision === fitrevision;
 }
 
-function fitgrid(limit) {
-  const baseobjects = installunderlay(limit);
-  const grid = gridsize(target.width, target.height, limit - baseobjects - visibilitycount());
-  const total = grid.columns * grid.rows;
-  const pixelscale = 720 / target.width;
-  for (let row = 0; row < grid.rows; row += 1) {
-    for (let column = 0; column < grid.columns; column += 1) {
-      const left = Math.floor(column * target.width / grid.columns);
-      const right = Math.max(left + 1, Math.floor((column + 1) * target.width / grid.columns));
-      const top = Math.floor(row * target.height / grid.rows);
-      const bottom = Math.max(top + 1, Math.floor((row + 1) * target.height / grid.rows));
-      const index = row * grid.columns + column;
-      const assetindex = Math.min(library.length - 1, Math.floor(index * library.length / total));
-      const asset = library[assetindex];
-      const candidate = {
-        asset,
-        x: (left + right) / 2,
-        y: (top + bottom) / 2,
-        width: Math.min(right - left, 3 * asset.naturalwidth / pixelscale),
-        height: Math.min(bottom - top, 3 * asset.naturalheight / pixelscale),
-        angle: 0,
-        warpx: 0,
-        warpy: 0,
-      };
-      refinecandidate(candidate);
-      if (assetneedsrolefit(asset)) {
-        Object.assign(candidate, refinecandidatecolors(candidate).candidate);
-      }
-      paintcandidate(candidate);
-      plan.push(candidate);
-    }
-  }
-}
-
 function measurefittedpreview() {
   resizecanvases();
   drawsource();
