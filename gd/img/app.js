@@ -10,6 +10,7 @@ const seedsearchselect = document.querySelector(".seedsearchselect");
 const coverageselect = document.querySelector(".coverageselect");
 const limitslider = document.querySelector(".limitslider");
 const underlaytoggle = document.querySelector(".underlaytoggleinput");
+const croptoggle = document.querySelector(".croptoggleinput");
 const underlaystyle = document.querySelector(".underlaystyle");
 const trialslider = document.querySelector(".trialslider");
 const colourslider = document.querySelector(".colourslider");
@@ -69,6 +70,11 @@ let target = {width: 0, height: 0};
 let targetpixels = new Uint8ClampedArray();
 let fittedpixels = new Uint8ClampedArray();
 let imageopaque = false;
+let sampledopaque = null;
+let imagerevision = 0;
+let alphaready = false;
+let originalplan = [];
+let croppedplan = null;
 let dominantcolor = null;
 let plan = [];
 let underlaycount = 0;
@@ -119,6 +125,7 @@ function quantize(value, levels) {
 }
 
 function sourceisopaque() {
+  if (sampledopaque !== null) return sampledopaque;
   const scale = 256 / Math.max(sourceimage.naturalWidth, sourceimage.naturalHeight);
   const width = Math.max(1, Math.round(sourceimage.naturalWidth * scale));
   const height = Math.max(1, Math.round(sourceimage.naturalHeight * scale));
@@ -128,10 +135,13 @@ function sourceisopaque() {
   const context = canvas.getContext("2d", {willReadFrequently: true});
   context.drawImage(sourceimage, 0, 0, width, height);
   const pixels = context.getImageData(0, 0, width, height).data;
+  sampledopaque = true;
   for (let offset = 3; offset < pixels.length; offset += 4) {
-    if (pixels[offset] < 255) return false;
+    if (pixels[offset] === 255) continue;
+    sampledopaque = false;
+    break;
   }
-  return true;
+  return sampledopaque;
 }
 
 function targetsize(width, height, limit, opaque) {
@@ -515,10 +525,10 @@ function resizecanvases() {
   const height = ratio >= 1 ? Math.max(1, Math.round(longside / ratio)) : longside;
   const zoom = Number(previewzoomslider.value);
   const size = previewsize();
-  resultcanvas.width = size.width;
-  resultcanvas.height = size.height;
-  sourcecanvas.width = width;
-  sourcecanvas.height = height;
+  if (resultcanvas.width !== size.width) resultcanvas.width = size.width;
+  if (resultcanvas.height !== size.height) resultcanvas.height = size.height;
+  if (sourcecanvas.width !== width) sourcecanvas.width = width;
+  if (sourcecanvas.height !== height) sourcecanvas.height = height;
   previewzoomvalue.textContent = `${cleannumber(zoom)}×`;
   previewzoomhelp.textContent = size.limited
     ? `Preview and PNG limited to ${size.width} × ${size.height} px at ${cleannumber(size.zoom)}×. The level is 720 units wide.`
@@ -538,7 +548,7 @@ function drawsource(canvas = sourcecanvas) {
   context.drawImage(sourceimage, 0, 0, canvas.width, canvas.height);
 }
 
-function drawresult() {
+function drawresult(objects = plan) {
   const context = resultcanvas.getContext("2d");
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.globalCompositeOperation = "source-over";
@@ -548,7 +558,7 @@ function drawresult() {
   const scalex = resultcanvas.width / target.width;
   context.save();
   context.translate(0, (resultcanvas.height - target.height * scalex) / 2);
-  previewrenderer.renderpreview(context, plan, scalex, scalex, spriteatlasimages, spriteatlasdimensions);
+  previewrenderer.renderpreview(context, objects, scalex, scalex, spriteatlasimages, spriteatlasdimensions);
   context.restore();
 }
 
@@ -754,10 +764,18 @@ function updatepreview(updatecatalog = false) {
   if (updatecatalog) rendercatalog(true);
 }
 
+function applycrop() {
+  if (croptoggle.checked && !croptoggle.disabled) {
+    croppedplan ??= croprectangle(originalplan, Number(limitslider.value));
+    plan = croppedplan;
+  } else plan = originalplan;
+  underlaycount = plan.filter(object => object.role === "underlay").length;
+}
+
 async function refresh(revision = fitrevision) {
   if (revision !== fitrevision) return false;
   updatefields();
-  if (!sourceimage.naturalWidth || !sourceimage.naturalHeight) return false;
+  if (!alphaready || !sourceimage.naturalWidth || !sourceimage.naturalHeight) return false;
   const aspect = sourceimage.naturalWidth / sourceimage.naturalHeight;
   if (Math.max(aspect, 1 / aspect) > sampleedge) {
     renderstate.textContent = "ERROR";
@@ -777,6 +795,9 @@ async function refresh(revision = fitrevision) {
   const limit = Number(limitslider.value);
   if (!await runfitsearch(limit, Number(trialslider.value), revision)) return false;
   if (revision !== fitrevision) return false;
+  originalplan = plan;
+  croppedplan = null;
+  applycrop();
   fittime = performance.now() - started;
   fitreadyrevision = revision;
   updatepreview(true);
@@ -796,6 +817,12 @@ function schedulepreview() {
 
 function loadimage(url, name) {
   fitrevision += 1;
+  imagerevision += 1;
+  sampledopaque = null;
+  alphaready = false;
+  croptoggle.disabled = true;
+  originalplan = [];
+  croppedplan = null;
   window.clearTimeout(refreshid);
   if (imageurl) URL.revokeObjectURL(imageurl);
   imageurl = url.startsWith("blob:") ? url : "";
@@ -862,9 +889,20 @@ function applypreset() {
   schedulepreview();
 }
 
-sourceimage.addEventListener("load", () => {
+sourceimage.addEventListener("load", async () => {
+  const revision = ++imagerevision;
+  sampledopaque = null;
+  alphaready = !croptoggle.checked;
   sourcename.textContent = `${imagename} · ${sourceimage.naturalWidth} × ${sourceimage.naturalHeight}`;
-  schedulepreview();
+  if (alphaready) schedulepreview();
+  const opaque = sourceisopaque() && await cropopaque(sourceimage, () => revision === imagerevision);
+  if (revision !== imagerevision) return;
+  croptoggle.disabled = !opaque;
+  if (!opaque) croptoggle.checked = false;
+  if (!alphaready) {
+    alphaready = true;
+    schedulepreview();
+  }
 });
 
 sourceimage.addEventListener("error", () => {
@@ -905,6 +943,11 @@ catalogmore.addEventListener("click", () => {
   rendercatalog();
 });
 limitslider.addEventListener("input", schedulepreview);
+croptoggle.addEventListener("change", () => {
+  if (fitreadyrevision !== fitrevision) return;
+  applycrop();
+  updatepreview(true);
+});
 underlaytoggle.addEventListener("change", () => {
   updatefields();
   schedulepreview();
