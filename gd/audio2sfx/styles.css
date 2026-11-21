@@ -43,7 +43,8 @@
 }
 
 .panel-title {
-  font-size: var(--gdlabelsize); margin: 0;
+  font-size: var(--gdlabelsize); font-weight: 400;
+  margin: 0;
 }
 
 .format-note,
@@ -79,7 +80,7 @@
 }
 
 .drop-title {
-  font-size: var(--gdlabelsize); font-weight: 700;
+  font-size: var(--gdlabelsize);
   min-inline-size: 0;
   max-inline-size: 100%;
   overflow-wrap: anywhere;
@@ -100,7 +101,7 @@
   display: grid; align-items: baseline;
   grid-template-columns: minmax(0, 1fr);
   gap: 2px; min-inline-size: 0;
-  font-size: var(--gdreadsize); font-weight: 700;
+  font-size: var(--gdreadsize);
 }
 
 .field-name {
@@ -198,7 +199,6 @@
 
 .locallink {
   color: inherit; font: inherit;
-  font-weight: 700;
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
@@ -225,6 +225,10 @@
 
 @media (max-width: 680px) {
   .audiomain { inline-size: min(calc(100% - 26px), 606px); }
+}
+
+@media (max-width: 520px) {
+  .advanced-fields { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 360px) {

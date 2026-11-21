@@ -11,10 +11,12 @@
     <link rel="stylesheet" href="../lettering.css">
     <link rel="stylesheet" href="../theme.css">
     <link rel="stylesheet" href="../controls.css">
+    <link rel="stylesheet" href="../options.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="actions.css">
     <script src="../global.js" defer></script>
     <script src="../lettering.js" defer></script>
+    <script src="../options.js" defer></script>
     <script src="app.js" defer></script>
   </head>
   <body class="gdtheme audiopage">
@@ -58,24 +60,24 @@
           </div>
 
           <details class="advanced">
-            <summary class="advanced-toggle gdbutton gdsecondary"><span class="gdplain">Matching settings</span></summary>
+            <summary class="advanced-toggle gdbutton"><span class="gdplain">Matching settings</span></summary>
             <div class="advanced-fields">
-              <label class="field-label">
-                <span class="field-name">Window size <span class="field-unit">milliseconds</span></span>
-                <select class="audiofield gdinput" name="hop">
+              <div class="field-label">
+                <span class="field-name optionlabel" id="window-size">Window size <span class="field-unit">milliseconds</span></span>
+                <select class="audiofield gdinput" name="hop" aria-labelledby="window-size">
                   <option value="0.0625" selected>62.5 · detailed</option>
                   <option value="0.125">125 · quicker</option>
                   <option value="0.25">250 · fastest</option>
                 </select>
-              </label>
-              <label class="field-label">
-                <span class="field-name">Candidate search <span class="field-unit">clips</span></span>
-                <select class="audiofield gdinput" name="shortlist">
+              </div>
+              <div class="field-label">
+                <span class="field-name optionlabel" id="candidate-search">Candidate search <span class="field-unit">clips</span></span>
+                <select class="audiofield gdinput" name="shortlist" aria-labelledby="candidate-search">
                   <option value="128" selected>128 · thorough</option>
                   <option value="64">64 · balanced</option>
                   <option value="32">32 · quicker</option>
                 </select>
-              </label>
+              </div>
             </div>
             <p class="advanced-note">More layers and a thorough search can improve the match, but may take longer and sound less consistent in-game.</p>
           </details>
@@ -100,7 +102,7 @@
               <p class="sfx-action-copy">Save the SFX this level uses. Pick your GeometryDash folder, or download a ZIP to extract there.</p>
               <div class="sfx-action-buttons">
                 <button class="sfx-button gdbutton" type="button" id="save-sfx-folder"><span class="gdplain">Save to a folder</span></button>
-                <button class="sfx-button gdbutton gdsecondary" type="button" id="download-sfx-zip"><span class="gdplain">Download SFX ZIP</span></button>
+                <button class="sfx-button gdbutton" type="button" id="download-sfx-zip"><span class="gdplain">Download SFX ZIP</span></button>
               </div>
               <p class="sfx-action-note" id="sfx-action-note">Existing files are left untouched. The ZIP contains every SFX used by this level.</p>
             </div>

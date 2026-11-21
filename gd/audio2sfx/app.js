@@ -194,7 +194,7 @@ fetch("/api/status")
     link.href = "http://127.0.0.1:8765/";
     link.textContent = "Open local converter";
     link.className = "locallink";
-    const accent = document.createElement("cs");
+    const accent = document.createElement("cy");
     accent.append(link);
     catalog.append(accent);
   });
