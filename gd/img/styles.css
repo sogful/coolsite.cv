@@ -467,6 +467,7 @@ select {
   width: 100%;
   height: auto;
   max-height: 440px;
+  object-fit: contain;
   border: 1px solid #ffffff22;
   border-radius: 8px;
   background: #041c42;

@@ -531,8 +531,8 @@ function regioncomparison() {
 async function refineregions(groups, analysis, tolerance, budget, revision) {
   const maximum = presetselect.value === "max";
   if (!maximum && presetselect.value !== "detail") return;
-  const width = Math.round(720 * Number(previewzoomslider.value));
-  if (width * width * target.height / target.width > 400000) return;
+  const {width, height} = previewsize();
+  if (width * height > 400000) return;
   const compare = regioncomparison();
   let best = compare();
   const variants = maximum ? [[1, true, 0], [0.8, true, 0], [1, false, 1], [1, false, 2]] : [[1, true, 0]];

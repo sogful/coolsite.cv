@@ -5,8 +5,7 @@ function preparecoveragetarget(resolution) {
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext("2d", {willReadFrequently:true});
-  const screenwidth = Math.max(1, Math.round(720 * Number(previewzoomslider.value)));
-  const screenheight = Math.max(1, Math.round(screenwidth * target.height / target.width));
+  const {width: screenwidth, height: screenheight} = previewsize();
   previewrenderer.paintbackground(context, width, height, screenwidth, screenheight,
     backgroundtile, backgroundtilepixels, background);
   const backdrop = context.getImageData(0, 0, width, height).data;
@@ -441,8 +440,7 @@ async function refinelayercolors(revision) {
   const zoom = previewzoomslider.value;
   const current = () => revision === fitrevision && plan === original && previewzoomslider.value === zoom;
   if (!current() || !original.length || !target.width || !target.height || !sourceimage.naturalWidth) return false;
-  const screenwidth = Math.max(1, Math.round(720 * Number(zoom)));
-  const screenheight = Math.max(1, Math.round(screenwidth * target.height / target.width));
+  const {width: screenwidth, height: screenheight} = previewsize();
   if (screenwidth * screenheight > 750000) return false;
   const step = Math.max(1, Math.ceil(Math.sqrt(screenwidth * screenheight / 135000)));
   const width = Math.ceil(screenwidth / step), height = Math.ceil(screenheight / step);

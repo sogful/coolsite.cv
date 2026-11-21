@@ -51,6 +51,7 @@ const uploadtypes = new Map([
   ["webp", "image/webp"], ["gif", "image/gif"], ["svg", "image/svg+xml"],
 ]);
 const seedoffset = 97;
+const sampleedge = 4096;
 const levelorigin = {x: 360, y: 300};
 
 const sourceimage = new Image();
@@ -138,9 +139,22 @@ function targetsize(width, height, limit, opaque) {
   const pixels = fitpixels || (presetselect.value === "max" && opaque
     ? 5200
     : Math.max(1600, Math.min(2000, Math.max(limit, 1) * 2.5)));
-  const columns = Math.max(24, Math.round(Math.sqrt(pixels * ratio)));
-  const rows = Math.max(24, Math.round(columns / ratio));
-  return {width: columns, height: rows};
+  const columns = Math.round(Math.sqrt(pixels * ratio));
+  const rows = Math.round(columns / ratio);
+  if (Math.min(columns, rows) >= 24 && Math.max(columns, rows) <= sampleedge) return {width: columns, height: rows};
+  const aspect = Math.max(ratio, 1 / ratio);
+  const short = Math.max(1, Math.min(Math.round(Math.sqrt(pixels / aspect)), Math.floor(sampleedge / aspect)));
+  const long = Math.min(sampleedge, Math.round(short * aspect));
+  return ratio >= 1 ? {width: long, height: short} : {width: short, height: long};
+}
+
+function previewsize() {
+  const zoom = Number(previewzoomslider.value);
+  const requested = Math.max(1, Math.round(720 * zoom));
+  const ratio = target.height / target.width;
+  const width = Math.max(1, Math.min(requested, 8192, Math.floor(8192 / ratio), Math.floor(Math.sqrt(4000000 / ratio))));
+  const height = Math.max(1, Math.min(Math.round(width * ratio), Math.floor(4000000 / width)));
+  return {width, height, limited: width < requested, zoom: width < requested ? width / 720 : zoom};
 }
 
 function mostcommoncolor(pixels, levels) {
@@ -467,8 +481,7 @@ function preparetarget() {
   sourcecomparecanvas.width = target.width;
   sourcecomparecanvas.height = target.height;
   const backgroundcontext = sourcecomparecanvas.getContext("2d", {willReadFrequently: true});
-  const screenwidth = Math.max(1, Math.round(720 * Number(previewzoomslider.value)));
-  const screenheight = Math.max(1, Math.round(screenwidth * target.height / target.width));
+  const {width: screenwidth, height: screenheight} = previewsize();
   previewrenderer.paintbackground(backgroundcontext, target.width, target.height, screenwidth,
     screenheight, backgroundtile, backgroundtilepixels, background);
   const backgroundpixels = backgroundcontext.getImageData(0, 0, target.width, target.height).data;
@@ -497,16 +510,19 @@ function preparetarget() {
 
 function resizecanvases() {
   const ratio = sourceimage.naturalWidth / sourceimage.naturalHeight;
-  const longside = 520;
-  const width = ratio >= 1 ? longside : Math.max(160, Math.round(longside * ratio));
-  const height = ratio >= 1 ? Math.max(160, Math.round(longside / ratio)) : longside;
+  const longside = Math.max(520, Math.ceil(Math.max(ratio, 1 / ratio)));
+  const width = ratio >= 1 ? longside : Math.max(1, Math.round(longside * ratio));
+  const height = ratio >= 1 ? Math.max(1, Math.round(longside / ratio)) : longside;
   const zoom = Number(previewzoomslider.value);
-  resultcanvas.width = Math.max(1, Math.round(720 * zoom));
-  resultcanvas.height = Math.max(1, Math.round(resultcanvas.width * target.height / target.width));
+  const size = previewsize();
+  resultcanvas.width = size.width;
+  resultcanvas.height = size.height;
   sourcecanvas.width = width;
   sourcecanvas.height = height;
   previewzoomvalue.textContent = `${cleannumber(zoom)}×`;
-  previewzoomhelp.textContent = `At ${cleannumber(zoom)}×, the 720-unit image is ${resultcanvas.width} px wide. PNG export uses the preview's pixel scale.`;
+  previewzoomhelp.textContent = size.limited
+    ? `Preview and PNG limited to ${size.width} × ${size.height} px at ${cleannumber(size.zoom)}×. The level is 720 units wide.`
+    : `At ${cleannumber(zoom)}×, the 720-unit image is ${size.width} px wide. PNG export uses the preview's pixel scale.`;
 }
 
 function drawsource() {
@@ -660,7 +676,7 @@ function updatepngdownload() {
     if (currentpngdownload) URL.revokeObjectURL(currentpngdownload);
     currentpngdownload = URL.createObjectURL(blob);
     pngdownload.href = currentpngdownload;
-    pngdownload.download = `${levelname()}-fit-${cleannumber(Number(previewzoomslider.value))}x.png`;
+    pngdownload.download = `${levelname()}-fit-${cleannumber(previewsize().zoom)}x.png`;
     pngdownload.hidden = false;
   }, "image/png");
 }
@@ -721,7 +737,7 @@ function updatepreview(updatecatalog = false) {
     : `${fittedcount.toLocaleString()} fitted sprites (${underlaymessage})`;
   const seednote = searchcount > 1 ? ` · best of ${searchcount} searches` : "";
   const helpernote = result.helpers ? ` + ${result.helpers} visibility helpers` : "";
-  statuscopy.textContent = `${objectsummary}${helpernote} · ${result.objects.toLocaleString()} objects total${seednote}. ${method}, ${transforms}, ${mapping}, ${fiterror.toFixed(1)}% preview mean RGB error vs source at ${cleannumber(Number(previewzoomslider.value))}× editor zoom in ${Math.max(1, Math.round(fittime))} ms.${visibilitywarning()}`;
+  statuscopy.textContent = `${objectsummary}${helpernote} · ${result.objects.toLocaleString()} objects total${seednote}. ${method}, ${transforms}, ${mapping}, ${fiterror.toFixed(1)}% preview mean RGB error vs source at ${cleannumber(previewsize().zoom)}× editor zoom in ${Math.max(1, Math.round(fittime))} ms.${visibilitywarning()}`;
   if (updatecatalog) rendercatalog(true);
 }
 
@@ -729,6 +745,12 @@ async function refresh(revision = fitrevision) {
   if (revision !== fitrevision) return false;
   updatefields();
   if (!sourceimage.naturalWidth || !sourceimage.naturalHeight) return false;
+  const aspect = sourceimage.naturalWidth / sourceimage.naturalHeight;
+  if (Math.max(aspect, 1 / aspect) > sampleedge) {
+    renderstate.textContent = "ERROR";
+    statuscopy.textContent = `This image is too narrow to fit. Use an aspect ratio up to ${sampleedge} to 1 in either direction.`;
+    return false;
+  }
   if (!atlasready) {
     renderstate.textContent = "WAITING";
     statuscopy.textContent = "Loading the medium native object atlas in the background.";
@@ -806,7 +828,9 @@ async function downloadlevel() {
     gdlvldownload.href = currentgdlvldownload;
     gdlvldownload.download = `${name}.gdlvl`;
     gdlvldownload.hidden = false;
-    statuscopy.textContent = `GMD and GDLVL ready: ${tilecount.textContent} objects, ${channelcount.textContent} colour channels.${visibilitywarning()}`;
+    const objects = tilecount.textContent;
+    const channels = channelcount.textContent;
+    statuscopy.textContent = `GMD and GDLVL ready. ${objects} object${objects === "1" ? "" : "s"}, ${channels} colour channel${channels === "1" ? "" : "s"}.${visibilitywarning()}`;
   } catch (error) {
     if (version !== exportversion || revision !== fitrevision || fitreadyrevision !== fitrevision) return;
     statuscopy.textContent = `GMD ready. GDLVL export failed: ${error.message}${visibilitywarning()}`;
