@@ -1,0 +1,121 @@
+@font-face {
+  font-family: gdoxygene;
+  src: url("assets/fonts/oxygene.woff2") format("woff2");
+  font-display: swap;
+}
+
+.gdplain,
+.gdgold,
+.gdlogo {
+  position: relative; isolation: isolate;
+  display: inline-block; line-height: 1.05;
+  font-weight: 400; font-synthesis: none;
+}
+
+.gdplain,
+.gdgold {
+  font-family: pusab, Arial, sans-serif; font-kerning: normal;
+  letter-spacing: normal; word-spacing: normal;
+}
+
+.gdplain {
+  --gdstroke: .048em;
+  --gdshadow: .034em .045em .015em #0006;
+  color: var(--gdfill, #faffff);
+  -webkit-text-stroke: .036em #000;
+}
+
+.gdgold {
+  --gdstroke: .072em;
+  --gdshadow: .025em .04em .018em #0000004d;
+  color: #ffcf40;
+}
+
+.gdgoldface {
+  display: block; color: transparent;
+}
+
+.gdgoldrun {
+  padding-block: .16em; box-decoration-break: clone;
+  background-clip: text;
+  background-image: linear-gradient(to bottom in srgb,
+    #ffae00 .378em, #ffc228 .597em, #ffdc4b .81em, #ffe659 .985em);
+}
+
+.gdgoldsmall {
+  background-image: linear-gradient(to bottom in srgb,
+    #ffae00 .465em, #ffc933 .705em, #ffe659 .965em);
+}
+
+.gdplain::before,
+.gdgold::before,
+.gdlogo::before,
+.gdlogo::after,
+.gdlogoface::before {
+  content: attr(data-text) / "";
+  position: absolute; inset: 0;
+  pointer-events: none; user-select: none;
+}
+
+.gdgoldface::selection,
+.gdlogoface::selection {
+  color: #082653; background: #c9ff55;
+}
+
+.gdplain::before,
+.gdgold::before {
+  z-index: -1; color: #000;
+  -webkit-text-stroke: var(--gdstroke) #000;
+  filter: drop-shadow(var(--gdshadow));
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.gdlogo {
+  font-family: gdoxygene, sans-serif; text-transform: uppercase;
+  word-spacing: .26em; color: #ccff55;
+}
+
+.gdlogo[data-text] {
+  filter: drop-shadow(.055em .045em 0 #0005);
+}
+
+.gdlogo::before,
+.gdlogo::after {
+  z-index: -2; color: #fff;
+  filter: drop-shadow(0 .085em 0 currentColor);
+  -webkit-text-stroke: .138em currentColor;
+}
+
+.gdlogo::after {
+  z-index: -1; color: #000;
+  -webkit-text-stroke-width: .092em;
+}
+
+.gdlogoface {
+  background-image: linear-gradient(to bottom, #ffffaa 0 .13em,
+    #ccff55 .13em .52em, #88ff33 .52em); background-clip: text;
+  color: transparent;
+}
+
+.gdlogoface::before {
+  z-index: -1; color: #66aa22;
+  transform: translateY(.085em);
+}
+
+@media (forced-colors: active) {
+  .gdplain,
+  .gdgoldrun,
+  .gdlogoface {
+    color: CanvasText; background-image: none;
+    -webkit-text-stroke: 0;
+  }
+
+  .gdplain::before,
+  .gdgold::before,
+  .gdlogo::before,
+  .gdlogo::after,
+  .gdlogoface::before { display: none; }
+
+  .gdlogo[data-text] { filter: none; }
+}

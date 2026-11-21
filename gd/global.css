@@ -6,7 +6,7 @@
 
 @font-face {
   font-family: aller;
-  src: url("cbf/assets/fonts/aller.woff2") format("woff2");
+  src: url("assets/fonts/aller.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }
@@ -34,6 +34,7 @@
 
 body {
   background: linear-gradient(to bottom, #0065fd 0%, #002e73 100%);
+  isolation: isolate;
 }
 
 a, p {
@@ -216,13 +217,10 @@ a, p {
 }
 
 .gdcornerart {
-  position: fixed;
-  z-index: 3;
-  width: 100px;
-  height: auto;
+  position: fixed; z-index: -1;
+  width: clamp(30px, 8vmin, 64px); height: auto;
   object-fit: contain;
-  pointer-events: none;
-  user-select: none;
+  pointer-events: none; user-select: none;
 }
 
 .gdcornerarttopleft {

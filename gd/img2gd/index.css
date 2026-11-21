@@ -40,7 +40,7 @@ body.imgpage {
 
 .pagehead .pagetitle {
   margin: 0; color: var(--lime);
-  font-size: clamp(20px, 4vw, 36px); line-height: 1.15;
+  font-size: clamp(22px, 4vw, 36px); line-height: 1.15;
 }
 
 .workspace {
@@ -171,7 +171,7 @@ body.imgpage {
 }
 
 .canvasfigure figcaption {
-  font-size: 12px; color: var(--muted);
+  font-size: 13px; color: var(--text);
 }
 
 .canvasfigure canvas {
@@ -241,7 +241,9 @@ body.imgpage {
   padding: 10px 12px; border-bottom: 1px solid var(--line);
 }
 
-.dialogtitle { margin: 0; font-size: 17px; }
+.dialogtitle {
+  margin: 0; font-size: 17px;
+}
 
 .dialogbody {
   padding: 12px; overflow: auto;
@@ -301,7 +303,7 @@ body.imgpage {
 
 @media (max-width: 480px) and (max-height: 430px) {
   .sourcename { display: none; }
-  .pagehead .pagetitle { font-size: 18px; }
+  .pagehead .pagetitle { font-size: 20px; }
   .fieldlabel,
   .checklabel { font-size: 12px; }
   .dropzone,
