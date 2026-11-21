@@ -1,4 +1,7 @@
 (() => {
+  document.querySelectorAll("gold").forEach(label => label.classList.add("gdgold"));
+  document.querySelectorAll("oxygene").forEach(label => label.classList.add("gdlogo"));
+
   for (const label of document.querySelectorAll(".gdplain")) {
     const synctext = () => {label.dataset.text = label.textContent;};
     synctext();

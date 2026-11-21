@@ -274,6 +274,7 @@ async function finishcrop(revision) {
   const enabled = croptoggle.checked && !croptoggle.disabled;
   if (enabled && !croppedplan) {
     fitreadyrevision = -1;
+    comparison.hidden = true;
     invalidateexports();
     pngdownload.hidden = true;
     renderstate.textContent = "CROPPING";
@@ -294,6 +295,6 @@ async function finishcrop(revision) {
   plan = enabled ? croppedplan : originalplan;
   underlaycount = plan.filter(object => object.role === "underlay").length;
   fitreadyrevision = revision;
-  updatepreview(true);
+  updatepreview();
   return true;
 }

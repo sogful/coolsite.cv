@@ -30,7 +30,6 @@
   <script src="src/fit/search.js" defer></script>
   <script src="src/export/gmd.js" defer></script>
   <script src="src/export/gdlvl.js" defer></script>
-  <script src="src/catalog.js" defer></script>
   <script src="src/atlas.js" defer></script>
   <script src="index.js" defer></script>
 
@@ -38,20 +37,21 @@
 <body class="gdtheme imgpage">
   <main class="maincontent">
     <header class="pagehead">
-      <h1 class="pagetitle"><span class="gdlogo">img2gd</span></h1>
-      <button class="gdbutton toolbutton catalogopen" type="button"><span class="gdplain">Objects</span></button>
+      <h1 class="pagetitle"><oxygene>img2gd</oxygene></h1>
     </header>
     <section class="workspace" aria-label="Image to Geometry Dash level converter">
       <form class="controlpanel panel gdpane" id="converter">
-        <div class="uploadrow">
-          <label class="dropzone gdwell">
-            <input class="imagefile" type="file" aria-label="Choose an image" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.jpg,.jpeg,.png,.webp,.gif,.svg">
-            <span class="droptitle gdplain">Choose image</span>
-            <span class="dropsubtitle" role="status" hidden>JPG, PNG, WebP, GIF, SVG</span>
-          </label>
-          <button class="gdbutton gdsecondary toolbutton examplebutton" type="button"><span class="gdplain">Example</span></button>
+        <div class="sourcefields">
+          <div class="uploadrow">
+            <label class="dropzone gdwell">
+              <input class="imagefile" type="file" aria-label="Choose an image" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.jpg,.jpeg,.png,.webp,.gif,.svg">
+              <span class="droptitle">Choose image</span>
+              <span class="dropsubtitle" role="status" hidden>JPG, PNG, WebP, GIF, SVG</span>
+            </label>
+            <button class="gdbutton gdsecondary toolbutton examplebutton" type="button"><span class="gdplain">Example</span></button>
+          </div>
+          <p class="sourcename">Loading example</p>
         </div>
-        <p class="sourcename">Loading example</p>
 
         <div class="basicfields">
           <label class="fieldlabel">
@@ -81,7 +81,7 @@
 
         <dialog class="gdpane appdialog advanceddialog" aria-labelledby="advancedtitle">
           <div class="dialoghead">
-            <h2 class="dialogtitle" id="advancedtitle"><span class="gdplain">Advanced settings</span></h2>
+            <h2 class="dialogtitle" id="advancedtitle"><gold>Advanced settings</gold></h2>
             <button class="gdbutton gdcircle dialogclose" type="button" aria-label="Close advanced settings">
               <span class="gdcloseicon" aria-hidden="true"></span>
             </button>
@@ -166,20 +166,21 @@
         </dialog>
       </form>
 
-      <section class="previewpanel panel gdpane" aria-label="Image comparison">
-        <div class="canvasgrid">
-          <figure class="canvasfigure">
-            <figcaption><span class="gdplain">Source</span></figcaption>
-            <canvas class="sourcecanvas gdwell" width="640" height="420"></canvas>
-          </figure>
-          <figure class="canvasfigure">
-            <figcaption><span class="gdgold">Level preview</span></figcaption>
-            <canvas class="resultcanvas gdwell" width="640" height="420"></canvas>
-          </figure>
+      <section class="previewpanel panel gdpane" aria-label="Generated level">
+        <div class="previewport gdwell">
+          <div class="previewimage">
+            <canvas class="resultcanvas" width="640" height="420" aria-label="Generated level image"></canvas>
+            <div class="comparison" hidden>
+              <canvas class="sourcecanvas" width="640" height="420" aria-hidden="true"></canvas>
+              <span class="swipebar" aria-hidden="true"></span>
+              <input class="swipeslider" type="range" min="0" max="100" value="50" step="1"
+                aria-label="Compare source and level" aria-valuetext="50% source">
+            </div>
+          </div>
         </div>
         <div class="stats">
           <span><b class="tilecount">0</b> objects</span>
-          <span><b class="gridcount">--</b> RGB error</span>
+          <span><b class="gridcount">--</b> <cr>R</cr><cg>G</cg><cl>B</cl> error</span>
           <span class="optionalstat"><b class="channelcount">0</b> channels</span>
           <span class="optionalstat"><b class="sizecount">0 KB</b> GMD</span>
         </div>
@@ -196,24 +197,6 @@
         </div>
       </section>
     </section>
-
-    <dialog class="gdpane appdialog catalogdialog" aria-labelledby="catalogtitle">
-      <div class="dialoghead">
-        <h2 class="dialogtitle" id="catalogtitle"><span class="gdplain">Native objects</span></h2>
-        <button class="gdbutton gdcircle dialogclose" type="button" aria-label="Close native objects">
-          <span class="gdcloseicon" aria-hidden="true"></span>
-        </button>
-      </div>
-      <div class="dialogbody">
-        <label class="fieldlabel">
-          <span>Find an object</span>
-          <input class="catalogsearch gdinput" type="search" placeholder="ID, size or sprites" autocomplete="off">
-        </label>
-        <p class="catalogcount" aria-live="polite">Loading objects.</p>
-        <div class="cataloggrid"></div>
-        <button class="gdbutton toolbutton catalogmore" type="button" hidden><span class="gdplain">Show more</span></button>
-      </div>
-    </dialog>
   </main>
 </body>
 </html>

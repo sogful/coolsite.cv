@@ -9,7 +9,7 @@
 .audiopage [hidden] { display: none; }
 
 .audiomain {
-  inline-size: min(calc(100% - 36px), 920px); margin-inline: auto;
+  inline-size: min(calc(100% - 36px), 1150px); margin-inline: auto;
   padding-block: clamp(22px, 4vh, 40px) 24px;
 }
 
@@ -18,18 +18,18 @@
 }
 
 .audiotitle {
-  margin: 0; color: var(--gdgold);
-  font-size: clamp(44px, 9vw, 76px); line-height: 1.05;
+  margin: 0;
+  font-size: clamp(48px, 9vw, 95px); line-height: 1.05;
 }
 
 .intro {
-  max-inline-size: 470px; margin: 12px auto 0;
+  max-inline-size: 588px; margin: 12px auto 0;
   font-size: var(--gdreadsize); color: var(--gdtext);
 }
 
 .workspace {
   display: grid; align-items: start;
-  grid-template-columns: minmax(0, 1.45fr) minmax(230px, 1fr); gap: 16px;
+  grid-template-columns: minmax(0, 1fr); gap: 20px;
 }
 
 .panel {
@@ -57,7 +57,7 @@
 .dropzone {
   position: relative; display: grid;
   justify-items: center; align-content: center;
-  padding: 14px 10px; min-block-size: 109px;
+  padding: 17px 12px; min-block-size: 128px;
   text-align: center; cursor: pointer;
 }
 
@@ -74,12 +74,13 @@
 }
 
 .upload-icon {
-  inline-size: 27px; block-size: 27px;
-  color: var(--gdgold); margin-block-end: 3px;
+  inline-size: 34px; block-size: 34px;
+  margin-block-end: 4px;
 }
 
 .drop-title {
-  font-size: var(--gdlabelsize); min-inline-size: 0;
+  font-size: var(--gdlabelsize); font-weight: 700;
+  min-inline-size: 0;
   max-inline-size: 100%;
   overflow-wrap: anywhere;
 }
@@ -92,7 +93,7 @@
 .fields,
 .advanced-fields {
   display: grid; gap: 9px 12px;
-  grid-template-columns: repeat(2, minmax(0, 1fr)); margin-block-start: 13px;
+  grid-template-columns: repeat(auto-fit, minmax(min(205px, calc((100% - 12px) / 2)), 1fr)); margin-block-start: 16px;
 }
 
 .field-label {
@@ -111,7 +112,7 @@
 .audiofield {
   grid-column: 1 / -1; box-sizing: border-box;
   min-inline-size: 0; inline-size: 100%;
-  padding: 5px 8px; min-block-size: 34px;
+  padding: 6px 10px; min-block-size: 42px;
   font: var(--gdreadsize) aller, Arial, sans-serif;
 }
 
@@ -141,11 +142,6 @@
 .privacy-note { text-align: center; }
 
 /*//////////////////////////////////////////////////////////////////////*/
-
-.side-column {
-  display: grid; gap: 10px;
-  min-inline-size: 0;
-}
 
 .status-light {
   inline-size: 9px; block-size: 9px;
@@ -196,19 +192,39 @@
 }
 
 .catalog-status {
-  margin: 0; padding: 8px 10px;
+  margin: 14px 0 0; padding: 8px 10px;
   font-size: var(--gdreadsize); text-align: left;
 }
 
 .locallink {
-  color: var(--gdgold); font: inherit;
+  color: inherit; font: inherit;
   font-weight: 700;
 }
 
-@media (max-width: 680px) {
-  .audiomain { inline-size: min(calc(100% - 26px), 485px); }
+/*//////////////////////////////////////////////////////////////////////*/
 
-  .workspace { grid-template-columns: minmax(0, 1fr); }
+.fields .field-label,
+.advanced-fields .field-label {
+  grid-row: span 2; grid-template-rows: subgrid;
+}
+
+@media (min-width: 850px) {
+  .audiopage form.panel {
+    display: grid;
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+    column-gap: 16px;
+  }
+
+  .audiopage form.panel > :not(.dropzone, .fields) { grid-column: 1 / -1; }
+
+  .fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-block-start: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .audiomain { inline-size: min(calc(100% - 26px), 606px); }
 }
 
 @media (max-width: 360px) {

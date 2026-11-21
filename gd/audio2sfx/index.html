@@ -20,21 +20,21 @@
   <body class="gdtheme audiopage">
     <main class="audiomain">
       <section class="hero" aria-labelledby="title">
-        <h1 class="audiotitle" id="title"><span class="gdlogo">TO SFX</span></h1>
+        <h1 class="audiotitle" id="title"><oxygene>TO SFX</oxygene></h1>
         <p class="intro">Convert a song into a Geometry Dash level using the game's sound effects.</p>
       </section>
 
       <section class="workspace" aria-label="Song conversion">
         <form id="convert-form" class="panel gdpane">
           <div class="panel-heading">
-            <h2 class="panel-title"><span class="gdgold">Your audio</span></h2>
+            <h2 class="panel-title"><gold>Your audio</gold></h2>
             <span class="format-note">WAV, OGG, MP3</span>
           </div>
 
           <label class="dropzone gdwell" id="dropzone" for="audio-file" tabindex="0">
             <input class="filepicker" id="audio-file" name="file" type="file" accept="audio/wav,audio/x-wav,audio/ogg,audio/mpeg,.wav,.ogg,.mp3" required>
             <span class="upload-icon" aria-hidden="true"></span>
-            <span class="drop-title gdplain" id="file-title">Choose a song</span>
+            <span class="drop-title" id="file-title">Choose a song</span>
             <span class="drop-subtitle" id="file-subtitle">Or drop an audio file here. Up to 100 MB.</span>
           </label>
 
@@ -79,15 +79,15 @@
             </div>
             <p class="advanced-note">More layers and a thorough search can improve the match, but may take longer and sound less consistent in-game.</p>
           </details>
-
+          <p class="catalog-status gdwell" id="catalog-status" role="status">Checking local SFX library...</p>
           <button class="convert-button gdbutton" id="convert-button" type="submit"><span class="gdplain">Build level</span></button>
           <p class="privacy-note">Audio stays on this computer and is discarded after conversion.</p>
         </form>
 
-        <aside class="side-column">
+        <div class="outputcolumn">
           <section class="panel gdpane status-panel" aria-live="polite">
             <div class="panel-heading">
-              <h2 class="panel-title"><span id="status-heading" class="gdplain">Conversion</span></h2>
+              <h2 class="panel-title" id="status-heading">Conversion</h2>
               <span class="status-light" id="status-light" aria-hidden="true"></span>
             </div>
             <p class="status-copy" id="status-copy">Choose a song to start.</p>
@@ -105,9 +105,7 @@
               <p class="sfx-action-note" id="sfx-action-note">Existing files are left untouched. The ZIP contains every SFX used by this level.</p>
             </div>
           </section>
-
-          <p class="catalog-status gdwell" id="catalog-status" role="status">Checking local SFX library...</p>
-        </aside>
+        </div>
       </section>
     </main>
   </body>

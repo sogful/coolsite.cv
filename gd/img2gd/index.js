@@ -24,6 +24,9 @@ const limitvalue = document.querySelector(".limitvalue");
 const trialvalue = document.querySelector(".trialvalue");
 const colourvalue = document.querySelector(".colourvalue");
 const sourcename = document.querySelector(".sourcename");
+const previewimage = document.querySelector(".previewimage");
+const comparison = document.querySelector(".comparison");
+const swipeslider = document.querySelector(".swipeslider");
 const sourcecanvas = document.querySelector(".sourcecanvas");
 const resultcanvas = document.querySelector(".resultcanvas");
 const sourcecomparecanvas = document.createElement("canvas");
@@ -413,7 +416,6 @@ async function loadnativeatlas() {
   preparetexturepools();
   atlasready = true;
   assetstatus.textContent = `ATLAS ${library.length.toLocaleString()}`;
-  if (catalogdialog.open) rendercatalog(true);
   schedulepreview();
 }
 
@@ -465,6 +467,7 @@ function resizecanvases() {
   const height = ratio >= 1 ? Math.max(1, Math.round(longside / ratio)) : longside;
   const zoom = Number(previewzoomslider.value);
   const size = previewsize();
+  previewimage.style.setProperty("--previewaspect", size.width / size.height);
   if (resultcanvas.width !== size.width) resultcanvas.width = size.width;
   if (resultcanvas.height !== size.height) resultcanvas.height = size.height;
   if (sourcecanvas.width !== width) sourcecanvas.width = width;
@@ -677,7 +680,7 @@ function updatefields() {
   warpselect.disabled = fitselect.value === "regions" || regionfitactive;
 }
 
-function updatepreview(updatecatalog = false) {
+function updatepreview() {
   if (fitreadyrevision !== fitrevision) return;
   resizecanvases();
   drawsource();
@@ -694,7 +697,7 @@ function updatepreview(updatecatalog = false) {
   sizecount.textContent = prettysize(new Blob([levelsource]).size);
   renderstate.textContent = fitselect.value === "grid" ? "SPRITE MOSAIC" : "SPRITE FIT";
   statuscopy.textContent = `Fit ready.${visibilitywarning()}`;
-  if (updatecatalog) updatecatalogusage();
+  comparison.hidden = false;
 }
 
 async function refresh(revision = fitrevision) {
@@ -727,8 +730,17 @@ async function refresh(revision = fitrevision) {
   return finishcrop(revision);
 }
 
+function updateswipe() {
+  const share = swipeslider.valueAsNumber;
+  comparison.style.setProperty("--sourcepart", share + "%");
+  swipeslider.setAttribute("aria-valuetext", share + "% source");
+}
+
+swipeslider.addEventListener("input", updateswipe);
+
 function schedulepreview() {
   const revision = ++fitrevision;
+  comparison.hidden = true;
   updatefields();
   if (!sourceimage.naturalWidth) return;
   invalidateexports();
@@ -741,6 +753,9 @@ function schedulepreview() {
 function loadimage(url, name) {
   fitrevision += 1;
   imagerevision += 1;
+  comparison.hidden = true;
+  swipeslider.value = "50";
+  updateswipe();
   sampledopaque = null;
   alphaready = false;
   croptoggle.disabled = true;
@@ -814,7 +829,7 @@ function applypreset() {
 const advanceddialog = document.querySelector(".advanceddialog");
 const advancedopen = document.querySelector(".advancedopen");
 const compactfields = document.querySelector(".compactfields");
-const compactlayout = matchMedia("(max-height: 500px), (max-width: 360px) and (max-height: 680px)");
+const compactlayout = matchMedia("(max-height: 590px), (max-width: 390px) and (max-height: 760px)");
 const compactcontrols = [document.querySelector(".basicfields"), croptoggle.closest("label"), examplebutton]
   .map(control => ({control, parent: control.parentElement, next: control.nextElementSibling}));
 
@@ -826,7 +841,6 @@ function updatesettingslayout() {
   }
   form.classList.toggle("compact", compact);
   advancedopen.querySelector(".gdplain").textContent = compact ? "Settings" : "Advanced";
-  advanceddialog.querySelector(".gdplain").textContent = compact ? "Settings" : "Advanced settings";
 }
 
 updatesettingslayout();

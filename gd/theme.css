@@ -1,8 +1,8 @@
 .gdtheme {
-  --gdreadsize: 1rem; --gdlabelsize: 1.5rem;
-  --gdlogosize: 2.5rem;
-  --gdtext: #fff5e4; --gdmuted: #f9e4ca;
-  --gdgold: #ffe68e; --gdfocus: #fdf08c;
+  --gdreadsize: clamp(1rem, 3.9vw, 1.25rem); --gdlabelsize: clamp(1.375rem, 5.8vw, 1.875rem);
+  --gdlogosize: clamp(2.5rem, 6.5vw, 3.125rem);
+  --gdtext: #fff; --gdmuted: #e6e6e6;
+  --gdgold: #ffdc41; --gdfocus: #ffff96;
   --gdedge: #4e2816; --gdwell: #502a1a;
   color: var(--gdtext); color-scheme: dark;
 }
@@ -21,7 +21,7 @@
 .gdbutton {
   display: inline-flex; align-items: center;
   justify-content: center; vertical-align: middle;
-  min-inline-size: 0; min-block-size: 40px;
+  min-inline-size: 0; min-block-size: max(40px, 1.67em);
   padding: 7px 13px; cursor: pointer;
   font: 400 var(--gdlabelsize)/1.08 pusab, sans-serif;
   color: #faffff; text-align: center;
@@ -82,3 +82,23 @@
     background: Canvas; color: CanvasText;
   }
 }
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+cb { color: #4a52e1; }
+cg { color: #40e348; }
+cl { color: #60abef; }
+cj { color: #32c8ff; }
+cy { color: #ffff00; }
+co { color: #ffa54b; }
+cr { color: #ff5a5a; }
+cp { color: #ff00ff; }
+ca { color: #9632ff; }
+cd { color: #ff96ff; }
+cc { color: #ffff96; }
+cf { color: #96ffff; }
+cs { color: #ffdc41; }
+cblack { color: #000; }
+cwhite { color: #fff; }
+cgray,
+cgrey { color: #808080; }

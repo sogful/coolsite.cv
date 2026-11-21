@@ -194,7 +194,9 @@ fetch("/api/status")
     link.href = "http://127.0.0.1:8765/";
     link.textContent = "Open local converter";
     link.className = "locallink";
-    catalog.append(link);
+    const accent = document.createElement("cs");
+    accent.append(link);
+    catalog.append(accent);
   });
 
 folderButton.addEventListener("click", () => saveSfxToFolder(latestSfxIds));
