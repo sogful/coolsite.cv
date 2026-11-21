@@ -99,7 +99,11 @@ async function runfitsearch(limit, trials, revision) {
     }
     if (revision !== fitrevision) return false;
     restorefit(best);
-    return true;
+    if (detailed && plan.length) {
+      statuscopy.textContent = "Refining object colors.";
+      await refinelayercolors(revision);
+    }
+    return revision === fitrevision;
   } finally {
     if (revision === fitrevision) {
       batchfitteractive = false;

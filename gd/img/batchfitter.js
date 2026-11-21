@@ -391,5 +391,191 @@ function createbatchfitter(prepare = preparecoveragetarget) {
     targetsubpixels = null;
   }
 
-  return {reset, fit: scorecandidate, paint: commit, refine, clear};
+  return {reset, fit: scorecandidate, paint: commit, refine, clear,
+    meshgroups: meshes, samplemesh: sample, meshpixel: pixel, meshlocation: location};
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+function tintdraws(objects, fitter, scale, offset, stepx, stepy, width, height) {
+  const draws = [];
+  let area = 0;
+  for (const [index, candidate] of objects.entries()) {
+    preparecandidate(candidate);
+    if (!Number.isFinite(candidate.matrixdeterminant) || Math.abs(candidate.matrixdeterminant) < 1e-8) continue;
+    const asset = candidate.asset;
+    for (const group of fitter.meshgroups(asset)) {
+      for (const entry of group) {
+        const sprite = entry.sprite;
+        if ((sprite.blendSource ?? 1) !== 1 || (sprite.blendDestination ?? 771) !== 771) return null;
+        let left = width, right = 0, top = height, bottom = 0;
+        for (const [vx, vy] of sprite.vertices) {
+          const u = (vx - asset.centrex) * candidate.width / asset.naturalwidth;
+          const v = (asset.centrey - vy) * candidate.height / asset.naturalheight;
+          const x = (candidate.x + candidate.matrix00 * u + candidate.matrix01 * v) * scale / stepx;
+          const y = ((candidate.y + candidate.matrix10 * u + candidate.matrix11 * v) * scale + offset) / stepy;
+          left = Math.min(left, x); right = Math.max(right, x);
+          top = Math.min(top, y); bottom = Math.max(bottom, y);
+        }
+        left = Math.max(0, Math.floor(left)); right = Math.min(width, Math.ceil(right));
+        top = Math.max(0, Math.floor(top)); bottom = Math.min(height, Math.ceil(bottom));
+        if (left >= right || top >= bottom) continue;
+        area += (right - left) * (bottom - top);
+        if (area > 2400000 || draws.length >= 16000) return null;
+        const fixed = candidate.role === "underlay" || asset.fixedonly || sprite.role === "fixed";
+        const role = fixed ? -1 : 2 * index + Number(sprite.role === "detail");
+        draws.push({candidate, entry, index, role, left, right, top, bottom,
+          layer: candidate.zlayer ?? (candidate.role === "underlay" ? 3 : 5)});
+      }
+    }
+  }
+  draws.sort((a, b) => b.layer - a.layer || (b.entry.sprite.batch || 0) - (a.entry.sprite.batch || 0)
+    || b.index - a.index || b.entry.order - a.entry.order);
+  return {draws, area};
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+async function refinelayercolors(revision) {
+  const original = plan;
+  const zoom = previewzoomslider.value;
+  const current = () => revision === fitrevision && plan === original && previewzoomslider.value === zoom;
+  if (!current() || !original.length || !target.width || !target.height || !sourceimage.naturalWidth) return false;
+  const screenwidth = Math.max(1, Math.round(720 * Number(zoom)));
+  const screenheight = Math.max(1, Math.round(screenwidth * target.height / target.width));
+  if (screenwidth * screenheight > 750000) return false;
+  const step = Math.max(1, Math.ceil(Math.sqrt(screenwidth * screenheight / 135000)));
+  const width = Math.ceil(screenwidth / step), height = Math.ceil(screenheight / step);
+  const size = width * height;
+  const stepx = screenwidth / width, stepy = screenheight / height;
+  const scale = screenwidth / target.width;
+  const offset = (screenheight - target.height * scale) / 2;
+  if (!batchfitter) batchfitter = createbatchfitter();
+  const fitter = batchfitter;
+  const geometry = tintdraws(original, fitter, scale, offset, stepx, stepy, width, height);
+  if (!geometry || !geometry.area) return false;
+  const before = measurefittedpreview();
+  const targetdata = sourcecomparecanvas.getContext("2d", {willReadFrequently: true}).getImageData(0, 0, screenwidth, screenheight).data;
+  const resultdata = resultcanvas.getContext("2d", {willReadFrequently: true}).getImageData(0, 0, screenwidth, screenheight).data;
+  const residual = new Float32Array(3 * size);
+  const column = new Float64Array(width), row = new Float64Array(height);
+  for (let x = 0; x < width; x++) column[x] = Math.floor((x + 0.5) * stepx) + 0.5;
+  for (let y = 0; y < height; y++) {
+    row[y] = Math.floor((y + 0.5) * stepy) + 0.5;
+    for (let x = 0; x < width; x++) {
+      const source = 4 * (Math.floor(row[y]) * screenwidth + Math.floor(column[x]));
+      const output = 3 * (y * width + x);
+      for (let c = 0; c < 3; c++) residual[output + c] = targetdata[source + c] - resultdata[source + c];
+    }
+  }
+  const capacity = Math.min(geometry.area, 600000);
+  const indices = new Uint32Array(capacity), next = new Int32Array(capacity);
+  const weights = new Float32Array(3 * capacity);
+  const heads = new Int32Array(2 * original.length).fill(-1);
+  const transmission = new Float32Array(size).fill(1);
+  let count = 0;
+  let deadline = performance.now() + 12;
+  for (const {candidate, entry, role, left, right, top, bottom} of geometry.draws) {
+    for (let y = top; y < bottom; y++) {
+      if (performance.now() >= deadline) {
+        await yieldfittask();
+        if (!current()) return false;
+        deadline = performance.now() + 12;
+      }
+      for (let x = left; x < right; x++) {
+        const point = y * width + x;
+        const visible = transmission[point];
+        if (visible < 0.00001) continue;
+        const [u, v] = fitter.meshlocation(candidate, column[x] / scale, (row[y] - offset) / scale);
+        if (!fitter.samplemesh(entry, u, v)) continue;
+        const pixel = fitter.meshpixel;
+        transmission[point] = visible * (1 - pixel[3]);
+        if (role < 0 || !Math.max(pixel[0], pixel[1], pixel[2])) continue;
+        if (count >= capacity) return false;
+        indices[count] = point;
+        next[count] = heads[role];
+        heads[role] = count;
+        for (let c = 0; c < 3; c++) weights[3 * count + c] = visible * pixel[c] / 255;
+        count++;
+      }
+    }
+  }
+  if (!count) return false;
+  const colors = original.map(item => ({...item}));
+  const marked = new Int32Array(size).fill(-1), touched = new Uint32Array(size);
+  const combined = new Float32Array(3 * size);
+  const bins = new Float64Array(3 * 256);
+  const levels = Number(colourslider.value);
+  let changed = false;
+  for (let sweep = 0; sweep < 2; sweep++) {
+    for (let role = heads.length - 1; role >= 0; role--) {
+      if (heads[role] < 0) continue;
+      if (performance.now() >= deadline) {
+        await yieldfittask();
+        if (!current()) return false;
+        deadline = performance.now() + 12;
+      }
+      const item = colors[Math.floor(role / 2)];
+      const key = role % 2 ? "detailRGB" : "baseRGB";
+      const old = item[key] || [item.red, item.green, item.blue];
+      let length = 0;
+      const tag = sweep * heads.length + role;
+      for (let at = heads[role]; at >= 0; at = next[at]) {
+        const point = indices[at], base = 3 * point;
+        if (marked[point] !== tag) {
+          marked[point] = tag;
+          touched[length++] = point;
+          combined[base] = combined[base + 1] = combined[base + 2] = 0;
+        }
+        for (let c = 0; c < 3; c++) combined[base + c] += weights[3 * at + c];
+      }
+      bins.fill(0);
+      const sums = [0, 0, 0];
+      for (let i = 0; i < length; i++) {
+        const base = 3 * touched[i];
+        for (let c = 0; c < 3; c++) {
+          const weight = combined[base + c];
+          if (weight < 0.00001) continue;
+          const value = quantize(old[c] + residual[base + c] / weight, levels);
+          bins[256 * c + value] += weight;
+          sums[c] += weight;
+        }
+      }
+      const fresh = [...old];
+      for (let c = 0; c < 3; c++) {
+        if (!sums[c]) continue;
+        let sum = 0;
+        for (let v = 0; v < 256; v++) {
+          sum += bins[256 * c + v];
+          if (sum >= sums[c] / 2) {fresh[c] = v; break;}
+        }
+      }
+      const shift = fresh.map((v, c) => v - old[c]);
+      if (!shift.some(Boolean)) continue;
+      let gain = 0;
+      for (let i = 0; i < length; i++) {
+        const base = 3 * touched[i];
+        for (let c = 0; c < 3; c++) {
+          const prior = residual[base + c];
+          gain += Math.abs(prior) - Math.abs(prior - combined[base + c] * shift[c]);
+        }
+      }
+      if (gain <= 0) continue;
+      for (let i = 0; i < length; i++) {
+        const base = 3 * touched[i];
+        for (let c = 0; c < 3; c++) residual[base + c] -= combined[base + c] * shift[c];
+      }
+      item[key] = fresh;
+      changed = true;
+    }
+  }
+  if (!changed || !current()) return false;
+  let accepted = false;
+  try {
+    plan = colors;
+    accepted = measurefittedpreview() < before;
+    return accepted;
+  } finally {
+    if (!accepted) {plan = original; drawresult();}
+  }
 }
