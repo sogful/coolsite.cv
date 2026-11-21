@@ -27,12 +27,46 @@
   transform-origin: center;
 }
 
-.previewimage.hasalpha {
+.previewimage.hasalpha:not(.hasoverhang),
+.previewimage.hasalpha.hasoverhang::before {
   background: repeating-conic-gradient(#eee 0 25%, #c9c9c9 0 50%) 0 0 / 24px 24px;
+}
+
+.previewimage.hasoverhang {
+  --overhangcenterx: calc(50% - var(--overhangx) - 50% * var(--overhangwidth));
+  --overhangcentery: calc(50% - var(--overhangy) - 50% * var(--overhangheight));
+  inline-size: min(calc(100cqw / var(--overhangwidth)),
+    calc(100cqh * var(--previewaspect) / var(--overhangheight)));
+  transform: translate(var(--viewx, 0px), var(--viewy, 0px)) scale(var(--viewzoom, 1))
+    translate(var(--overhangcenterx), var(--overhangcentery));
+}
+
+.previewimage.hasoverhang .resultcanvas { display: none; }
+
+.previewimage .overflowcanvas,
+.previewimage.hasalpha.hasoverhang::before {
+  inset: var(--overhangy) auto auto var(--overhangx);
+  inline-size: calc(100% * var(--overhangwidth)); block-size: calc(100% * var(--overhangheight));
+}
+
+.previewimage.hasalpha.hasoverhang::before {
+  content: ""; position: absolute;
+  pointer-events: none;
 }
 
 .previewimage.hasalpha:has(.comparison:not([hidden])) .resultcanvas {
   clip-path: inset(0 0 0 var(--sourcepart));
+}
+
+.previewimage.hasalpha:has(.comparison:not([hidden])) .overflowcanvas {
+  --frameleft: calc(-1 * var(--overhangx) / var(--overhangwidth));
+  --frametop: calc(-1 * var(--overhangy) / var(--overhangheight));
+  --swiperight: calc(var(--frameleft) + var(--sourcepart) / var(--overhangwidth));
+  --framebottom: calc(var(--frametop) + 100% / var(--overhangheight));
+  clip-path: polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0,
+    var(--frameleft) var(--frametop), var(--swiperight) var(--frametop),
+    var(--swiperight) var(--framebottom), var(--frameleft) var(--framebottom),
+    var(--frameleft) var(--frametop), 0 0);
 }
 
 .viewframe .swipeslider { --swipehit: calc(22px / var(--viewzoom, 1)); }

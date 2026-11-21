@@ -326,7 +326,7 @@ async function fittransparentregions(limit, revision) {
     preparetarget();
     const analysis = transparentregions();
     if (!analysis) return null;
-    warpselect.value = "on";
+    if (!warptoggle.checked) return null;
     coverageselect.value = "2";
     installunderlay(limit);
     const budget = limit - (limit > visibilitycost ? visibilitycost : 0);

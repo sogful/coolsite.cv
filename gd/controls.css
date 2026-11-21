@@ -12,8 +12,8 @@
   border-image-width: var(--gdbuttonrim); border-image-repeat: stretch;
 }
 
-.gdbutton:disabled::before,
-.gdbutton[aria-disabled="true"]::before { filter: grayscale(1) brightness(.8); }
+.gdbutton:disabled,
+.gdbutton[aria-disabled="true"] { opacity: .5; }
 
 .gdcircle::before {
   border-image: none; border-radius: 50%;

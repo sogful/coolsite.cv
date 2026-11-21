@@ -58,35 +58,42 @@ body.imgpage {
 .controlpanel {
   display: grid; gap: 8px 24px;
   grid-template-columns: minmax(0, 1.06fr) minmax(0, .94fr);
+  grid-template-rows: max-content 1fr;
   grid-template-areas: "picker ranges" "actions ranges";
-  align-items: center;
+  align-items: start;
 }
 
 .sourcefields {
   grid-area: picker; min-inline-size: 0;
-  position: relative; padding-block-end: 1rem;
+  position: relative;
 }
+
+.sourcefields:has(.dropsubtitle:not(:empty)) { padding-block-end: 1rem; }
 
 .uploadrow {
   padding-inline-end: 4px; border-radius: 20px;
   background: #6c3c25; border: 1px solid #4a2517;
 }
 
+.uploadrow.isdragging {
+  outline: 2px solid #fff; outline-offset: 1px;
+}
+
 .examplebutton { flex: none; }
 
 .droptitle {
-  display: flex; flex-wrap: wrap;
+  display: flex; align-items: baseline;
   gap: 0 .3em; max-inline-size: 100%;
 }
 
 .filecaption {
   overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: nowrap; min-inline-size: 0;
 }
 
-.dropzone:not([title]) .filecaption { white-space: normal; }
-
-.filedimensions { white-space: nowrap; }
+.filedimensions {
+  flex: none; white-space: nowrap;
+}
 
 .settingsrow {
   grid-area: actions; flex-wrap: wrap;
@@ -98,11 +105,15 @@ body.imgpage {
   position: relative;
 }
 
+.edgeoptions {
+  display: flex; flex-wrap: wrap;
+  gap: 6px 8px; min-inline-size: 0;
+}
+
 .dropzone {
   position: relative; flex: 1;
   min-block-size: max(40px, 1.67em);
   display: flex; align-items: center;
-  flex-wrap: wrap; gap: 2px 7px;
   padding: 5px 9px;
   min-inline-size: 0; cursor: pointer;
 }
@@ -111,10 +122,6 @@ body.imgpage {
   position: absolute; inset: 0;
   inline-size: 100%; opacity: 0;
   cursor: pointer; outline: none;
-}
-
-.dropzone.isdragging {
-  outline: 2px solid var(--gdfocus); outline-offset: -2px;
 }
 
 .controlerror {
@@ -157,6 +164,13 @@ body.imgpage {
 .previewpanel {
   display: grid; grid-template-rows: minmax(0, 1fr);
   align-self: stretch; min-block-size: 0;
+}
+
+.previewport .previewempty {
+  position: absolute; inset-inline: 12px;
+  inset-block-start: 50%; translate: 0 -50%;
+  font-size: var(--gdlabelsize); text-align: center;
+  pointer-events: none; user-select: none;
 }
 
 .previewimage canvas,
@@ -290,6 +304,7 @@ body.imgpage {
 @media (max-width: 840px) {
   .controlpanel {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
     grid-template-areas: "picker" "ranges" "actions";
     gap: 8px;
   }
@@ -308,6 +323,7 @@ body.imgpage {
 @media (min-width: 450px) and (max-height: 590px) {
   .controlpanel {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: max-content 1fr;
     grid-template-areas: "picker ranges" "actions ranges";
   }
 

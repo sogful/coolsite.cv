@@ -5,7 +5,9 @@
   align-items: start; gap: 0 12px;
 }
 
-.sliderlabel > label { align-self: center; }
+.sliderlabel > .rangecaption {
+  align-self: center; user-select: none;
+}
 
 .sliderlabel .gdslider {
   grid-column: 2; grid-row: 1 / 3;

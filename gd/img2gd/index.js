@@ -1,5 +1,6 @@
 const form = document.querySelector(".controlpanel");
 const imagefile = document.querySelector(".imagefile");
+const uploadrow = document.querySelector(".uploadrow");
 const dropzone = document.querySelector(".dropzone");
 const dropsubtitle = document.querySelector(".dropsubtitle");
 const fitmessage = document.querySelector(".fitmessage");
@@ -13,13 +14,14 @@ const effortslider = document.querySelector(".effortslider");
 const colourslider = document.querySelector(".colourslider");
 const fitselect = document.querySelector(".fitselect");
 const samplerselect = document.querySelector(".samplerselect");
-const warpselect = document.querySelector(".warpselect");
+const warptoggle = document.querySelector(".warptoggleinput");
 const colourmode = document.querySelector(".colourmode");
 const previewzoomslider = document.querySelector(".previewzoomslider");
 const filecaption = document.querySelector(".filecaption");
 const filedimensions = document.querySelector(".filedimensions");
 const stats = document.querySelector(".stats");
 const previewimage = document.querySelector(".previewimage");
+const previewempty = document.querySelector(".previewempty");
 const comparison = document.querySelector(".comparison");
 const swipeslider = document.querySelector(".swipeslider");
 const sourcecanvas = document.querySelector(".sourcecanvas");
@@ -420,6 +422,8 @@ function preparetarget() {
   }
 }
 
+const overflowcanvas = previewimage.querySelector(".overflowcanvas");
+
 function resizecanvases() {
   const ratio = sourceimage.naturalWidth / sourceimage.naturalHeight;
   const longside = Math.max(520, Math.ceil(Math.max(ratio, 1 / ratio)));
@@ -452,6 +456,73 @@ function drawsource(canvas = sourcecanvas) {
   context.drawImage(sourceimage, 0, 0, canvas.width, canvas.height);
 }
 
+function resultbounds(objects, width, height, scale, yoffset) {
+  let left = 0, top = 0, right = width, bottom = height;
+  const tolerance = 1e-8;
+  for (const object of objects) {
+    const bounds = cropbounds(object);
+    if (Number.isFinite(bounds.left) && bounds.left < -tolerance) {
+      left = Math.min(left, Math.floor(bounds.left * scale));
+    }
+    if (Number.isFinite(bounds.top) && bounds.top < -tolerance) {
+      top = Math.min(top, Math.floor(bounds.top * scale + yoffset));
+    }
+    if (Number.isFinite(bounds.right) && bounds.right > target.width + tolerance) {
+      right = Math.max(right, Math.ceil(bounds.right * scale));
+    }
+    if (Number.isFinite(bounds.bottom) && bounds.bottom > target.height + tolerance) {
+      bottom = Math.max(bottom, Math.ceil(bounds.bottom * scale + yoffset));
+    }
+  }
+  return {left, top, width: right - left, height: bottom - top};
+}
+
+function drawpreviewobjects(context, objects, scale, yoffset) {
+  context.save();
+  context.translate(0, yoffset);
+  previewrenderer.renderpreview(context, objects, scale, scale, spriteatlasimages, spriteatlasdimensions);
+  context.restore();
+}
+
+function drawoverhang(context, objects, scale, yoffset) {
+  const {width, height} = resultcanvas;
+  const bounds = resultbounds(objects, width, height, scale, yoffset);
+  const expanded = bounds.width !== width || bounds.height !== height;
+  overflowcanvas.hidden = !expanded;
+  previewimage.classList.toggle("hasoverhang", expanded);
+  if (!expanded) {
+    if (overflowcanvas.width !== 1) overflowcanvas.width = 1;
+    if (overflowcanvas.height !== 1) overflowcanvas.height = 1;
+    return false;
+  }
+
+  const resolution = Math.min(1, 8192 / bounds.width, 8192 / bounds.height,
+    Math.sqrt(4000000 / bounds.width / bounds.height));
+  const drawwidth = Math.max(1, Math.floor(bounds.width * resolution));
+  const drawheight = Math.max(1, Math.floor(bounds.height * resolution));
+  if (overflowcanvas.width !== drawwidth) overflowcanvas.width = drawwidth;
+  if (overflowcanvas.height !== drawheight) overflowcanvas.height = drawheight;
+  previewimage.style.setProperty("--overhangx", `${100 * bounds.left / width}%`);
+  previewimage.style.setProperty("--overhangy", `${100 * bounds.top / height}%`);
+  previewimage.style.setProperty("--overhangwidth", bounds.width / width);
+  previewimage.style.setProperty("--overhangheight", bounds.height / height);
+
+  const display = overflowcanvas.getContext("2d");
+  const drawx = drawwidth / bounds.width, drawy = drawheight / bounds.height;
+  display.resetTransform();
+  display.clearRect(0, 0, drawwidth, drawheight);
+  display.setTransform(drawx, 0, 0, drawy, -bounds.left * drawx, -bounds.top * drawy);
+  display.drawImage(resultcanvas, 0, 0);
+  drawpreviewobjects(display, objects, scale, yoffset);
+  if (resolution < 1) return false;
+
+  context.save();
+  context.globalCompositeOperation = "copy";
+  context.drawImage(overflowcanvas, -bounds.left, -bounds.top, width, height, 0, 0, width, height);
+  context.restore();
+  return true;
+}
+
 function drawresult(objects = plan, canvas = resultcanvas) {
   const context = canvas.getContext("2d");
   context.setTransform(1, 0, 0, 1, 0, 0);
@@ -464,11 +535,10 @@ function drawresult(objects = plan, canvas = resultcanvas) {
     previewrenderer.paintbackground(context, canvas.width, canvas.height, canvas.width,
       canvas.height, backgroundtile, backgroundtilepixels, background);
   } else context.clearRect(0, 0, canvas.width, canvas.height);
-  const scalex = canvas.width / target.width;
-  context.save();
-  context.translate(0, (canvas.height - target.height * scalex) / 2);
-  previewrenderer.renderpreview(context, objects, scalex, scalex, spriteatlasimages, spriteatlasdimensions);
-  context.restore();
+  const scale = canvas.width / target.width;
+  const yoffset = (canvas.height - target.height * scale) / 2;
+  if (onscreen && drawoverhang(context, objects, scale, yoffset)) return;
+  drawpreviewobjects(context, objects, scale, yoffset);
 }
 
 function hsvvalue(candidate) {
@@ -637,7 +707,6 @@ function updatefields() {
     || fitselect.value === "regions" || fitselect.value === "grid" || regionfitactive;
   coverageselect.disabled = !detailfit()
     || fitselect.value === "regions" || fitselect.value === "grid" || regionfitactive;
-  warpselect.disabled = fitselect.value === "regions" || regionfitactive;
   updateoptions();
   updatestart();
 }
@@ -717,6 +786,7 @@ function loadimage(url, name) {
   resetpreviewview();
   clearlivevalues();
   previewimage.hidden = true;
+  previewempty.hidden = true;
   sampledopaque = null;
   alphaready = false;
   fitmessage.textContent = "";
@@ -794,6 +864,7 @@ sourceimage.addEventListener("load", async () => {
   dropzone.title = imagename + " " + filedimensions.textContent;
   const aspect = sourceimage.naturalWidth / sourceimage.naturalHeight;
   if (Math.max(aspect, 1 / aspect) > sampleedge) {
+    previewempty.hidden = false;
     dropsubtitle.textContent = "Image is too narrow or tall.";
     renderstate.textContent = "ERROR";
     return;
@@ -808,6 +879,7 @@ sourceimage.addEventListener("load", async () => {
 
 sourceimage.addEventListener("error", () => {
   filedimensions.hidden = true;
+  previewempty.hidden = false;
   dropsubtitle.textContent = "Could not read image.";
   renderstate.textContent = "ERROR";
   updatestart();
@@ -821,29 +893,29 @@ imagefile.addEventListener("change", () => {
 examplebutton.addEventListener("click", () => loadimage("assets/soggycat.jpg", "soggycat.jpg"));
 
 for (const name of ["dragenter", "dragover"]) {
-  dropzone.addEventListener(name, event => {
+  uploadrow.addEventListener(name, event => {
+    if (!event.dataTransfer?.types.includes("Files")) return;
     event.preventDefault();
-    dropzone.classList.add("isdragging");
+    uploadrow.classList.add("isdragging");
   });
 }
 
-for (const name of ["dragleave", "drop"]) {
-  dropzone.addEventListener(name, event => {
-    event.preventDefault();
-    dropzone.classList.remove("isdragging");
-  });
-}
+uploadrow.addEventListener("dragleave", event => {
+  if (event.relatedTarget instanceof Node && uploadrow.contains(event.relatedTarget)) return;
+  uploadrow.classList.remove("isdragging");
+});
 
-dropzone.addEventListener("drop", event => {
-  loadupload(event.dataTransfer.files);
+uploadrow.addEventListener("drop", event => {
+  event.preventDefault();
+  uploadrow.classList.remove("isdragging");
+  if (event.dataTransfer) loadupload(event.dataTransfer.files);
 });
 
 form.addEventListener("rangevaluechange", updatefields);
 form.addEventListener("change", event => {
-  if (!event.target.matches("select, .croptoggleinput")) return;
+  if (!event.target.matches("select, .croptoggleinput, .warptoggleinput")) return;
   regionfitactive = false;
   if (event.target === fitselect && fitselect.value === "regions") {
-    warpselect.value = "on";
     coverageselect.value = "2";
   }
   updatefields();

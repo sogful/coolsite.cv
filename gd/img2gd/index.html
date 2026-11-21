@@ -68,17 +68,17 @@
 
         <div class="basicfields">
           <div class="fieldlabel sliderlabel objectlimitfield">
-            <label for="objectlimit">Object limit:</label>
+            <span class="rangecaption" id="objectlimit-label">Object limit:</span>
             <div class="gdslider">
-              <input class="limitslider gdrange" id="objectlimit" type="range" min="50" max="2500" value="1500" step="1" data-edit-max="5000" data-limit-messages>
+              <input class="limitslider gdrange" id="objectlimit" type="range" min="50" max="2500" value="1500" step="1" aria-labelledby="objectlimit-label" data-edit-max="5000" data-limit-messages>
               <input class="rangevalueeditor" type="text" inputmode="numeric" value="1500" autocomplete="off" spellcheck="false" aria-label="Object limit value" aria-describedby="objectlimit-error">
             </div>
             <span class="rangevaluemessage" id="objectlimit-error" role="status" hidden><cr></cr><img alt="" hidden></span>
           </div>
           <div class="fieldlabel sliderlabel effortfield">
-            <label for="effort">Effort:</label>
+            <span class="rangecaption" id="effort-label">Effort:</span>
             <div class="gdslider">
-              <input class="effortslider gdrange" id="effort" type="range" min="0" max="100" value="75" step="1">
+              <input class="effortslider gdrange" id="effort" type="range" min="0" max="100" value="75" step="1" aria-labelledby="effort-label">
               <input class="rangevalueeditor" type="text" inputmode="numeric" value="75" autocomplete="off" spellcheck="false" aria-label="Effort value" aria-describedby="effort-error">
             </div>
             <span class="rangevaluemessage" id="effort-error" role="status" hidden><cr></cr></span>
@@ -90,14 +90,20 @@
             <button class="gdbutton toolbutton advancedopen" type="button" aria-haspopup="dialog"><gold class="gdgold">Advanced</gold></button>
             <cr class="fitmessage controlerror" role="status"></cr>
           </div>
-          <label class="checklabel">
-            <input class="croptoggleinput gdcheck" type="checkbox" aria-describedby="crophelp">
-            <span>Crop to edges</span>
-          </label>
+          <div class="edgeoptions">
+            <label class="checklabel">
+              <input class="croptoggleinput gdcheck" type="checkbox" aria-describedby="crophelp">
+              <span>Crop to edges</span>
+            </label>
+            <label class="checklabel">
+              <input class="warptoggleinput gdcheck" type="checkbox" checked>
+              <span>2.2 axis warp</span>
+            </label>
+          </div>
           <span class="assistivetext" id="crophelp">Keep objects inside the image bounds.</span>
         </div>
 
-        <dialog class="gdpane appdialog advanceddialog" aria-labelledby="advancedtitle">
+        <dialog class="gdpane appdialog advanceddialog" aria-labelledby="advancedtitle" closedby="any">
           <div class="dialoghead">
             <h2 class="dialogtitle" id="advancedtitle"><gold>Advanced settings</gold></h2>
             <button class="gdbutton gdcircle dialogclose" type="button" aria-label="Close advanced settings" autofocus>
@@ -136,27 +142,20 @@
               </select>
             </div>
             <div class="fieldlabel sliderlabel colourlevelsfield">
-              <label for="colourlevels">Color levels</label>
+              <span class="rangecaption" id="colourlevels-label">Color levels</span>
               <div class="gdslider">
-                <input class="colourslider gdrange" id="colourlevels" type="range" min="2" max="256" value="256" step="1">
+                <input class="colourslider gdrange" id="colourlevels" type="range" min="2" max="256" value="256" step="1" aria-labelledby="colourlevels-label">
                 <input class="rangevalueeditor" type="text" inputmode="numeric" value="256" autocomplete="off" spellcheck="false" aria-label="Color levels value" aria-describedby="colourlevels-error">
               </div>
               <span class="rangevaluemessage" id="colourlevels-error" role="status" hidden><cr></cr></span>
             </div>
             <div class="fieldlabel sliderlabel pngscalefield">
-              <label for="pngscale">PNG scale</label>
+              <span class="rangecaption" id="pngscale-label">PNG scale</span>
               <div class="gdslider">
-                <input class="previewzoomslider gdrange" id="pngscale" type="range" min="0.15" max="0.60" value="0.35" step="0.01">
+                <input class="previewzoomslider gdrange" id="pngscale" type="range" min="0.15" max="0.60" value="0.35" step="0.01" aria-labelledby="pngscale-label">
                 <input class="rangevalueeditor" type="text" inputmode="decimal" value="0.35" autocomplete="off" spellcheck="false" aria-label="PNG scale value" aria-describedby="pngscale-error">
               </div>
               <span class="rangevaluemessage" id="pngscale-error" role="status" hidden><cr></cr></span>
-            </div>
-            <div class="fieldlabel">
-              <span class="optionlabel">2.2 axis warp</span>
-              <select class="warpselect gdinput">
-                <option value="off">Off</option>
-                <option value="on" selected>On</option>
-              </select>
             </div>
             <div class="fieldlabel">
               <span class="optionlabel">Color channels</span>
@@ -174,6 +173,7 @@
           <div class="viewframe" tabindex="0">
             <div class="previewimage" hidden>
               <canvas class="resultcanvas" width="640" height="420"></canvas>
+              <canvas class="overflowcanvas" aria-hidden="true" hidden></canvas>
               <div class="comparison" hidden>
                 <canvas class="sourcecanvas" width="640" height="420" aria-hidden="true"></canvas>
                 <span class="swipebar" aria-hidden="true"></span>
@@ -181,6 +181,7 @@
               </div>
             </div>
           </div>
+          <span class="previewempty gdplain">Choose an image first!</span>
           <div class="stats" tabindex="0" role="group" hidden>
             <span class="statrow" data-empty><span class="tilecount">--</span> objects</span>
             <span class="statrow" data-empty><span class="gridcount">--</span> <cr>R</cr><cg>G</cg><cl>B</cl> error</span>

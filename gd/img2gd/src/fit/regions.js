@@ -576,6 +576,7 @@ async function refineregions(groups, analysis, tolerance, budget, revision) {
 async function fitcolorregions(limit, revision) {
   if (!limit) return null;
   if (!sourceisopaque()) return fittransparentregions(limit, revision);
+  if (!warptoggle.checked) return null;
   const reserved = limit > visibilitycost ? visibilitycost : 0;
   fitpixels = 64000;
   preparetarget();
@@ -584,7 +585,6 @@ async function fitcolorregions(limit, revision) {
     fitpixels = 0;
     return null;
   }
-  warpselect.value = "on";
   coverageselect.value = "2";
   try {
     installunderlay(limit);
