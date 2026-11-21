@@ -212,7 +212,7 @@ function triangulatepolygon(points) {
   return triangles;
 }
 
-function regiontriangle(points, color) {
+function regiontriangle(points, color, turn = 0) {
   let anchor = 0;
   let longest = 0;
   for (let index = 0; index < 3; index += 1) {
@@ -224,6 +224,7 @@ function regiontriangle(points, color) {
       anchor = index;
     }
   }
+  anchor = (anchor + turn) % 3;
   const origin = points[anchor];
   const left = points[(anchor + 1) % 3];
   const top = points[(anchor + 2) % 3];
@@ -352,15 +353,78 @@ function regionstitches(polygon, triangles, color) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-function regionobjects(region, palette, labels, tolerance) {
+function alignpolygon(contour, polygon, tolerance) {
+  const edges = polygon.map((start, index) => {
+    const end = polygon[(index + 1) % polygon.length];
+    const dx = end[0] - start[0], dy = end[1] - start[1];
+    const length = Math.hypot(dx, dy);
+    const nx = -dy / length, ny = dx / length;
+    const stop = contour.indexOf(end);
+    let sum = 0, count = 0;
+    for (let cursor = contour.indexOf(start); cursor !== stop; cursor = (cursor + 1) % contour.length) {
+      const next = contour[(cursor + 1) % contour.length];
+      sum += nx * (contour[cursor][0] + next[0]) / 2 + ny * (contour[cursor][1] + next[1]) / 2;
+      count += 1;
+    }
+    return [nx, ny, sum / count];
+  });
+  return polygon.map((point, index) => {
+    const [a, b, c] = edges[(index + edges.length - 1) % edges.length];
+    const [d, e, f] = edges[index];
+    const determinant = a * e - b * d;
+    if (Math.abs(determinant) < 0.04) return point;
+    const dx = (c * e - b * f) / determinant - point[0];
+    const dy = (a * f - c * d) / determinant - point[1];
+    const factor = Math.min(1, tolerance / (Math.hypot(dx, dy) || 1));
+    return [point[0] + dx * factor, point[1] + dy * factor];
+  });
+}
+
+function regionquad(contour, polygon, color) {
+  const corners = polygon.slice();
+  while (corners.length > 4) {
+    let closest = 0, distance = Infinity;
+    for (const [index, point] of corners.entries()) {
+      const before = corners[(index + corners.length - 1) % corners.length];
+      const after = corners[(index + 1) % corners.length];
+      const span = Math.hypot(after[0] - before[0], after[1] - before[1]);
+      const delta = Math.abs(trianglecross(before, after, point)) / (span || 1);
+      if (delta < distance) {closest = index; distance = delta;}
+    }
+    if (distance > 2.5) return null;
+    corners.splice(closest, 1);
+  }
+  if (corners.length !== 4) return null;
+  const [a, b, c, d] = alignpolygon(contour, corners, 2.5);
+  if (Math.hypot(a[0] + c[0] - b[0] - d[0], a[1] + c[1] - b[1] - d[1]) > 2) return null;
+  const ux = (b[0] - a[0] + c[0] - d[0]) / 2, uy = (b[1] - a[1] + c[1] - d[1]) / 2;
+  const vx = (d[0] - a[0] + c[0] - b[0]) / 2, vy = (d[1] - a[1] + c[1] - b[1]) / 2;
+  if (ux * vy - uy * vx <= 1) return null;
+  return {
+    asset: library.find(asset => asset.id === 495),
+    x: (a[0] + b[0] + c[0] + d[0]) / 4, y: (a[1] + b[1] + c[1] + d[1]) / 4,
+    width: Math.hypot(ux, uy), height: Math.hypot(vx, vy), angle: 0,
+    warpx: Math.atan2(uy, ux) * 180 / Math.PI, warpy: Math.atan2(vy, vx) * 180 / Math.PI - 90,
+    red: color[0], green: color[1], blue: color[2],
+  };
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+function regionobjects(region, palette, labels, tolerance, aligned = false, turn = 0) {
   const color = palette[region.color];
   if (region.count === (region.right - region.left) * (region.bottom - region.top))
     return [coarseregion(region, palette, true)];
   const contour = region.contour;
   const ellipse = regionellipse(region, labels, color, contour);
   if (ellipse) return [ellipse];
-  const polygon = simplifypolygon(contour, tolerance);
+  let polygon = simplifypolygon(contour, tolerance);
   if (polygon.length < 3) return [coarseregion(region, palette)];
+  if (aligned) {
+    const quad = regionquad(contour, polygon, color);
+    if (quad) return [quad];
+    polygon = alignpolygon(contour, polygon, tolerance);
+  }
   const triangles = triangulatepolygon(polygon);
   const objects = triangles.map(points => {
     const margins = points.map((point, index) => {
@@ -375,7 +439,7 @@ function regionobjects(region, palette, labels, tolerance) {
     const factor = Math.min(1, 0.6 / maximum);
     const expanded = points.map((point, index) => [point[0] + changes[index][0] * factor,
     point[1] + changes[index][1] * factor]);
-    return regiontriangle(expanded, color);
+    return regiontriangle(expanded, color, turn);
   });
   return [...objects, ...regionstitches(polygon, triangles, color)];
 }
@@ -421,6 +485,88 @@ function fitregionbackground(limit, regions, analysis) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
+function regioncomparison() {
+  measurefittedpreview();
+  const width = resultcanvas.width, height = resultcanvas.height;
+  const source = sourcecomparecanvas.getContext("2d").getImageData(0, 0, width, height).data;
+  const directions = [1, width, width + 1, width - 1, 2, width * 2, width * 2 + 2, width * 2 - 2];
+  const smooth = new Uint8Array(width * height);
+  for (let y = 2; y < height - 2; y += 1) {
+    for (let x = 2; x < width - 2; x += 1) {
+      const index = y * width + x;
+      for (let direction = 0; direction < directions.length; direction += 1) {
+        const step = 4 * directions[direction];
+        let flat = true;
+        for (let c = index * 4; c < index * 4 + 3; c += 1) {
+          if (Math.abs(source[c - step] - source[c + step]) > 12
+            || Math.abs(2 * source[c] - source[c - step] - source[c + step]) >= 16) {flat = false; break;}
+        }
+        if (flat) smooth[index] |= 1 << direction;
+      }
+    }
+  }
+  return () => {
+    drawresult();
+    const pixels = resultcanvas.getContext("2d").getImageData(0, 0, width, height).data;
+    let difference = 0, streaks = 0;
+    for (let index = 0; index < smooth.length; index += 1) {
+      const base = index * 4;
+      difference += Math.abs(source[base] - pixels[base]) + Math.abs(source[base + 1] - pixels[base + 1])
+        + Math.abs(source[base + 2] - pixels[base + 2]);
+      for (let direction = 0; direction < directions.length; direction += 1) {
+        if (!(smooth[index] & (1 << direction))) continue;
+        const step = 4 * directions[direction];
+        let peak = 0;
+        for (let c = base; c < base + 3; c += 1) {
+          if (Math.abs(pixels[c - step] - pixels[c + step]) > 12) {peak = 0; break;}
+          peak = Math.max(peak, Math.abs(2 * pixels[c] - pixels[c - step] - pixels[c + step]));
+        }
+        if (peak >= 48) {streaks += 1; break;}
+      }
+    }
+    return {difference, streaks};
+  };
+}
+
+async function refineregions(groups, analysis, tolerance, budget, revision) {
+  const maximum = presetselect.value === "max";
+  if (!maximum && presetselect.value !== "detail") return;
+  const width = Math.round(720 * Number(previewzoomslider.value));
+  if (width * width * target.height / target.width > 400000) return;
+  const compare = regioncomparison();
+  let best = compare();
+  const variants = maximum ? [[1, true, 0], [0.8, true, 0], [1, false, 1], [1, false, 2]] : [[1, true, 0]];
+  for (const group of groups) {
+    if (group.objects.length === 1 || group.placed !== group.objects) continue;
+    const index = plan.indexOf(group.placed[0]);
+    if (index < 0) continue;
+    let length = group.placed.length;
+    for (const [factor, aligned, turn] of variants) {
+      let objects;
+      try {
+        objects = regionobjects(group.region, analysis.palette, analysis.labels, tolerance * factor, aligned, turn);
+      } catch (error) {
+        if (error.message === "Region polygon could not be triangulated without losing geometry.") continue;
+        throw error;
+      }
+      if (objects.length > group.objects.length + 4 || plan.length - length + objects.length > budget) continue;
+      for (const object of objects) {object.macro = true; preparecandidate(object);}
+      const previous = plan;
+      plan = [...previous.slice(0, index), ...objects, ...previous.slice(index + length)];
+      const score = compare();
+      if (score.streaks <= best.streaks && (score.difference < best.difference
+        || score.difference === best.difference && objects.length < length)) {
+        best = score;
+        length = objects.length;
+      } else plan = previous;
+    }
+    await yieldfittask();
+    if (revision !== fitrevision) return;
+  }
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
 async function fitcolorregions(limit, revision) {
   if (!limit || !sourceisopaque()) return null;
   const reserved = limit > visibilitycost ? visibilitycost : 0;
@@ -445,7 +591,7 @@ async function fitcolorregions(limit, revision) {
         region, objects: index === 0 && !underlaycount ? [coarseregion(region, analysis.palette, true)]
           : regionobjects(region, analysis.palette, analysis.labels, tolerance),
       }));
-      if (groups.reduce((count, group) => count + group.objects.length, 0) <= available) break;
+      if (groups.reduce((count, group) => count + group.objects.length, 0) <= available || attempt === 5) break;
       tolerance *= 1.7;
     }
     for (const group of groups) {
@@ -453,6 +599,7 @@ async function fitcolorregions(limit, revision) {
       const remaining = limit - reserved - plan.length;
       if (remaining <= 0) break;
       const objects = group.objects.length <= remaining ? group.objects : [coarseregion(group.region, analysis.palette)];
+      group.placed = objects;
       for (const candidate of objects) {
         candidate.macro = true;
         preparecandidate(candidate);
@@ -463,6 +610,8 @@ async function fitcolorregions(limit, revision) {
     }
     if (revision !== fitrevision) return false;
     fitregionbackground(limit, regions, analysis);
+    await refineregions(groups, analysis, tolerance, limit - reserved, revision);
+    if (revision !== fitrevision) return false;
     regionfitactive = true;
     updatefields();
     return revision === fitrevision;
