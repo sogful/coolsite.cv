@@ -174,8 +174,7 @@ body.imgpage {
 }
 
 .previewimage canvas,
-.comparison,
-.swipeslider {
+.comparison {
   position: absolute; inset: 0;
   inline-size: 100%; block-size: 100%;
 }
@@ -183,48 +182,6 @@ body.imgpage {
 .comparison { pointer-events: none; }
 
 .sourcecanvas { clip-path: inset(0 calc(100% - var(--sourcepart)) 0 0); }
-
-.swipebar {
-  position: absolute; inset-block: 0;
-  inset-inline-start: var(--sourcepart); pointer-events: none;
-  inline-size: 4px; border: 1px solid #000;
-  background: #ffff32; translate: -50%;
-  forced-color-adjust: none;
-}
-
-.swipebar::after {
-  content: ""; position: absolute;
-  inline-size: 32px; block-size: 32px;
-  inset-block-start: 50%; inset-inline-start: 50%;
-  translate: -50% -50%;
-  background: url("../assets/svgs/thumb.svg") center / contain no-repeat;
-}
-
-.comparison:active .swipebar::after {
-  background-image: url("../assets/svgs/thumb.svg#pressed");
-}
-
-.swipeslider {
-  appearance: none; margin: 0;
-  background: transparent; border: 0; outline: none;
-  cursor: ew-resize; touch-action: none;
-  pointer-events: auto; --swipehit: 22px;
-  clip-path: inset(0 max(0px, calc(100% - var(--sourcepart) - var(--swipehit)))
-    0 max(0px, calc(var(--sourcepart) - var(--swipehit))));
-}
-
-.swipeslider::-webkit-slider-runnable-track { block-size: 100%; }
-.swipeslider::-moz-range-track { block-size: 100%; }
-
-.swipeslider::-webkit-slider-thumb {
-  appearance: none; inline-size: 0;
-  block-size: 100%; border: 0;
-}
-
-.swipeslider::-moz-range-thumb {
-  inline-size: 0; block-size: 100%;
-  border: 0; background: transparent;
-}
 
 /*//////////////////////////////////////////////////////////////////////*/
 

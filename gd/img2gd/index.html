@@ -176,17 +176,21 @@
               <canvas class="overflowcanvas" aria-hidden="true" hidden></canvas>
               <div class="comparison" hidden>
                 <canvas class="sourcecanvas" width="640" height="420" aria-hidden="true"></canvas>
-                <span class="swipebar" aria-hidden="true"></span>
-                <input class="swipeslider" type="range" min="0" max="100" value="50" step="1">
               </div>
+            </div>
+            <div class="swipebar">
+              <input class="swipeslider" type="range" min="0" max="100" value="50" step="1" aria-label="Compare source image and fitted image">
             </div>
           </div>
           <span class="previewempty gdplain">Choose an image first!</span>
-          <div class="stats" tabindex="0" role="group" hidden>
+          <div class="stats" tabindex="0" role="group" aria-label="Image information" hidden>
             <span class="statrow" data-empty><span class="tilecount">--</span> objects</span>
-            <span class="statrow" data-empty><span class="gridcount">--</span> <cr>R</cr><cg>G</cg><cl>B</cl> error</span>
+            <span class="statrow" data-empty><span class="gridcount">--</span> <cr>r</cr><cg>g</cg><cl>b</cl> error</span>
             <span class="statrow" data-empty><span class="channelcount">--</span> channels</span>
             <span class="statrow" data-empty><span class="sizecount">--</span> size</span>
+            <span class="statrow" data-empty><span class="dimensionscount">--</span> source</span>
+            <span class="statrow" data-empty><span class="shapecount">--</span> shape types</span>
+            <span class="statrow" data-empty><span class="timecount">--</span> elapsed</span>
           </div>
           <div class="previewfooter">
             <p class="statusline" role="status">

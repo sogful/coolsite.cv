@@ -33,6 +33,9 @@ const tilecount = document.querySelector(".tilecount");
 const gridcount = document.querySelector(".gridcount");
 const channelcount = document.querySelector(".channelcount");
 const sizecount = document.querySelector(".sizecount");
+const dimensionscount = document.querySelector(".dimensionscount");
+const shapecount = document.querySelector(".shapecount");
+const timecount = document.querySelector(".timecount");
 const assetstatus = document.querySelector(".assetstatus");
 const renderstate = document.querySelector(".renderstate");
 const downloadlink = document.querySelector(".downloadlink");
@@ -97,6 +100,7 @@ const sampledtexture = [0, 0, 0, 0];
 let fitting = false;
 let fitrevision = 0;
 let fitreadyrevision = -1;
+let fitstarttime;
 let fiterror = 0;
 let seedretryoffset = 0;
 let batchfitter = null;
@@ -692,7 +696,9 @@ function updatestat(element, value) {
 }
 
 function clearlivevalues() {
-  for (const value of [tilecount, gridcount, channelcount, sizecount]) updatestat(value, "--");
+  for (const value of [tilecount, gridcount, channelcount, sizecount, shapecount, timecount]) {
+    updatestat(value, "--");
+  }
 }
 
 function prettysize(bytes) {
@@ -725,6 +731,7 @@ async function updatepreview() {
   updatestat(tilecount, result.objects.toLocaleString());
   updatestat(gridcount, fiterror.toFixed(1) + "%");
   updatestat(channelcount, result.channels.toLocaleString());
+  updatestat(shapecount, new Set(plan.map(object => object.asset.id)).size.toLocaleString());
   updatestat(sizecount, prettysize(level.size));
   renderstate.textContent = fitselect.value === "grid" ? "SPRITE MOSAIC" : "SPRITE FIT";
   statuscopy.textContent = "Preparing files...";
@@ -732,18 +739,23 @@ async function updatepreview() {
   comparison.hidden = false;
   enableexport(downloadlink, level, name + ".gmd");
   await prepareexports(result.raw, name);
+  if (fitreadyrevision === fitrevision && fitstarttime !== undefined) {
+    updatestat(timecount, ((performance.now() - fitstarttime) / 1000).toFixed(1) + "s");
+  }
 }
 
 async function startfit() {
   if (startbutton.disabled) return;
   const revision = ++fitrevision;
   fitting = true;
+  fitstarttime = performance.now();
   fitmessage.textContent = "";
   if (advanceddialog.open) advanceddialog.close();
   form.inert = true;
   advancedopen.disabled = true;
   comparison.hidden = true;
   stats.hidden = false;
+  updatestat(dimensionscount, sourceimage.naturalWidth + "x" + sourceimage.naturalHeight);
   clearlivevalues();
   invalidateexports();
   renderstate.textContent = "FITTING";
@@ -768,14 +780,6 @@ async function startfit() {
     updatefields();
   }
 }
-
-function updateswipe() {
-  const share = swipeslider.valueAsNumber;
-  previewimage.style.setProperty("--sourcepart", share + "%");
-  swipeslider.setAttribute("aria-valuetext", share + "% source");
-}
-
-swipeslider.addEventListener("input", updateswipe);
 
 function loadimage(url, name) {
   fitrevision += 1;

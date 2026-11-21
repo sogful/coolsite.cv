@@ -1,8 +1,9 @@
-const resetpreviewview = (() => {
+const previewview = (() => {
   const viewport = document.querySelector(".previewport");
   const frame = viewport.querySelector(".viewframe");
   const image = frame.querySelector(".previewimage");
-  const swipe = image.querySelector(".swipeslider");
+  const divider = frame.querySelector(".swipebar");
+  const swipe = divider.querySelector(".swipeslider");
   const stats = viewport.querySelector(".stats");
   const footer = viewport.querySelector(".previewfooter");
   const pointers = new Map();
@@ -19,6 +20,8 @@ const resetpreviewview = (() => {
   let statsy = 8;
   let statsdrag;
   let swipepointer;
+  let swipex = .5;
+  let swipey = .5;
 
   function setview(x, y, zoom = viewzoom) {
     if (!(zoom > 0 && Number.isFinite(zoom) && Number.isFinite(x) && Number.isFinite(y))) return;
@@ -28,6 +31,7 @@ const resetpreviewview = (() => {
     image.style.setProperty("--viewx", x + "px");
     image.style.setProperty("--viewy", y + "px");
     image.style.setProperty("--viewzoom", zoom);
+    placeswipe();
   }
 
   function zoomview(zoom, from, to = from) {
@@ -41,6 +45,11 @@ const resetpreviewview = (() => {
 
   function resetview() {
     setview(0, 0, 1);
+    const bounds = frame.getBoundingClientRect();
+    const middle = divider.getBoundingClientRect();
+    if (middle.right <= bounds.left || middle.left >= bounds.right || swipey < 0 || swipey > 1) {
+      setswipe(.5, .5);
+    }
   }
 
   function midpoint(first, second) {
@@ -48,7 +57,7 @@ const resetpreviewview = (() => {
   }
 
   function othercontrol(event) {
-    return event.target.closest(".swipebar, .swipehandle, input, button, a");
+    return event.target.closest(".swipebar, input, button, a");
   }
 
   /*//////////////////////////////////////////////////////////////////////*/
@@ -111,18 +120,42 @@ const resetpreviewview = (() => {
 
   /*//////////////////////////////////////////////////////////////////////*/
 
+  function placeswipe() {
+    if (image.hidden) return;
+    const rect = image.getBoundingClientRect();
+    const bounds = frame.getBoundingClientRect();
+    divider.style.setProperty("--swipex", rect.left - bounds.left + rect.width * swipex + "px");
+    divider.style.setProperty("--swipey", swipey * 100 + "%");
+  }
+
+  function setswipe(x, y = swipey) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    swipex = x;
+    swipey = y;
+    const share = Math.max(0, Math.min(100, x * 100));
+    image.style.setProperty("--sourcepart", share + "%");
+    swipe.valueAsNumber = Math.round(share);
+    swipe.setAttribute("aria-valuetext", swipe.value + "% source");
+    placeswipe();
+  }
+
+  function updateswipe() {
+    setswipe(swipe.valueAsNumber / 100, swipey < 0 || swipey > 1 ? .5 : swipey);
+  }
+
+  swipe.addEventListener("input", updateswipe);
+
   function moveswipe(event) {
     if (event.pointerId !== swipepointer) return;
-    const rect = swipe.getBoundingClientRect();
-    const fraction = (event.clientX - rect.left) / rect.width;
-    const value = Math.round(Math.max(0, Math.min(1, fraction)) * 100);
-    if (!Number.isFinite(value) || value === swipe.valueAsNumber) return;
-    swipe.valueAsNumber = value;
-    swipe.dispatchEvent(new Event("input", {bubbles: true}));
+    const rect = image.getBoundingClientRect();
+    const bounds = frame.getBoundingClientRect();
+    setswipe((event.clientX - rect.left) / rect.width, (event.clientY - bounds.top) / bounds.height);
   }
 
   function endswipe(event) {
-    if (event.pointerId === swipepointer) swipepointer = undefined;
+    if (event.pointerId !== swipepointer) return;
+    swipepointer = undefined;
+    divider.classList.remove("dragging");
   }
 
   swipe.addEventListener("pointerdown", event => {
@@ -131,6 +164,7 @@ const resetpreviewview = (() => {
     swipe.focus({preventScroll: true});
     swipe.setPointerCapture(event.pointerId);
     swipepointer = event.pointerId;
+    divider.classList.add("dragging");
     moveswipe(event);
   });
 
@@ -148,9 +182,9 @@ const resetpreviewview = (() => {
   stats.addEventListener("pointerdown", event => {
     if (event.button !== 0 || statsdrag) return;
     event.preventDefault();
-    if (event.pointerType === "mouse") stats.focus({preventScroll: true});
     stats.setPointerCapture(event.pointerId);
     statsdrag = {id: event.pointerId, x: event.clientX - statsx, y: event.clientY - statsy};
+    stats.classList.add("dragging");
   });
 
   function dragstats(event) {
@@ -159,7 +193,9 @@ const resetpreviewview = (() => {
   }
 
   function endstatsdrag(event) {
-    if (event.pointerId === statsdrag?.id) statsdrag = null;
+    if (event.pointerId !== statsdrag?.id) return;
+    statsdrag = null;
+    stats.classList.remove("dragging");
   }
 
   stats.addEventListener("keydown", event => {
@@ -202,11 +238,19 @@ const resetpreviewview = (() => {
     frame.classList.remove("dragging");
     swipepointer = undefined;
     statsdrag = null;
+    divider.classList.remove("dragging");
+    stats.classList.remove("dragging");
   });
 
   const bounds = new ResizeObserver(() => movestats(statsx, statsy));
   bounds.observe(viewport);
   bounds.observe(stats);
   if (footer) bounds.observe(footer);
-  return resetview;
+  const splitlayout = new ResizeObserver(placeswipe);
+  splitlayout.observe(frame);
+  splitlayout.observe(image);
+  return {resetview, updateswipe};
 })();
+
+const resetpreviewview = previewview.resetview;
+const updateswipe = previewview.updateswipe;
