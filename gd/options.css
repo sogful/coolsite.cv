@@ -18,7 +18,7 @@
   inline-size: 36px; min-block-size: 42px;
   border: 0; border-radius: 20px;
   padding: 3px; background: none;
-  cursor: pointer; transition: scale 90ms ease-out;
+  cursor: pointer;
 }
 
 .optionarrow::after {
@@ -28,7 +28,6 @@
 }
 
 .optionnext::after { scale: -1 1; }
-.optionarrow:active:not(:disabled) { scale: .9; }
 .optionarrow:disabled { cursor: not-allowed; opacity: .58; }
 
 .optionarrow:focus-visible {

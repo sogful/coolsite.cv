@@ -24,16 +24,11 @@
   min-inline-size: 0; min-block-size: max(40px, 1.67em);
   padding: 7px 13px; cursor: pointer;
   font: 400 var(--gdlabelsize)/1.08 pusab, sans-serif;
-  color: #faffff; text-align: center;
+  color: #ffcf40; text-align: center;
   user-select: none;
   text-decoration: none; font-synthesis: none;
-  scale: 1;
-  transition: scale 135ms cubic-bezier(.2,.7,.32,1);
 }
 
-.gdbutton:active:not(:disabled, [aria-disabled="true"]) {
-  scale: 1.11; transition-duration: 65ms;
-}
 .gdbutton:disabled,
 .gdbutton[aria-disabled="true"] { cursor: not-allowed; }
 
@@ -112,39 +107,11 @@ cgrey { color: #808080; }
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-.appdialog {
-  opacity: 0; scale: .82;
-  animation: gdpopupclose 160ms ease-in;
-  transition: display 160ms allow-discrete, overlay 160ms allow-discrete;
-}
-
 .appdialog[open] {
-  opacity: 1; scale: 1;
-  animation: gdpopup 240ms ease-out;
+  animation: gdpopup 350ms cubic-bezier(.333333,1.567193,.666667,1);
 }
 
 @keyframes gdpopup {
-  from {
-    opacity: 0; scale: .62;
-  }
-  72% {
-    opacity: 1; scale: 1.055;
-  }
+  from { scale: .62; }
   to { scale: 1; }
-}
-
-@keyframes gdpopupclose {
-  from {
-    opacity: 1; scale: 1;
-  }
-}
-
-.appdialog::backdrop {
-  opacity: 0; transition: opacity 150ms ease-out, display 180ms allow-discrete, overlay 180ms allow-discrete;
-}
-
-.appdialog[open]::backdrop { opacity: 1; }
-
-@starting-style {
-  .appdialog[open]::backdrop { opacity: 0; }
 }
