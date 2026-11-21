@@ -112,7 +112,7 @@ async function runfitsearch(limit, trials, revision) {
         await refinesmoothareas(revision);
       }
     }
-    await comparephotobase(broad, revision);
+    comparephotobase(broad, revision);
     return revision === fitrevision;
   } finally {
     if (revision === fitrevision) {
