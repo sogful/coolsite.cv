@@ -7,7 +7,15 @@ const {rangevalue, validrangevalues} = (() => {
     const railmax = Number(slider.max);
     const maximum = Number(slider.dataset.editMax ?? slider.max);
     const limitmessages = slider.hasAttribute("data-limit-messages");
-    const fractional = !Number.isInteger(Number(slider.step));
+    const step = Number(slider.step);
+    const fractional = !Number.isInteger(step);
+    const precision = slider.step.split(".")[1]?.length || 0;
+    const ticks = Math.round((railmax - minimum) / step);
+    const divisions = Math.min(24, ticks);
+    const stops = Array.from({length: divisions + 1}, (_, index) => {
+      const tick = Math.round(index * ticks / divisions);
+      return Number((minimum + tick * step).toFixed(precision));
+    });
     const editor = document.createElement("input");
     const warning = document.createElement("span");
     const warningtext = document.createElement("cr");
@@ -36,12 +44,15 @@ const {rangevalue, validrangevalues} = (() => {
     }
 
     rail.append(editor);
+    rail.parentElement.classList.add("rangewarninghost");
     rail.after(warning);
     controls.set(slider, control);
 
     function place() {
-      const percent = (slider.valueAsNumber - minimum) / (railmax - minimum) * 100;
-      rail.style.setProperty("--gdprogress", percent + "%");
+      const fraction = (slider.valueAsNumber - minimum) / (railmax - minimum);
+      rail.style.setProperty("--gdfraction", fraction);
+      rail.style.setProperty("--gdprogress", fraction * 100 + "%");
+      rail.style.setProperty("--gdfillstop", fraction > 0 && fraction < 1 ? "var(--gdthumbcenter)" : fraction * 100 + "%");
       if (control.value === slider.valueAsNumber) slider.removeAttribute("aria-valuetext");
       else slider.setAttribute("aria-valuetext", String(control.value));
     }
@@ -78,8 +89,35 @@ const {rangevalue, validrangevalues} = (() => {
       slider.dispatchEvent(new Event("rangevaluechange", {bubbles: true}));
     }
 
+    function snap(value) {
+      return stops.reduce((nearest, candidate) => Math.abs(candidate - value) < Math.abs(nearest - value) ? candidate : nearest);
+    }
+
+    function keyvalue(event) {
+      if (event.key === "Home") return minimum;
+      if (event.key === "End") return railmax;
+      const forward = getComputedStyle(slider).direction === "rtl" ? -1 : 1;
+      const moves = {ArrowLeft: -forward, ArrowRight: forward, ArrowDown: -1, ArrowUp: 1, PageDown: -3, PageUp: 3};
+      const move = moves[event.key];
+      if (!move) return null;
+      const value = slider.valueAsNumber;
+      const start = move > 0 ? stops.findIndex(stop => stop > value) : stops.findLastIndex(stop => stop < value);
+      if (start < 0) return move > 0 ? railmax : minimum;
+      return stops[Math.max(0, Math.min(divisions, start + move - Math.sign(move)))];
+    }
+
     editor.addEventListener("input", () => edit(editor.value));
-    slider.addEventListener("input", () => edit(slider.value));
+    slider.addEventListener("input", event => edit(event.isTrusted ? snap(slider.valueAsNumber) : slider.value));
+    slider.addEventListener("keydown", event => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      const value = keyvalue(event);
+      if (value === null) return;
+      event.preventDefault();
+      if (value === control.value && value === slider.valueAsNumber && control.valid) return;
+      slider.valueAsNumber = value;
+      slider.dispatchEvent(new Event("input", {bubbles: true}));
+      slider.dispatchEvent(new Event("change", {bubbles: true}));
+    });
     slider.addEventListener("change", () => {
       if (slider.valueAsNumber !== Math.min(control.value, railmax)) edit(slider.value);
     });

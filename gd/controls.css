@@ -1,10 +1,21 @@
 .gdbutton {
   border: 0 solid transparent; background: transparent;
-  border-image-source: url("assets/svgs/button.svg"); border-image-slice: 38 fill;
-  border-image-width: 12px; border-image-repeat: stretch;
+  --gdbuttonrim: 12px; position: relative;
+  isolation: isolate;
 }
 
-.gdcircle {
+.gdbutton::before {
+  content: ""; position: absolute;
+  inset: 0; z-index: -1;
+  border: 0 solid transparent; pointer-events: none;
+  border-image-source: url("assets/svgs/button.svg"); border-image-slice: 38 fill;
+  border-image-width: var(--gdbuttonrim); border-image-repeat: stretch;
+}
+
+.gdbutton:disabled::before,
+.gdbutton[aria-disabled="true"]::before { filter: grayscale(1) brightness(.8); }
+
+.gdcircle::before {
   border-image: none; border-radius: 50%;
   background: url("assets/svgs/circle.svg") center / contain no-repeat;
 }
@@ -44,6 +55,7 @@
 
 .gdslider {
   --gdthumbsize: 30px; --gdthumb: url("assets/svgs/thumb.svg");
+  --gdthumbcenter: calc(var(--gdthumbsize) / 2 + (100% - var(--gdthumbsize)) * var(--gdfraction, 0));
   inline-size: 100%; min-inline-size: 0;
   grid-template-columns: minmax(0, 1fr); isolation: isolate;
 }
@@ -57,21 +69,19 @@
 }
 
 .gdslider::before {
-  z-index: 1; block-size: 14px;
-  border: 0 solid transparent;
-  border-image: url("assets/svgs/groove.svg") 12 14 fill / 6.5px 7.5px;
+  z-index: 1; block-size: 10px;
+  border: 0 solid transparent; border-image: url("assets/svgs/groove.svg") 16 30 fill / 3.6px 6.8px;
 }
 
 .gdslider::after {
-  block-size: 8px; border-radius: 6px;
-  background: url("assets/svgs/fill.svg") left center / 32px 100% repeat-x;
-  clip-path: inset(0 calc(100% - var(--gdprogress)) 0 0);
+  block-size: 6px; border-radius: 4px;
+  background: url("assets/svgs/fill.svg") left center / 24px 100% repeat-x;
+  clip-path: inset(0 calc(100% - var(--gdfillstop, var(--gdprogress))) 0 0);
 }
 
 .gdslider > .gdrange {
   z-index: 2; min-block-size: var(--gdthumbsize);
-  inline-size: calc(100% + var(--gdthumbsize));
-  inset-inline-start: calc(var(--gdthumbsize) / -2); justify-self: start;
+  inline-size: 100%; min-inline-size: 0;
 }
 
 .gdrange::-webkit-slider-runnable-track {
@@ -104,6 +114,8 @@
     background: ButtonFace; color: ButtonText;
   }
 
+  .gdbutton::before { display: none; }
+
   .gdcloseicon {
     background: ButtonText; mask: url("assets/svgs/cross.svg") center / contain no-repeat;
   }
@@ -120,10 +132,6 @@
   .gdcheck:checked::before,
   .gdslider::before,
   .gdslider::after { display: none; }
-
-  .gdslider > .gdrange {
-    inline-size: 100%; inset-inline-start: auto;
-  }
 
   .gdrange::-webkit-slider-thumb { appearance: auto; }
 }

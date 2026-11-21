@@ -1,8 +1,12 @@
 .gdslider:has(.rangevalueeditor) { margin-block-end: 1.4rem; }
 
+.rangewarninghost {
+  position: relative; padding-block-end: 1.3rem;
+}
+
 .rangevalueeditor {
   position: absolute; inset-block-start: 100%;
-  inset-inline-start: var(--gdprogress); translate: -50%;
+  inset-inline-start: var(--gdthumbcenter); translate: -50%;
   box-sizing: border-box; inline-size: 2.5rem;
   block-size: 1.4rem; padding: 0;
   border: 0; border-radius: 99px;
@@ -15,6 +19,8 @@
 .imgpage .gdrange:focus-visible { outline: none; }
 
 .rangevaluemessage:not([hidden]) {
+  position: absolute; inset-inline: 0;
+  inset-block-end: 0;
   display: flex; align-items: center;
   gap: 4px; font: 400 .875rem/1.25 aller, sans-serif;
   text-align: start;
