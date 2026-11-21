@@ -37,6 +37,8 @@ async function runfitsearch(limit, trials, revision) {
     if (result !== null) return result;
     preparetarget();
   }
+  const broad = await photobase(limit, revision);
+  if (revision !== fitrevision) return false;
   if (!await fitadaptive(limit, trials, revision)) return false;
   if (revision !== fitrevision) return false;
   const detailed = presetselect.value === "detail" || presetselect.value === "max";
@@ -114,6 +116,7 @@ async function runfitsearch(limit, trials, revision) {
         await refinesmoothareas(revision);
       }
     }
+    comparephotobase(broad, revision);
     return revision === fitrevision;
   } finally {
     if (revision === fitrevision) {

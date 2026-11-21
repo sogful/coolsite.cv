@@ -71,6 +71,7 @@ let targetpixels = new Uint8ClampedArray();
 let fittedpixels = new Uint8ClampedArray();
 let imageopaque = false;
 let sampledopaque = null;
+let opacitycheck = Promise.resolve(false);
 let imagerevision = 0;
 let alphaready = false;
 let originalplan = [];
@@ -899,7 +900,8 @@ sourceimage.addEventListener("load", async () => {
   alphaready = !croptoggle.checked;
   sourcename.textContent = `${imagename} · ${sourceimage.naturalWidth} × ${sourceimage.naturalHeight}`;
   if (alphaready) schedulepreview();
-  const opaque = sourceisopaque() && await cropopaque(sourceimage, () => revision === imagerevision);
+  opacitycheck = sourceisopaque() ? cropopaque(sourceimage, () => revision === imagerevision) : Promise.resolve(false);
+  const opaque = await opacitycheck;
   if (revision !== imagerevision) return;
   croptoggle.disabled = !opaque;
   if (!opaque) croptoggle.checked = false;
