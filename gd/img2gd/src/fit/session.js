@@ -171,7 +171,6 @@ async function startfit() {
   stats.hidden = false;
   channelcount.parentElement.hidden = colourmode.value === "hsv";
   clearlivevalues();
-  updatestat(dimensionscount, sourceimage.naturalWidth + "x" + sourceimage.naturalHeight);
   invalidateexports();
   renderstate.textContent = "FITTING";
   seedretryoffset = 0;

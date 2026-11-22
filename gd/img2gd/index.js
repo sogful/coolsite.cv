@@ -30,7 +30,6 @@ const tilecount = document.querySelector(".tilecount");
 const gridcount = document.querySelector(".gridcount");
 const channelcount = document.querySelector(".channelcount");
 const sizecount = document.querySelector(".sizecount");
-const dimensionscount = document.querySelector(".dimensionscount");
 const shapecount = document.querySelector(".shapecount");
 const timecount = document.querySelector(".timecount");
 const assetstatus = document.querySelector(".assetstatus");
