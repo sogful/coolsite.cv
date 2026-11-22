@@ -87,7 +87,7 @@
             <span class="rangecaption" id="objectlimit-label">Object limit:</span>
             <div class="gdslider">
               <input class="limitslider gdrange" id="objectlimit" type="range" min="50" max="2500" value="1500" step="1" aria-labelledby="objectlimit-label" data-snap="100" data-edit-max="5000" data-limit-messages>
-              <input class="rangevalueeditor" type="text" inputmode="numeric" value="1500" autocomplete="off" spellcheck="false" aria-label="Object limit value" aria-describedby="objectlimit-error">
+              <input class="rangevalueeditor" type="text" inputmode="numeric" value="1500" autocomplete="off" spellcheck="false" aria-labelledby="objectlimit-label" aria-describedby="objectlimit-error">
             </div>
             <span class="rangevaluemessage" id="objectlimit-error" role="status" hidden><cr></cr><img alt="" hidden></span>
           </div>
@@ -95,7 +95,7 @@
             <span class="rangecaption" id="effort-label">Effort:</span>
             <div class="gdslider">
               <input class="effortslider gdrange" id="effort" type="range" min="0" max="100" value="75" step="1" aria-labelledby="effort-label" data-snap="5">
-              <input class="rangevalueeditor" type="text" inputmode="numeric" value="75" autocomplete="off" spellcheck="false" aria-label="Effort value" aria-describedby="effort-error">
+              <input class="rangevalueeditor" type="text" inputmode="numeric" value="75" autocomplete="off" spellcheck="false" aria-labelledby="effort-label" aria-describedby="effort-error">
             </div>
             <span class="rangevaluemessage" id="effort-error" role="status" hidden><cr></cr></span>
           </div>
@@ -110,7 +110,7 @@
             <div class="checklabel">
               <input class="croptoggleinput gdcheck" type="checkbox" aria-labelledby="crop-label" aria-describedby="crop-help">
               <button class="helptrigger" id="crop-label" type="button" aria-describedby="crop-help">Perfect crop</button>
-              <small class="settingtooltip" id="crop-help" role="tooltip" popover="manual">Keeps objects inside the borders of an opaque image. This can reduce detail near the edges.</small>
+              <small class="settingtooltip" id="crop-help" role="tooltip" popover="manual">Keeps objects inside the borders of an opaque image. This might reduce detail near the edges.</small>
             </div>
             <label class="checklabel">
               <input class="legacytoggleinput gdcheck" type="checkbox">
@@ -122,8 +122,9 @@
         <dialog class="gdpane appdialog advanceddialog" aria-labelledby="advancedtitle" closedby="any">
           <div class="dialoghead">
             <h2 class="dialogtitle" id="advancedtitle"><gold>Advanced settings</gold></h2>
-            <button class="gdbutton gdcircle dialogclose" type="button" aria-label="Close advanced settings" autofocus>
+            <button class="gdbutton gdcircle dialogclose" type="button" autofocus>
               <span class="gdcloseicon" aria-hidden="true"></span>
+              <span class="assistivetext">Close advanced settings</span>
             </button>
           </div>
           <div class="dialogbody advancedfields">
@@ -155,7 +156,7 @@
               <button class="rangecaption helptrigger" id="colourlevels-label" type="button" aria-describedby="colors-help">Color levels</button>
               <div class="gdslider">
                 <input class="colourslider gdrange" id="colourlevels" type="range" min="2" max="256" value="256" step="1" aria-labelledby="colourlevels-label" aria-describedby="colors-help" data-snap="16">
-                <input class="rangevalueeditor" type="text" inputmode="numeric" value="256" autocomplete="off" spellcheck="false" aria-label="Color levels value" aria-describedby="colourlevels-error">
+                <input class="rangevalueeditor" type="text" inputmode="numeric" value="256" autocomplete="off" spellcheck="false" aria-labelledby="colourlevels-label" aria-describedby="colourlevels-error">
               </div>
               <span class="rangevaluemessage" id="colourlevels-error" role="status" hidden><cr></cr></span>
               <small class="settingtooltip" id="colors-help" role="tooltip" popover="manual">Lower values limit the shades the search can use.</small>
@@ -171,24 +172,28 @@
         </dialog>
       </form>
 
-      <section class="previewpanel panel gdpane" aria-label="Generated level">
+      <section class="previewpanel panel gdpane" aria-labelledby="preview-title">
+        <h2 class="assistivetext" id="preview-title">Generated level</h2>
+        <span class="assistivetext previewdescription" id="preview-description">Choose an image first!</span>
         <div class="previewport gdwell">
           <div class="viewframe" tabindex="0">
             <div class="previewimage">
-              <canvas class="resultcanvas" width="1280" height="240" role="img" aria-label="Choose an image first!"></canvas>
+              <canvas class="resultcanvas" width="1280" height="240" role="img" aria-labelledby="preview-description"></canvas>
               <canvas class="overflowcanvas" aria-hidden="true" hidden></canvas>
               <div class="comparison" hidden>
                 <canvas class="sourcecanvas" width="640" height="420" aria-hidden="true"></canvas>
               </div>
             </div>
             <div class="swipebar">
-              <input class="swipeslider" type="range" min="0" max="100" value="50" step="1" aria-label="Compare source image and fitted image">
+              <label class="assistivetext" for="compare-image">Compare source image and fitted image</label>
+              <input class="swipeslider" id="compare-image" type="range" min="0" max="100" value="50" step="1">
             </div>
           </div>
-          <div class="stats" tabindex="0" role="group" aria-label="Image information" hidden>
+          <div class="stats" tabindex="0" role="group" aria-labelledby="stats-title" hidden>
+            <span class="assistivetext" id="stats-title">Image information</span>
             <span class="statrow" data-empty><span class="tilecount">--</span> objects</span>
             <span class="statrow" data-empty><span class="gridcount">--</span> <cr>r</cr><cg>g</cg><cl>b</cl> error</span>
-            <span class="statrow" data-empty><span class="channelcount">--</span> channels</span>
+            <span class="statrow" data-empty hidden><span class="channelcount">--</span> channels</span>
             <span class="statrow" data-empty><span class="sizecount">--</span> size</span>
             <span class="statrow" data-empty><span class="dimensionscount">--</span> source</span>
             <span class="statrow" data-empty><span class="shapecount">--</span> shape types</span>

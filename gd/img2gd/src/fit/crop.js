@@ -301,6 +301,28 @@ async function cropopaque(image, current) {
   return true;
 }
 
+function cropclearborder(image) {
+  const width = image.naturalWidth, height = image.naturalHeight;
+  const tile = document.createElement("canvas");
+  const context = tile.getContext("2d", {willReadFrequently: true});
+  const edges = [[0, 0, width, 1], [0, height - 1, width, 1],
+    [0, 0, 1, height], [width - 1, 0, 1, height]];
+  for (const [left, top, columns, rows] of edges) {
+    tile.width = Math.min(columns, 512);
+    tile.height = Math.min(rows, 512);
+    for (let y = 0; y < rows; y += tile.height) {
+      for (let x = 0; x < columns; x += tile.width) {
+        const w = Math.min(tile.width, columns - x), h = Math.min(tile.height, rows - y);
+        context.clearRect(0, 0, w, h);
+        context.drawImage(image, left + x, top + y, w, h, 0, 0, w, h);
+        const pixels = context.getImageData(0, 0, w, h).data;
+        for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 0) return false;
+      }
+    }
+  }
+  return true;
+}
+
 /*//////////////////////////////////////////////////////////////////////*/
 
 function cropdifference(a, b, i) {
@@ -442,7 +464,7 @@ async function refinecropedges(original, objects, limit, current) {
 /*//////////////////////////////////////////////////////////////////////*/
 
 async function finishcrop(revision, limit) {
-  if (!croptoggle.checked) return true;
+  if (croptoggle.disabled || !croptoggle.checked) return true;
   const current = () => revision === fitrevision;
   renderstate.textContent = "CROPPING";
   statuscopy.textContent = "Fitting edges...";

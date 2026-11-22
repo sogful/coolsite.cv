@@ -49,7 +49,10 @@ for (const select of document.querySelectorAll("select.gdinput")) {
   next.className = "optionarrow optionnext";
   for (const [button, action] of [[previous, "Previous"], [next, "Next"]]) {
     button.type = "button";
-    button.setAttribute("aria-label", action + " option");
+    const name = document.createElement("span");
+    name.className = "optionarrowtext";
+    name.textContent = action + " option";
+    button.append(name);
     button.setAttribute("aria-describedby", [value.id, select.getAttribute("aria-describedby")].filter(Boolean).join(" "));
   }
 

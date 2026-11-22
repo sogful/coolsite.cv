@@ -78,7 +78,6 @@ document.body.prepend(filterSvg);
 
 for (const label of oxygeneLabels) {
   const text = label.textContent.trim();
-  label.setAttribute("aria-label", text);
   const upperedge = document.createElement("span");
   upperedge.className = "oxygeneupperedge";
   upperedge.textContent = text;
@@ -112,7 +111,6 @@ for (const label of oxygeneLabels) {
   const face = document.createElement("span");
   face.className = "oxygeneface";
   face.textContent = text;
-  face.setAttribute("aria-hidden", "true");
   label.replaceChildren(upperedge, loweredge, white, fill, border, light, face);
 }
 

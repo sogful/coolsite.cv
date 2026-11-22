@@ -18,6 +18,7 @@ const filecaption = document.querySelector(".filecaption");
 const filedimensions = document.querySelector(".filedimensions");
 const stats = document.querySelector(".stats");
 const previewimage = document.querySelector(".previewimage");
+const previewdescription = document.querySelector(".previewdescription");
 const comparison = document.querySelector(".comparison");
 const swipeslider = document.querySelector(".swipeslider");
 const sourcecanvas = document.querySelector(".sourcecanvas");
@@ -77,6 +78,7 @@ let targetpixels = new Uint8ClampedArray();
 let fittedpixels = new Uint8ClampedArray();
 let imageopaque = false;
 let sampledopaque = null;
+let clearborder = false;
 let opacitycheck = Promise.resolve(false);
 let imagerevision = 0;
 let alphaready = false;
@@ -429,7 +431,7 @@ function drawidlepreview(image) {
   previewimage.classList.toggle("ispixelart", Boolean(image) && fitselect.value === "pixelart");
   previewimage.classList.toggle("isempty", !image);
   overflowcanvas.hidden = true;
-  resultcanvas.setAttribute("aria-label", image ? "Source image preview" : emptyprompt);
+  previewdescription.textContent = image ? "Source image preview" : emptyprompt;
   const context = resultcanvas.getContext("2d");
   if (image) {
     context.imageSmoothingQuality = "high";
@@ -744,7 +746,7 @@ function updatefields() {
   seedsearchselect.disabled = !textures || !maximumfit();
   coverageselect.disabled = !textures || !detailfit();
   samplerselect.disabled = exact;
-  croptoggle.disabled = exact || legacytoggle.checked;
+  croptoggle.disabled = exact || legacytoggle.checked || clearborder;
   for (const slider of [limitslider, effortslider, colourslider]) {
     slider.disabled = exact;
     slider.parentElement.querySelector(".rangevalueeditor").disabled = exact;
@@ -772,7 +774,7 @@ async function updatepreview() {
   statuscopy.textContent = "Preparing files...";
   document.querySelector(".exportlinks").title = visibilitywarning().trim();
   comparison.hidden = false;
-  resultcanvas.setAttribute("aria-label", "Generated image preview");
+  previewdescription.textContent = "Generated image preview";
   enableexport(downloadlink, level, name + ".gmd");
   await prepareexports(result.raw, name);
   if (fitreadyrevision === fitrevision && fitstarttime !== undefined) {
@@ -795,6 +797,7 @@ async function startfit() {
   advancedopen.disabled = true;
   comparison.hidden = true;
   stats.hidden = false;
+  channelcount.parentElement.hidden = colourmode.value === "hsv";
   clearlivevalues();
   updatestat(dimensionscount, sourceimage.naturalWidth + "x" + sourceimage.naturalHeight);
   invalidateexports();
@@ -843,6 +846,7 @@ function loadimage(url, name) {
   regionfitactive = false;
   if (advanceddialog.open) advanceddialog.close();
   sampledopaque = null;
+  clearborder = false;
   alphaready = false;
   fitmessage.textContent = "";
   if (imageurl) URL.revokeObjectURL(imageurl);
@@ -922,9 +926,10 @@ sourceimage.addEventListener("load", async () => {
   if (fitselect.value === "auto" || autoselectedpixelart) {
     autoselectedpixelart = sourceimage.naturalWidth < 150 && sourceimage.naturalHeight < 150;
     fitselect.value = autoselectedpixelart ? "pixelart" : "auto";
-    updatefields();
   }
   drawidlepreview(sourceimage);
+  clearborder = cropclearborder(sourceimage);
+  updatefields();
   opacitycheck = sourceisopaque() ? cropopaque(sourceimage, () => revision === imagerevision) : Promise.resolve(false);
   const opaque = await opacitycheck;
   if (revision !== imagerevision) return;
