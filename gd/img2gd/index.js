@@ -813,6 +813,12 @@ async function startfit() {
     } else {
       const limit = objectlimit();
       if (!await runfitsearch(limit, fittrials(), revision)) return;
+      const layers = !sourceisopaque() && fitlayeredcontours(limit - visibilitycost);
+      if (layers && layers.length + opacitycost(layers) + (visibilityrequired(layers) ? visibilitycost : 0) <= limit
+        && prefercontourplan(layers, plan)) {
+        plan = layers;
+        underlaycount = 0;
+      }
       if (!await finishcrop(revision, limit)) return;
     }
     fitreadyrevision = revision;

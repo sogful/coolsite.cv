@@ -114,8 +114,8 @@ function labelregions(nearest, minimum) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-function regioncontour(region, labels, holes = false) {
-  const stride = target.width + 1;
+function regioncontour(region, labels, holes = false, width = target.width, height = target.height) {
+  const stride = width + 1;
   const steps = [1, stride, -1, -stride];
   const turns = [3, 0, 1];
   const edges = new Map();
@@ -125,11 +125,11 @@ function regioncontour(region, labels, holes = false) {
   }
   for (let y = region.top; y < region.bottom; y += 1) {
     for (let x = region.left; x < region.right; x += 1) {
-      const index = y * target.width + x;
+      const index = y * width + x;
       if (labels[index] !== region.id) continue;
-      if (!y || labels[index - target.width] !== region.id) edge(x, y, 0);
-      if (x + 1 === target.width || labels[index + 1] !== region.id) edge(x + 1, y, 1);
-      if (y + 1 === target.height || labels[index + target.width] !== region.id) edge(x + 1, y + 1, 2);
+      if (!y || labels[index - width] !== region.id) edge(x, y, 0);
+      if (x + 1 === width || labels[index + 1] !== region.id) edge(x + 1, y, 1);
+      if (y + 1 === height || labels[index + width] !== region.id) edge(x + 1, y + 1, 2);
       if (!x || labels[index - 1] !== region.id) edge(x, y + 1, 3);
     }
   }
@@ -284,6 +284,41 @@ function regionellipse(region, labels, color, contour) {
     asset: library.find(asset => asset.id === 497), x, y, width, height, angle: 0, warpx: 0, warpy: 0,
     red: color[0], green: color[1], blue: color[2],
   };
+}
+
+function contourellipse(points, color) {
+  if (points.length < 12) return null;
+  let area = 0, xsum = 0, ysum = 0, xxsum = 0, yysum = 0, xysum = 0;
+  for (let i = 0; i < points.length; i += 1) {
+    const [ax, ay] = points[i], [bx, by] = points[(i + 1) % points.length];
+    const cross = ax * by - ay * bx;
+    area += cross;
+    xsum += (ax + bx) * cross;
+    ysum += (ay + by) * cross;
+    xxsum += (ax * ax + ax * bx + bx * bx) * cross;
+    yysum += (ay * ay + ay * by + by * by) * cross;
+    xysum += (2 * ax * ay + ax * by + bx * ay + 2 * bx * by) * cross;
+  }
+  if (area <= 0) return null;
+  const x = xsum / (3 * area), y = ysum / (3 * area);
+  const xx = xxsum / (6 * area) - x * x, yy = yysum / (6 * area) - y * y;
+  const xy = xysum / (12 * area) - x * y;
+  const gap = Math.hypot(xx - yy, 2 * xy);
+  const major = Math.sqrt(2 * (xx + yy + gap)), minor = Math.sqrt(2 * (xx + yy - gap));
+  if (!(minor > 0) || Math.abs(area / (2 * Math.PI * major * minor) - 1) > 0.025) return null;
+  const angle = Math.atan2(2 * xy, xx - yy) / 2;
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  let error = 0;
+  for (const [px, py] of points) {
+    const dx = px - x, dy = py - y;
+    const radius = Math.hypot((cos * dx + sin * dy) / major, (cos * dy - sin * dx) / minor);
+    const deviation = Math.abs(radius - 1);
+    if (deviation > 0.07) return null;
+    error += deviation * deviation;
+  }
+  if (error > points.length * 0.02 ** 2) return null;
+  return {asset: library.find(asset => asset.id === 497), x, y, width: 2 * major, height: 2 * minor,
+    angle: angle * 180 / Math.PI, warpx: 0, warpy: 0, red: color[0], green: color[1], blue: color[2]};
 }
 
 function pointinpolygon(point, polygon) {
