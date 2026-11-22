@@ -736,116 +736,15 @@ function prettysize(bytes) {
   return bytes < 1024 ? bytes + "b" : (bytes / 1024).toFixed(1) + "kb";
 }
 
-function updatestart() {
-  startbutton.disabled = fitting || !atlasready || !alphaready || !validrangevalues();
-}
-
-function updatefields() {
-  const exact = fitselect.value === "pixelart";
-  const textures = !exact && !legacytoggle.checked && fitselect.value !== "regions" && !regionfitactive;
-  seedsearchselect.disabled = !textures || !maximumfit();
-  coverageselect.disabled = !textures || !detailfit();
-  samplerselect.disabled = exact;
-  croptoggle.disabled = exact || legacytoggle.checked || clearborder;
-  for (const slider of [limitslider, effortslider, colourslider]) {
-    slider.disabled = exact;
-    slider.parentElement.querySelector(".rangevalueeditor").disabled = exact;
-  }
-  updateoptions();
-  updatestart();
-}
-
-async function updatepreview() {
-  if (fitreadyrevision !== fitrevision) return;
-  resizecanvases();
-  drawsource();
-  drawresult();
-  fiterror = measurepreviewerror();
-  const result = buildsource();
-  invalidateexports();
-  const name = levelname();
-  const level = new Blob([gmddocument(result.raw, name, legacyactive)], {type: "application/xml"});
-  updatestat(tilecount, result.objects.toLocaleString());
-  updatestat(gridcount, fiterror.toFixed(1) + "%");
-  updatestat(channelcount, result.channels.toLocaleString());
-  updatestat(sizecount, prettysize(level.size));
-  updatestat(shapecount, new Set(plan.map(object => object.asset.id)).size.toLocaleString());
-  renderstate.textContent = pixelartactive ? "PIXEL ART" : "SPRITE FIT";
-  statuscopy.textContent = "Preparing files...";
-  document.querySelector(".exportlinks").title = visibilitywarning().trim();
-  comparison.hidden = false;
-  previewdescription.textContent = "Generated image preview";
-  enableexport(downloadlink, level, name + ".gmd");
-  await prepareexports(result.raw, name);
-  if (fitreadyrevision === fitrevision && fitstarttime !== undefined) {
-    updatestat(timecount, ((performance.now() - fitstarttime) / 1000).toFixed(1) + "s");
-  }
-}
-
-async function startfit() {
-  if (startbutton.disabled) return;
-  const revision = ++fitrevision;
-  fitting = true;
-  pixelartactive = false;
-  legacyactive = false;
-  regionfitactive = false;
-  previewimage.classList.remove("ispixelart");
-  fitstarttime = performance.now();
-  fitmessage.textContent = "";
-  if (advanceddialog.open) advanceddialog.close();
-  form.inert = true;
-  advancedopen.disabled = true;
-  comparison.hidden = true;
-  stats.hidden = false;
-  channelcount.parentElement.hidden = colourmode.value === "hsv";
-  clearlivevalues();
-  updatestat(dimensionscount, sourceimage.naturalWidth + "x" + sourceimage.naturalHeight);
-  invalidateexports();
-  renderstate.textContent = "FITTING";
-  seedretryoffset = 0;
-  updatestart();
-
-  try {
-    if (legacytoggle.checked) {
-      if (!await fitlegacy(revision)) return;
-    } else if (fitselect.value === "pixelart") {
-      if (!await fitpixelart(revision)) return;
-    } else {
-      const limit = objectlimit();
-      if (!await runfitsearch(limit, fittrials(), revision)) return;
-      const layerbudget = limit - visibilitycost;
-      let layers = !sourceisopaque() && fitlayeredcontours(layerbudget);
-      if (layers && limit >= 350 && layers.length < layerbudget) {
-        const analysis = transparentsource();
-        layers = await fitglowunderlay(layers, analysis, layerbudget, revision);
-        if (!layers || revision !== fitrevision) return;
-        layers = await filltransparentdetails(layers, analysis, layerbudget, revision, true);
-        if (revision !== fitrevision) return;
-      }
-      if (layers && layers.length + opacitycost(layers) + (visibilityrequired(layers) ? visibilitycost : 0) <= limit
-        && prefercontourplan(layers, plan)) {
-        plan = layers;
-        underlaycount = 0;
-      }
-      if (!await finishcrop(revision, limit)) return;
-    }
-    fitreadyrevision = revision;
-    await updatepreview();
-  } catch (error) {
-    renderstate.textContent = "ERROR";
-    fitmessage.textContent = "Image fit failed.";
-    console.error(error);
-  } finally {
-    statuscopy.textContent = "";
-    fitting = false;
-    form.inert = false;
-    advancedopen.disabled = false;
-    updatefields();
-  }
-}
-
 function loadimage(url, name) {
   fitrevision += 1;
+  if (fitting) {
+    batchfitteractive = false;
+    fitpixels = fitretries = 0;
+    fitcoverage = 1;
+    batchfitter?.clear();
+  }
+  resetfitsession();
   imagerevision += 1;
   comparison.hidden = true;
   stats.hidden = true;

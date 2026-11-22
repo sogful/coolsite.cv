@@ -1,4 +1,5 @@
 function capturefit(score) {
+  rememberfit(plan);
   return {score, plan: plan.slice(), pixels: new Uint8ClampedArray(fittedpixels),
     target: {...target}, source: targetpixels, underlaycount, underlaymessage, offset: seedretryoffset,
     pool: fitpoolname};
@@ -30,6 +31,7 @@ async function runfitsearch(limit, trials, revision) {
   startfitpreview();
   if (["auto", "regions"].includes(fitselect.value)) {
     const result = await fitcolorregions(limit, revision);
+    if (revision !== fitrevision) return false;
     if (result !== null) return result;
     preparetarget();
   }
@@ -101,11 +103,16 @@ async function runfitsearch(limit, trials, revision) {
     if (detailed && plan.length) {
       statuscopy.textContent = "Refining colors...";
       await refinelayercolors(revision);
+      if (revision !== fitrevision) return false;
+      rememberfit(plan);
       if (revision === fitrevision && imageopaque && plan.length >= 128) {
         statuscopy.textContent = "Refining contours...";
         if (await refinephotocontours(revision, 0.4) && revision === fitrevision) {
+          rememberfit(plan);
           await refinephotocontours(revision, 0.18);
         }
+        if (revision !== fitrevision) return false;
+        rememberfit(plan);
       }
       if (revision === fitrevision && imageopaque && plan.length >= 80) {
         statuscopy.textContent = "Smoothing...";

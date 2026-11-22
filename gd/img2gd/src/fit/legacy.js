@@ -336,7 +336,9 @@ async function fitlegacy(revision) {
     legacyartwidth = scale * block.naturalwidth * width;
     const larger = assets.find(asset => asset.id === 495 && asset.naturalwidth === 40 && asset.naturalheight === 40);
     const fit = (pixels, columns, rows, limit) => legacypixelrectangles(pixels, columns, rows, limit, block, larger);
-    legacyactive = await fitpixelart(revision, block, fit);
+    const exact = await fitpixelart(revision, block, fit);
+    if (revision !== fitrevision) return false;
+    legacyactive = exact;
     return legacyactive;
   }
   const limit = objectlimit();

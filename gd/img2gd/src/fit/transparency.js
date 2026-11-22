@@ -924,6 +924,7 @@ async function fittransparentregions(limit, revision) {
     const base = objects.flat();
     const completed = await filltransparentdetails(base, analysis, budget, revision);
     if (!completed || revision !== fitrevision) return false;
+    rememberfit(completed);
     const silhouette = await fittransparentsilhouette(analysis, budget, revision);
     if (revision !== fitrevision) return false;
     let best = completed;
@@ -934,6 +935,7 @@ async function fittransparentregions(limit, revision) {
       const quality = transparentquality(filled, analysis);
       if (quality.score < reference.score && (limit <= 500 || preservetransparentdetail(quality, reference))) {
         best = filled;
+        rememberfit(best);
         reference = quality;
       }
     }
@@ -945,6 +947,7 @@ async function fittransparentregions(limit, revision) {
       const quality = transparentquality(candidate, analysis);
       if (quality.score < bestscore && preservetransparentdetail(quality, reference)) {
         best = candidate;
+        rememberfit(best);
         bestscore = quality.score;
       }
     }
@@ -954,6 +957,7 @@ async function fittransparentregions(limit, revision) {
       const quality = transparentquality(glowing, analysis);
       if (quality.score < bestscore && preservetransparentdetail(quality, reference)) best = glowing;
     }
+    rememberfit(best);
     if (limit >= 350 && budget - best.length - opacitycost(best) >= 2) {
       const covered = await filltransparentdetails(best, analysis, budget, revision, true);
       if (!covered || revision !== fitrevision) return false;

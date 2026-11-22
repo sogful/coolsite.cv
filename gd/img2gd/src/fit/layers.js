@@ -132,10 +132,16 @@ function joinlayergroup(front, back, groups, labels) {
   groups.delete(front.id);
 }
 
-function ordercolorlayers(segmentation, colors, width, height, large) {
+async function ordercolorlayers(segmentation, colors, width, height, large, revision) {
   const {groups, labels} = segmentation;
   const layers = [];
+  let deadline = performance.now() + 16;
   while (groups.size) {
+    if (performance.now() >= deadline) {
+      await yieldfittask();
+      if (revision !== fitrevision) return null;
+      deadline = performance.now() + 16;
+    }
     let best = -Infinity, front = null, back = null;
     for (const group of groups.values()) {
       const boundary = [...group.edges.values()].reduce((a, b) => a + b, 0);
@@ -199,7 +205,7 @@ function contourlayerobjects(layer, tolerance, scalex, scaley) {
   return vertices <= 64 && holes.length <= 3 ? transparentstrips(outlines, [...color, 255]) : null;
 }
 
-function fitlayeredcontours(limit) {
+async function fitlayeredcontours(limit, revision) {
   const originalwidth = sourceimage.naturalWidth, originalheight = sourceimage.naturalHeight;
   if (!originalwidth || !originalheight) return null;
   const large = Math.max(originalwidth, originalheight) > 200 || originalwidth * originalheight > 30000;
@@ -220,8 +226,8 @@ function fitlayeredcontours(limit) {
   const segmentation = layercomponents(context.getImageData(0, 0, canvas.width, canvas.height).data,
     colors, canvas.width, canvas.height, large);
   if (!segmentation) return null;
-  const layers = ordercolorlayers(segmentation, colors, canvas.width, canvas.height, large);
-  if (!layers.length || layers.length > limit) return null;
+  const layers = await ordercolorlayers(segmentation, colors, canvas.width, canvas.height, large, revision);
+  if (revision !== fitrevision || !layers?.length || layers.length > limit) return null;
   for (const layer of layers) {
     if (layer.loops.length !== 1) continue;
     const points = layer.loops[0].map(([x, y]) => [x * target.width / canvas.width, y * target.height / canvas.height]);
@@ -230,10 +236,16 @@ function fitlayeredcontours(limit) {
   }
   const tolerances = large ? [0.52, 0.68, 0.85, 1, 1.25, 1.5, 1.8, 2.2, 2.8, 3.6]
     : [0.22, 0.29, 0.36, 0.44, 0.53, 0.64, 0.77, 0.92, 1.12, 1.42, 1.8, 2.4];
+  let deadline = performance.now() + 16;
   for (const tolerance of tolerances) {
     const result = [];
     let complete = true;
     for (const layer of layers) {
+      if (performance.now() >= deadline) {
+        await yieldfittask();
+        if (revision !== fitrevision) return null;
+        deadline = performance.now() + 16;
+      }
       const objects = layer.ellipse ? [layer.ellipse] : contourlayerobjects(layer, tolerance * sampling, target.width / canvas.width, target.height / canvas.height);
       if (!objects) {complete = false; break;}
       result.push(...objects);

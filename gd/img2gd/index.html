@@ -46,6 +46,7 @@
   <script src="../buttonmotion.js" defer></script>
   <script src="src/render/viewport.js" defer></script>
   <script src="src/rangevalues.js" defer></script>
+  <script src="src/fit/session.js" defer></script>
   <script src="index.js" defer></script>
   <script src="src/tooltips.js" defer></script>
   <script src="src/filedrop.js" defer></script>
@@ -59,7 +60,7 @@
     </header>
 
     <section class="workspace">
-      <form class="controlpanel panel gdpane" id="converter">
+      <form class="controlpanel panel gdpane">
         <div class="sourcefields">
           <div class="uploadrow">
             <label class="dropzone">
@@ -76,30 +77,31 @@
 
         <div class="basicfields">
           <div class="fieldlabel fitmodefield">
-            <button class="optionlabel helptrigger" type="button" aria-describedby="mode-help">Mode</button>
-            <select class="fitselect gdinput" aria-describedby="mode-help">
+            <button class="optionlabel helptrigger" type="button">Mode</button>
+            <select class="fitselect gdinput">
               <option value="auto" selected>Automatic</option>
               <option value="adaptive">Texture search</option>
               <option value="regions">Flat color regions</option>
               <option value="pixelart">Pixel art</option>
             </select>
-            <small class="settingtooltip" id="mode-help" role="tooltip" popover="manual">Pixel Art matches source pixels with rectangles. Automatic mode switches to it for images under 150 pixels on both sides.</small>
+            <small class="settingtooltip" role="tooltip" popover="manual">Pixel art mode only uses rectangles! This is the web equivalent of <a href="https://geode-sdk.org/mods/grian.art_importer">Art importer</a> / <a href="https://geode-sdk.org/mods/zejoant.pix2gd">Pix2GD</a>. <br>
+            Automatic mode switches to it for images under 150 pixels on both sides, however if you need a non-pixel art image of the size this small converted, you can set a different mode.</small>
           </div>
           <div class="fieldlabel sliderlabel objectlimitfield">
-            <span class="rangecaption" id="objectlimit-label">Object limit:</span>
+            <span class="rangecaption">Object limit:</span>
             <div class="gdslider">
-              <input class="limitslider gdrange" id="objectlimit" type="range" min="50" max="2500" value="1500" step="1" aria-labelledby="objectlimit-label" data-snap="100" data-edit-max="5000" data-limit-messages>
-              <input class="rangevalueeditor" type="text" inputmode="numeric" value="1500" autocomplete="off" spellcheck="false" aria-labelledby="objectlimit-label" aria-describedby="objectlimit-error">
+              <input class="limitslider gdrange" type="range" min="50" max="2500" value="1500" step="1" data-snap="100" data-edit-max="5000" data-limit-messages>
+              <input class="rangevalueeditor" type="text" inputmode="numeric" value="1500" autocomplete="off" spellcheck="false">
             </div>
-            <span class="rangevaluemessage" id="objectlimit-error" role="status" hidden><cr></cr><img alt="" hidden></span>
+            <span class="rangevaluemessage" role="status" hidden><cr></cr><img alt="" hidden></span>
           </div>
           <div class="fieldlabel sliderlabel effortfield">
-            <span class="rangecaption" id="effort-label">Effort:</span>
+            <span class="rangecaption">Effort:</span>
             <div class="gdslider">
-              <input class="effortslider gdrange" id="effort" type="range" min="0" max="100" value="75" step="1" aria-labelledby="effort-label" data-snap="5">
-              <input class="rangevalueeditor" type="text" inputmode="numeric" value="75" autocomplete="off" spellcheck="false" aria-labelledby="effort-label" aria-describedby="effort-error">
+              <input class="effortslider gdrange" type="range" min="0" max="100" value="75" step="1" data-snap="5">
+              <input class="rangevalueeditor" type="text" inputmode="numeric" value="75" autocomplete="off" spellcheck="false">
             </div>
-            <span class="rangevaluemessage" id="effort-error" role="status" hidden><cr></cr></span>
+            <span class="rangevaluemessage" role="status" hidden><cr></cr></span>
           </div>
         </div>
         <div class="settingsrow">
@@ -110,9 +112,9 @@
           </div>
           <div class="edgeoptions">
             <div class="checklabel">
-              <input class="croptoggleinput gdcheck" type="checkbox" aria-labelledby="crop-label" aria-describedby="crop-help">
-              <button class="helptrigger" id="crop-label" type="button" aria-describedby="crop-help">Perfect crop</button>
-              <small class="settingtooltip" id="crop-help" role="tooltip" popover="manual">Keeps objects inside the borders of an opaque image. This might reduce detail near the edges.</small>
+              <input class="croptoggleinput gdcheck" type="checkbox">
+              <button class="helptrigger" type="button">Perfect crop</button>
+              <small class="settingtooltip" role="tooltip" popover="manual">Keeps objects inside the borders of an opaque image. This might reduce detail near the edges.</small>
             </div>
             <label class="checklabel">
               <input class="legacytoggleinput gdcheck" type="checkbox">
@@ -121,9 +123,9 @@
           </div>
         </div>
 
-        <dialog class="gdpane appdialog advanceddialog" aria-labelledby="advancedtitle" closedby="any">
+        <dialog class="gdpane appdialog advanceddialog" closedby="any">
           <div class="dialoghead">
-            <h2 class="dialogtitle" id="advancedtitle"><gold>Advanced settings</gold></h2>
+            <h2 class="dialogtitle"><gold>Advanced settings</gold></h2>
             <button class="gdbutton gdcircle dialogclose" type="button" autofocus>
               <span class="gdcloseicon" aria-hidden="true"></span>
               <span class="assistivetext">Close advanced settings</span>
@@ -131,37 +133,37 @@
           </div>
           <div class="dialogbody advancedfields">
             <div class="fieldlabel">
-              <button class="optionlabel helptrigger" type="button" aria-describedby="coverage-help">Fitting coverage</button>
-              <select class="coverageselect gdinput" aria-describedby="coverage-help">
+              <button class="optionlabel helptrigger" type="button">Fitting coverage</button>
+              <select class="coverageselect gdinput">
                 <option value="1" selected>1 sample per pixel</option>
                 <option value="2">4 samples per pixel</option>
               </select>
-              <small class="settingtooltip" id="coverage-help" role="tooltip" popover="manual">More samples can improve fine edges and take longer.</small>
+              <small class="settingtooltip" role="tooltip" popover="manual">More samples can improve fine edges and take longer.</small>
             </div>
             <div class="fieldlabel">
-              <button class="optionlabel helptrigger" type="button" aria-describedby="seeds-help">Max seed search</button>
-              <select class="seedsearchselect gdinput" aria-describedby="seeds-help" disabled>
+              <button class="optionlabel helptrigger" type="button">Max seed search</button>
+              <select class="seedsearchselect gdinput" disabled>
                 <option value="3" selected>3 starts</option>
                 <option value="6">6 starts</option>
               </select>
-              <small class="settingtooltip" id="seeds-help" role="tooltip" popover="manual">Try more starting points when Effort is 100.</small>
+              <small class="settingtooltip" role="tooltip" popover="manual">Try more starting points when Effort is 100.</small>
             </div>
             <div class="fieldlabel">
-              <button class="optionlabel helptrigger" type="button" aria-describedby="sampling-help">Sampling</button>
-              <select class="samplerselect gdinput" aria-describedby="sampling-help">
+              <button class="optionlabel helptrigger" type="button">Sampling</button>
+              <select class="samplerselect gdinput">
                 <option value="average" selected>Area average</option>
                 <option value="nearest">Nearest pixel</option>
               </select>
-              <small class="settingtooltip" id="sampling-help" role="tooltip" popover="manual">Area average blends source pixels. Nearest pixel keeps their colors.</small>
+              <small class="settingtooltip" role="tooltip" popover="manual">Area average blends source pixels. Nearest pixel keeps their colors.</small>
             </div>
             <div class="fieldlabel sliderlabel colourlevelsfield">
-              <button class="rangecaption helptrigger" id="colourlevels-label" type="button" aria-describedby="colors-help">Color levels</button>
+              <button class="rangecaption helptrigger" type="button">Color levels</button>
               <div class="gdslider">
-                <input class="colourslider gdrange" id="colourlevels" type="range" min="2" max="256" value="256" step="1" aria-labelledby="colourlevels-label" aria-describedby="colors-help" data-snap="16">
-                <input class="rangevalueeditor" type="text" inputmode="numeric" value="256" autocomplete="off" spellcheck="false" aria-labelledby="colourlevels-label" aria-describedby="colourlevels-error">
+                <input class="colourslider gdrange" type="range" min="2" max="256" value="256" step="1" data-snap="16">
+                <input class="rangevalueeditor" type="text" inputmode="numeric" value="256" autocomplete="off" spellcheck="false">
               </div>
-              <span class="rangevaluemessage" id="colourlevels-error" role="status" hidden><cr></cr></span>
-              <small class="settingtooltip" id="colors-help" role="tooltip" popover="manual">Lower values limit the shades the search can use.</small>
+              <span class="rangevaluemessage" role="status" hidden><cr></cr></span>
+              <small class="settingtooltip" role="tooltip" popover="manual">Lower values limit the shades the search can use.</small>
             </div>
             <div class="fieldlabel">
               <span class="optionlabel">Color channels</span>
@@ -174,25 +176,25 @@
         </dialog>
       </form>
 
-      <section class="previewpanel panel gdpane" aria-labelledby="preview-title">
-        <h2 class="assistivetext" id="preview-title">Generated level</h2>
-        <span class="assistivetext previewdescription" id="preview-description">Choose an image first!</span>
+      <section class="previewpanel panel gdpane">
+        <h2 class="assistivetext previewtitle">Generated level</h2>
+        <span class="assistivetext previewdescription">Choose an image first!</span>
         <div class="previewport gdwell">
           <div class="viewframe" tabindex="0">
             <div class="previewimage">
-              <canvas class="resultcanvas" width="1280" height="240" role="img" aria-labelledby="preview-description"></canvas>
+              <canvas class="resultcanvas" width="1280" height="240" role="img"></canvas>
               <canvas class="overflowcanvas" aria-hidden="true" hidden></canvas>
               <div class="comparison" hidden>
                 <canvas class="sourcecanvas" width="640" height="420" aria-hidden="true"></canvas>
               </div>
             </div>
             <div class="swipebar">
-              <label class="assistivetext" for="compare-image">Compare source image and fitted image</label>
-              <input class="swipeslider" id="compare-image" type="range" min="0" max="100" value="50" step="1">
+              <span class="assistivetext swipelabel">Compare source image and fitted image</span>
+              <input class="swipeslider" type="range" min="0" max="100" value="50" step="1">
             </div>
           </div>
-          <div class="stats" tabindex="0" role="group" aria-labelledby="stats-title" hidden>
-            <span class="assistivetext" id="stats-title">Image information</span>
+          <div class="stats" tabindex="0" role="group" hidden>
+            <span class="assistivetext statstitle">Image information</span>
             <span class="statrow" data-empty><span class="tilecount">--</span> objects</span>
             <span class="statrow" data-empty><span class="gridcount">--</span> <cr>r</cr><cg>g</cg><cl>b</cl> error</span>
             <span class="statrow" data-empty hidden><span class="channelcount">--</span> channels</span>

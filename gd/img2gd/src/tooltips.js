@@ -36,6 +36,7 @@ function tooltipleave(trigger, tooltip) {
 
 for (const trigger of document.querySelectorAll(".helptrigger")) {
   const tooltip = trigger.parentElement.querySelector(".settingtooltip");
+  trigger.ariaDescribedByElements = [tooltip];
   let touchedopen = false;
   trigger.addEventListener("pointerdown", event => {
     touchedopen = event.pointerType === "touch" && opentooltip?.tooltip === tooltip && opentooltip.touch;
@@ -58,6 +59,30 @@ for (const trigger of document.querySelectorAll(".helptrigger")) {
     else showtooltip(trigger, tooltip, touch);
   });
 }
+
+for (const field of document.querySelectorAll(".sliderlabel")) {
+  const label = field.querySelector(".rangecaption");
+  const message = field.querySelector(".rangevaluemessage");
+  const tooltip = field.querySelector(".settingtooltip");
+  const slider = field.querySelector(".gdrange");
+  const editor = field.querySelector(".rangevalueeditor");
+  slider.ariaLabelledByElements = [label];
+  editor.ariaLabelledByElements = [label];
+  if (tooltip) slider.ariaDescribedByElements = [tooltip];
+  editor.ariaDescribedByElements = [message];
+}
+
+for (const [control, label] of [
+  [".croptoggleinput", ".edgeoptions .helptrigger"],
+  [".advanceddialog", ".dialogtitle"],
+  [".previewpanel", ".previewtitle"],
+  [".resultcanvas", ".previewdescription"],
+  [".swipeslider", ".swipelabel"],
+  [".stats", ".statstitle"],
+]) {
+  document.querySelector(control).ariaLabelledByElements = [document.querySelector(label)];
+}
+document.querySelector(".croptoggleinput").ariaDescribedByElements = [document.querySelector(".edgeoptions .settingtooltip")];
 
 document.addEventListener("pointerdown", event => {
   if (opentooltip && !opentooltip.trigger.contains(event.target) && !opentooltip.tooltip.contains(event.target)) {

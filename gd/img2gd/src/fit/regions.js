@@ -614,6 +614,7 @@ async function refineregions(groups, analysis, tolerance, budget, revision) {
         length = objects.length;
       } else plan = previous;
     }
+    rememberfit(plan);
     showfitprogress(revision);
     await yieldfittask();
     if (revision !== fitrevision) return;
@@ -666,6 +667,7 @@ async function fitcolorregions(limit, revision) {
     }
     if (revision !== fitrevision) return false;
     fitregionbackground(limit, regions, analysis);
+    rememberfit(plan);
     await refineregions(groups, analysis, tolerance, limit - reserved, revision);
     if (revision !== fitrevision) return false;
     regionfitactive = true;

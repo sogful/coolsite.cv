@@ -135,27 +135,6 @@ function fitcandidate(candidate, step) {
   return benefit * step * step;
 }
 
-let nextlivepreview = 0;
-
-function startfitpreview() {
-  resizecanvases();
-  drawsource();
-  drawresult([]);
-  previewimage.hidden = false;
-  clearlivevalues();
-  statuscopy.textContent = "Fitting...";
-  nextlivepreview = 0;
-}
-
-function showfitprogress(revision, objects = plan) {
-  if (revision !== fitrevision || performance.now() < nextlivepreview) return;
-  if (typeof objects === "function") objects = objects();
-  if (!objects.length) return;
-  nextlivepreview = performance.now() + 1000;
-  drawresult(objects);
-  updatestat(tilecount, objects.length.toLocaleString());
-}
-
 function yieldfittask() {
   return new Promise(resolve => {
     const channel = new MessageChannel();

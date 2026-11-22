@@ -1,11 +1,14 @@
 const optionsteppers = [];
 
 function updateoptions() {
-  for (const {select, value, previous, next} of optionsteppers) {
+  for (const {select, value, previous, next, title} of optionsteppers) {
     const label = select.selectedOptions[0]?.label || "";
     if (value.textContent !== label) {
       value.textContent = label;
       value.dataset.text = label;
+    }
+    for (const [button, action] of [[previous, "Previous"], [next, "Next"]]) {
+      button.querySelector(".optionarrowtext").textContent = action + " " + title.textContent.trim() + " option. Selected " + label;
     }
     const disabled = select.matches(":disabled");
     if (previous.disabled !== disabled) previous.disabled = next.disabled = disabled;
@@ -18,17 +21,17 @@ for (const select of document.querySelectorAll("select.gdinput")) {
   const title = select.parentElement.querySelector(".optionlabel");
   if (!title || select.multiple) continue;
 
-  if (!title.id) title.id = "gd-option-" + optionsteppers.length;
-  select.setAttribute("aria-labelledby", title.id);
+  const tooltip = select.parentElement.querySelector(".settingtooltip");
+  select.ariaLabelledByElements = [title];
+  if (tooltip) select.ariaDescribedByElements = [tooltip];
 
   const stepper = document.createElement("div");
   stepper.className = "optionstepper";
   stepper.setAttribute("role", "group");
-  stepper.setAttribute("aria-labelledby", title.id);
+  stepper.ariaLabelledByElements = [title];
 
   const value = document.createElement("span");
   value.className = "optionvalue gdplain";
-  value.id = title.id + "-value";
   value.setAttribute("aria-live", "polite");
   value.setAttribute("aria-atomic", "true");
 
@@ -47,13 +50,12 @@ for (const select of document.querySelectorAll("select.gdinput")) {
   const next = document.createElement("button");
   previous.className = "optionarrow optionprevious";
   next.className = "optionarrow optionnext";
-  for (const [button, action] of [[previous, "Previous"], [next, "Next"]]) {
+  for (const button of [previous, next]) {
     button.type = "button";
     const name = document.createElement("span");
     name.className = "optionarrowtext";
-    name.textContent = action + " option";
     button.append(name);
-    button.setAttribute("aria-describedby", [value.id, select.getAttribute("aria-describedby")].filter(Boolean).join(" "));
+    if (tooltip) button.ariaDescribedByElements = [tooltip];
   }
 
   function changeoption(direction) {
@@ -84,7 +86,7 @@ for (const select of document.querySelectorAll("select.gdinput")) {
   stepper.append(previous, labels, next);
   select.after(stepper);
   select.hidden = true;
-  optionsteppers.push({select, value, previous, next});
+  optionsteppers.push({select, value, previous, next, title});
 }
 
 updateoptions();
