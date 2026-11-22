@@ -71,6 +71,7 @@
 /*//////////////////////////////////////////////////////////////////////*/
 
 .gdlogo {
+  --oxygenecorners: url("assets/svgs/textfilters.svg#oxygenecorners");
   font-family: gdoxygene, sans-serif; text-transform: uppercase;
   word-spacing: .335em; color: #ccff55;
 }
@@ -82,7 +83,7 @@
 .gdlogo::before,
 .gdlogo::after {
   z-index: -2; color: #fff;
-  -webkit-text-stroke: .116em currentColor;
+  -webkit-text-stroke: .116em currentColor; filter: var(--oxygenecorners);
 }
 
 .gdlogo::after {
@@ -93,7 +94,7 @@
 .gdlogoface {
   display: block; color: transparent;
   background: linear-gradient(to bottom, #ccff55 0 .486em, #88ff33 .486em);
-  background-clip: text; filter: url("assets/svgs/textfilters.svg#gdlogobevel");
+  background-clip: text; filter: var(--oxygenecorners) url("assets/svgs/textfilters.svg#gdlogobevel");
 }
 
 

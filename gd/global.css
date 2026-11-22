@@ -57,6 +57,7 @@ a, p {
 }
 
 .oxygene {
+  --oxygenecorners: url("assets/svgs/textfilters.svg#oxygenecorners");
   position: relative;
   display: block;
   width: fit-content;
@@ -118,12 +119,12 @@ a, p {
 }
 
 .oxygeneupperedge {
-  filter: url("assets/svgs/textfilters.svg#oxygeneupperedgefilter");
+  filter: var(--oxygenecorners) url("assets/svgs/textfilters.svg#oxygeneupperedgefilter");
 }
 
 .oxygeneloweredge {
   z-index: 6;
-  filter: url("assets/svgs/textfilters.svg#oxygeneloweredgefilter");
+  filter: var(--oxygenecorners) url("assets/svgs/textfilters.svg#oxygeneloweredgefilter");
 }
 
 .oxygenewhite {
@@ -134,6 +135,7 @@ a, p {
   text-shadow: none;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 0.1em #fff;
+  filter: var(--oxygenecorners);
 }
 
 .oxygenefill {
@@ -143,6 +145,7 @@ a, p {
   color: #000;
   text-shadow: none;
   -webkit-text-stroke: 0;
+  filter: var(--oxygenecorners);
 }
 
 .oxygeneborder {
@@ -151,7 +154,7 @@ a, p {
   inset: 0;
   color: #000;
   text-shadow: none;
-  filter: url("assets/svgs/textfilters.svg#oxygeneblackborderfilter");
+  filter: var(--oxygenecorners) url("assets/svgs/textfilters.svg#oxygeneblackborderfilter");
   -webkit-text-stroke: 0;
 }
 
@@ -160,7 +163,7 @@ a, p {
   z-index: 7;
   inset: 0;
   color: #ffffaa;
-  filter: url("assets/svgs/textfilters.svg#oxygenelightfilter");
+  filter: var(--oxygenecorners) url("assets/svgs/textfilters.svg#oxygenelightfilter");
   mask-image: repeating-linear-gradient(to bottom, #000 0 0.5em, transparent 0.5em 1em);
   mask-size: 100% 1em;
   mask-repeat: repeat;
@@ -181,6 +184,7 @@ a, p {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 0;
+  filter: var(--oxygenecorners);
 }
 
 .gold {
