@@ -3,12 +3,8 @@ const legacyshapeids = new Set([50, 51, 211, 236, 495, 497, 694]);
 let legacyactive = false;
 let legacyartwidth = 720;
 
-function legacypixelrectangles(pixels, width, height, limit, asset) {
-  const palette = pixelartpalette(pixels, width, height, limit);
-  if (!palette) return null;
-  const {keys, alphaobjects} = palette;
+function legacysquaresizes(keys, width, height) {
   const sizes = new Uint16Array(keys.length);
-  const maximum = Math.floor(legacymaximumscale * asset.naturalwidth * width / legacyartwidth + 1e-8);
   for (let y = height - 1; y >= 0; y -= 1) {
     for (let x = width - 1; x >= 0; x -= 1) {
       const i = y * width + x, key = keys[i];
@@ -18,8 +14,32 @@ function legacypixelrectangles(pixels, width, height, limit, asset) {
       sizes[i] = joins ? 1 + Math.min(sizes[i + 1], sizes[i + width], sizes[i + width + 1]) : 1;
     }
   }
+  return sizes;
+}
+
+function legacysquareassets(width, blocks) {
+  const pitch = legacyartwidth / width;
+  const maximum = Math.floor(legacymaximumscale * Math.max(...blocks.map(block => block.naturalwidth)) / pitch + 1e-8);
+  const assets = [null];
+  for (let side = 1; side <= maximum; side += 1) {
+    const asset = blocks.find(block => {
+      const ticks = 100 * pitch * side / block.naturalwidth;
+      return ticks >= 1 - 1e-8 && ticks <= 100 * legacymaximumscale + 1e-8
+        && Math.abs(ticks - Math.round(ticks)) < 1e-8;
+    });
+    assets.push(asset);
+  }
+  while (assets.length > 1 && !assets.at(-1)) assets.pop();
+  return assets;
+}
+
+function legacysquaregroups(keys, width, height, sizes, assets, limit) {
+  const largest = [0];
+  for (let side = 1; side < assets.length; side += 1) largest.push(assets[side] ? side : largest[side - 1]);
+  const maximum = assets.length - 1;
   const covered = new Uint16Array(width);
-  const rectangles = [];
+  const groups = new Map();
+  let count = 0;
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
       const i = y * width + x;
@@ -28,11 +48,99 @@ function legacypixelrectangles(pixels, width, height, limit, asset) {
       for (let col = 1; col < side; col += 1) {
         if (covered[x + col] > y) side = col;
       }
-      rectangles.push({key: keys[i], x, y, width: side, height: side});
-      if (rectangles.length + alphaobjects > limit) return null;
+      side = largest[side];
+      if (!side || ++count > limit) return null;
+      const key = keys[i];
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push({key, asset: assets[side], x, y, width: side, height: side});
       covered.fill(y + side, x, x + side);
       x += side - 1;
     }
+  }
+  return groups;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+function legacyopaquecover(color, assets, previous) {
+  const {key, left, right, top, bottom} = color;
+  const width = right - left, height = bottom - top;
+  let side = Math.min(width, height, assets.length - 1);
+  while (side > 0 && !assets[side]) side -= 1;
+  if (!side || Math.ceil(width / side) * Math.ceil(height / side) >= previous.length) return previous;
+  const rectangles = [];
+  for (let y = top; y < bottom; y += side) {
+    for (let x = left; x < right; x += side) {
+      rectangles.push({key, asset: assets[side], x: Math.min(x, right - side),
+        y: Math.min(y, bottom - side), width: side, height: side});
+    }
+  }
+  return rectangles;
+}
+
+function legacydisjointcover(color, assets, previous, budget) {
+  const {key, left, right, top, bottom} = color;
+  const width = right - left, height = bottom - top;
+  const columns = Math.min(width, height), rows = Math.max(width, height);
+  const maximum = Math.min(columns, assets.length - 1);
+  if (columns > 10 || color.count > 256 || maximum < 2 || previous.length <= Math.ceil(color.count / maximum ** 2)) {
+    return previous;
+  }
+  const skyline = new Uint16Array(columns);
+  const seen = new Map();
+  const trial = [];
+  let best = previous;
+  function search(area) {
+    if (budget.nodes <= 0 || trial.length + Math.ceil(area / maximum ** 2) >= best.length) return;
+    budget.nodes -= 1;
+    if (!area) {
+      best = trial.slice();
+      return;
+    }
+    const profile = skyline.join(",");
+    if ((seen.get(profile) ?? Infinity) <= trial.length) return;
+    seen.set(profile, trial.length);
+    let x = 0;
+    for (let i = 1; i < columns; i += 1) if (skyline[i] < skyline[x]) x = i;
+    const y = skyline[x];
+    let side = 1;
+    while (side < maximum && x + side < columns && y + side < rows && skyline[x + side] === y) side += 1;
+    for (; side >= 1; side -= 1) {
+      const asset = assets[side];
+      if (!asset) continue;
+      skyline.fill(y + side, x, x + side);
+      trial.push({key, asset, x: left + (width <= height ? x : y),
+        y: top + (width <= height ? y : x), width: side, height: side});
+      search(area - side ** 2);
+      trial.pop();
+      skyline.fill(y, x, x + side);
+    }
+  }
+  search(color.count);
+  return best;
+}
+
+function legacypixelrectangles(pixels, width, height, limit, asset, alternative) {
+  const palette = pixelartpalette(pixels, width, height, limit);
+  if (!palette) return null;
+  const {keys, colors, alphaobjects} = palette;
+  const sizes = legacysquaresizes(keys, width, height);
+  const defaults = legacysquareassets(width, [asset]);
+  const room = limit - alphaobjects;
+  const baseline = legacysquaregroups(keys, width, height, sizes, defaults, room);
+  const assets = alternative ? legacysquareassets(width, [asset, alternative]) : defaults;
+  const expanded = assets.length > defaults.length ? legacysquaregroups(keys, width, height, sizes, assets, room) : null;
+  if (!baseline && !expanded) return null;
+  const rectangles = [];
+  const budget = {nodes: 60000};
+  for (const color of colors.values()) {
+    const regular = baseline?.get(color.key), alternate = expanded?.get(color.key);
+    let chosen = !regular || alternate && alternate.length < regular.length ? alternate : regular;
+    if (color.count === (color.right - color.left) * (color.bottom - color.top)) {
+      chosen = color.alpha === 255 ? legacyopaquecover(color, assets, chosen)
+        : legacydisjointcover(color, assets, chosen, budget);
+    }
+    for (const rect of chosen) rectangles.push(rect);
   }
   return {rectangles, count: rectangles.length + alphaobjects};
 }
@@ -226,7 +334,9 @@ async function fitlegacy(revision) {
     const scale = Math.max(.01, Math.min(legacymaximumscale,
       Math.floor(72000 / (Math.max(width, height) * block.naturalwidth)) / 100));
     legacyartwidth = scale * block.naturalwidth * width;
-    legacyactive = await fitpixelart(revision, block, legacypixelrectangles);
+    const larger = assets.find(asset => asset.id === 495 && asset.naturalwidth === 40 && asset.naturalheight === 40);
+    const fit = (pixels, columns, rows, limit) => legacypixelrectangles(pixels, columns, rows, limit, block, larger);
+    legacyactive = await fitpixelart(revision, block, fit);
     return legacyactive;
   }
   const limit = objectlimit();

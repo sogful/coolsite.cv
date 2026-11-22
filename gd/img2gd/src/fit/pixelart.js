@@ -272,7 +272,7 @@ async function fitpixelart(revision, asset = library.find(item => item.id === 49
   target = {width, height};
   imageopaque = !pixels.some((value, index) => index % 4 === 3 && value < 255);
   plan = result.rectangles.map(rect => ({
-    asset, x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, width: rect.width, height: rect.height,
+    asset: rect.asset || asset, x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, width: rect.width, height: rect.height,
     angle: 0, warpx: 0, warpy: 0, macro: true, red: rect.key & 255, green: rect.key >>> 8 & 255,
     blue: rect.key >>> 16 & 255, opacity: (rect.key >>> 24) / 255,
   }));
