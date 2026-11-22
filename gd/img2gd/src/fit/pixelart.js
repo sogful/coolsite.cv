@@ -239,14 +239,13 @@ function drawpixelartresult(canvas, objects) {
   context.putImageData(image, 0, 0);
 }
 
-async function fitpixelart(revision) {
+async function fitpixelart(revision, asset = library.find(item => item.id === 495), fit = pixelartrectangles) {
   const width = sourceimage.naturalWidth;
   const height = sourceimage.naturalHeight;
-  const asset = library.find(item => item.id === 495);
   const reject = message => {
     fitmessage.textContent = message;
     stats.hidden = true;
-    previewimage.hidden = true;
+    drawidlepreview(sourceimage);
     renderstate.textContent = "ERROR";
     return false;
   };
@@ -263,7 +262,7 @@ async function fitpixelart(revision) {
   canvas.height = height;
   drawpixelartsource(canvas);
   const pixels = canvas.getContext("2d").getImageData(0, 0, width, height).data;
-  const result = pixelartrectangles(pixels, width, height, pixelartobjectlimit, asset);
+  const result = fit(pixels, width, height, pixelartobjectlimit, asset);
   if (!result || result.count > pixelartobjectlimit) return reject("Pixel Art exceeds the 80,000-object export limit.");
 
   fitpixels = 0;

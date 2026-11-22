@@ -437,8 +437,7 @@ function tintdraws(objects, fitter, scale, offset, stepx, stepy, width, height) 
 
 async function refinelayercolors(revision, verify = null, frozen = null) {
   const original = plan;
-  const zoom = previewzoomslider.value;
-  const current = () => revision === fitrevision && plan === original && previewzoomslider.value === zoom;
+  const current = () => revision === fitrevision && plan === original;
   if (!current() || !original.length || !target.width || !target.height || !sourceimage.naturalWidth) return false;
   const {width: screenwidth, height: screenheight} = previewsize();
   if (screenwidth * screenheight > 750000) return false;

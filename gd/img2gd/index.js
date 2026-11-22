@@ -12,14 +12,12 @@ const effortslider = document.querySelector(".effortslider");
 const colourslider = document.querySelector(".colourslider");
 const fitselect = document.querySelector(".fitselect");
 const samplerselect = document.querySelector(".samplerselect");
-const warptoggle = document.querySelector(".warptoggleinput");
+const legacytoggle = document.querySelector(".legacytoggleinput");
 const colourmode = document.querySelector(".colourmode");
-const previewzoomslider = document.querySelector(".previewzoomslider");
 const filecaption = document.querySelector(".filecaption");
 const filedimensions = document.querySelector(".filedimensions");
 const stats = document.querySelector(".stats");
 const previewimage = document.querySelector(".previewimage");
-const previewempty = document.querySelector(".previewempty");
 const comparison = document.querySelector(".comparison");
 const swipeslider = document.querySelector(".swipeslider");
 const sourcecanvas = document.querySelector(".sourcecanvas");
@@ -47,6 +45,8 @@ const uploadtypes = new Map([
 ]);
 const seedoffset = 97;
 const sampleedge = 4096;
+const pngscale = 0.35;
+const emptyprompt = "Choose an image first!";
 const levelorigin = {x: 360, y: 300};
 
 const sourceimage = new Image();
@@ -158,7 +158,7 @@ function targetsize(width, height, limit, opaque) {
 
 function previewsize() {
   if (pixelartactive) return {width: target.width, height: target.height, zoom: 1};
-  const zoom = rangevalue(previewzoomslider);
+  const zoom = pngscale;
   const requested = Math.max(1, Math.round(720 * zoom));
   const ratio = target.height / target.width;
   const width = Math.max(1, Math.min(requested, 8192, Math.floor(8192 / ratio), Math.floor(Math.sqrt(4000000 / ratio))));
@@ -419,6 +419,36 @@ function preparetarget() {
 
 const overflowcanvas = previewimage.querySelector(".overflowcanvas");
 
+function drawidlepreview(image) {
+  const scale = image ? Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight)) : 1;
+  resultcanvas.width = image ? Math.max(1, Math.round(image.naturalWidth * scale)) : 1280;
+  resultcanvas.height = image ? Math.max(1, Math.round(image.naturalHeight * scale)) : 240;
+  previewimage.style.setProperty("--previewaspect", resultcanvas.width / resultcanvas.height);
+  previewimage.classList.remove("hasoverhang");
+  previewimage.classList.toggle("hasalpha", Boolean(image) && !sourceisopaque());
+  previewimage.classList.toggle("ispixelart", Boolean(image) && fitselect.value === "pixelart");
+  previewimage.classList.toggle("isempty", !image);
+  overflowcanvas.hidden = true;
+  resultcanvas.setAttribute("aria-label", image ? "Source image preview" : emptyprompt);
+  const context = resultcanvas.getContext("2d");
+  if (image) {
+    context.imageSmoothingQuality = "high";
+    context.drawImage(image, 0, 0, resultcanvas.width, resultcanvas.height);
+  } else {
+    context.font = "64px pusab, Arial, sans-serif";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.lineJoin = "round";
+    context.lineWidth = 6;
+    context.strokeStyle = "#000";
+    context.fillStyle = "#faffff";
+    const {width, height} = resultcanvas;
+    context.strokeText(emptyprompt, width / 2, height / 2, width - 80);
+    context.fillText(emptyprompt, width / 2, height / 2, width - 80);
+  }
+  previewimage.hidden = false;
+}
+
 function resizecanvases() {
   const ratio = sourceimage.naturalWidth / sourceimage.naturalHeight;
   const longside = Math.max(520, Math.ceil(Math.max(ratio, 1 / ratio)));
@@ -573,6 +603,7 @@ function objectposition(candidate, pixelscale, scalex, scaley) {
 }
 
 function buildsource() {
+  if (legacyactive) return buildlegacysource();
   const colors = new Map();
   const colorlines = ["1_6_2_18_3_40_6_1000_7_1", "1_6_2_18_3_40_6_1001_7_1", "1_255_2_255_3_255_6_1004_7_1"];
   const hsvmode = colourmode.value === "hsv";
@@ -709,12 +740,12 @@ function updatestart() {
 
 function updatefields() {
   const exact = fitselect.value === "pixelart";
-  const textures = !exact && fitselect.value !== "regions" && !regionfitactive;
+  const textures = !exact && !legacytoggle.checked && fitselect.value !== "regions" && !regionfitactive;
   seedsearchselect.disabled = !textures || !maximumfit();
   coverageselect.disabled = !textures || !detailfit();
   samplerselect.disabled = exact;
-  croptoggle.disabled = warptoggle.disabled = exact;
-  for (const slider of [limitslider, effortslider, colourslider, previewzoomslider]) {
+  croptoggle.disabled = exact || legacytoggle.checked;
+  for (const slider of [limitslider, effortslider, colourslider]) {
     slider.disabled = exact;
     slider.parentElement.querySelector(".rangevalueeditor").disabled = exact;
   }
@@ -731,7 +762,7 @@ async function updatepreview() {
   const result = buildsource();
   invalidateexports();
   const name = levelname();
-  const level = new Blob([gmddocument(result.raw, name)], {type: "application/xml"});
+  const level = new Blob([gmddocument(result.raw, name, legacyactive)], {type: "application/xml"});
   updatestat(tilecount, result.objects.toLocaleString());
   updatestat(gridcount, fiterror.toFixed(1) + "%");
   updatestat(channelcount, result.channels.toLocaleString());
@@ -741,6 +772,7 @@ async function updatepreview() {
   statuscopy.textContent = "Preparing files...";
   document.querySelector(".exportlinks").title = visibilitywarning().trim();
   comparison.hidden = false;
+  resultcanvas.setAttribute("aria-label", "Generated image preview");
   enableexport(downloadlink, level, name + ".gmd");
   await prepareexports(result.raw, name);
   if (fitreadyrevision === fitrevision && fitstarttime !== undefined) {
@@ -753,6 +785,7 @@ async function startfit() {
   const revision = ++fitrevision;
   fitting = true;
   pixelartactive = false;
+  legacyactive = false;
   regionfitactive = false;
   previewimage.classList.remove("ispixelart");
   fitstarttime = performance.now();
@@ -770,7 +803,9 @@ async function startfit() {
   updatestart();
 
   try {
-    if (fitselect.value === "pixelart") {
+    if (legacytoggle.checked) {
+      if (!await fitlegacy(revision)) return;
+    } else if (fitselect.value === "pixelart") {
       if (!await fitpixelart(revision)) return;
     } else {
       const limit = objectlimit();
@@ -803,8 +838,8 @@ function loadimage(url, name) {
   clearlivevalues();
   previewimage.hidden = true;
   previewimage.classList.remove("ispixelart");
-  previewempty.hidden = true;
   pixelartactive = false;
+  legacyactive = false;
   regionfitactive = false;
   if (advanceddialog.open) advanceddialog.close();
   sampledopaque = null;
@@ -879,7 +914,7 @@ sourceimage.addEventListener("load", async () => {
   dropzone.title = imagename + " " + filedimensions.textContent;
   const aspect = sourceimage.naturalWidth / sourceimage.naturalHeight;
   if (Math.max(aspect, 1 / aspect) > sampleedge) {
-    previewempty.hidden = false;
+    drawidlepreview();
     dropsubtitle.textContent = "Image is too narrow or tall.";
     renderstate.textContent = "ERROR";
     return;
@@ -889,17 +924,19 @@ sourceimage.addEventListener("load", async () => {
     fitselect.value = autoselectedpixelart ? "pixelart" : "auto";
     updatefields();
   }
+  drawidlepreview(sourceimage);
   opacitycheck = sourceisopaque() ? cropopaque(sourceimage, () => revision === imagerevision) : Promise.resolve(false);
   const opaque = await opacitycheck;
   if (revision !== imagerevision) return;
   sampledopaque = opaque;
+  previewimage.classList.toggle("hasalpha", !opaque);
   alphaready = true;
   updatestart();
 });
 
 sourceimage.addEventListener("error", () => {
   filedimensions.hidden = true;
-  previewempty.hidden = false;
+  drawidlepreview();
   dropsubtitle.textContent = "Could not read image.";
   renderstate.textContent = "ERROR";
   updatestart();
@@ -914,11 +951,14 @@ examplebutton.addEventListener("click", () => loadimage("assets/soggycat.jpg", "
 
 form.addEventListener("rangevaluechange", updatefields);
 form.addEventListener("change", event => {
-  if (!event.target.matches("select, .croptoggleinput, .warptoggleinput")) return;
+  if (!event.target.matches("select, .croptoggleinput, .legacytoggleinput")) return;
   regionfitactive = false;
   if (event.target === fitselect) {
     autoselectedpixelart = false;
     if (fitselect.value === "regions") coverageselect.value = "2";
+    if (alphaready && fitreadyrevision !== fitrevision) {
+      previewimage.classList.toggle("ispixelart", fitselect.value === "pixelart");
+    }
   }
   updatefields();
 });
@@ -931,6 +971,10 @@ window.addEventListener("nativepreviewrestored", () => {
 });
 
 updatefields();
+drawidlepreview();
+document.fonts.load("64px pusab").then(() => {
+  if (!previewimage.hidden && previewimage.classList.contains("isempty")) drawidlepreview();
+}).catch(() => {});
 loadnativeatlas().catch(error => {
   assetstatus.textContent = "ATLAS ERROR";
   renderstate.textContent = "ERROR";

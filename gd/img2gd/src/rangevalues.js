@@ -10,12 +10,12 @@ const {rangevalue, validrangevalues} = (() => {
     const step = Number(slider.step);
     const fractional = !Number.isInteger(step);
     const precision = slider.step.split(".")[1]?.length || 0;
-    const ticks = Math.round((railmax - minimum) / step);
-    const divisions = Math.min(24, ticks);
-    const stops = Array.from({length: divisions + 1}, (_, index) => {
-      const tick = Math.round(index * ticks / divisions);
-      return Number((minimum + tick * step).toFixed(precision));
-    });
+    const interval = Number(slider.dataset.snap ?? slider.step);
+    const stops = [minimum];
+    for (let index = Math.floor(minimum / interval) + 1; index * interval < railmax; index++) {
+      stops.push(Number((index * interval).toFixed(precision)));
+    }
+    stops.push(railmax);
     const editor = rail.querySelector(".rangevalueeditor");
     const warning = rail.closest(".sliderlabel").querySelector(".rangevaluemessage");
     const warningtext = warning.querySelector("cr");
@@ -78,7 +78,7 @@ const {rangevalue, validrangevalues} = (() => {
       const value = slider.valueAsNumber;
       const start = move > 0 ? stops.findIndex(stop => stop > value) : stops.findLastIndex(stop => stop < value);
       if (start < 0) return move > 0 ? railmax : minimum;
-      return stops[Math.max(0, Math.min(divisions, start + move - Math.sign(move)))];
+      return stops[Math.max(0, Math.min(stops.length - 1, start + move - Math.sign(move)))];
     }
 
     editor.addEventListener("input", () => edit(editor.value));

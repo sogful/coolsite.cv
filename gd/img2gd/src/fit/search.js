@@ -375,8 +375,8 @@ function contourbrush(source, screen, width, height, field, levels) {
 /*//////////////////////////////////////////////////////////////////////*/
 
 async function refinephotocontours(revision, fraction = 0.4) {
-  const original = plan, zoom = previewzoomslider.value;
-  const current = () => revision === fitrevision && plan === original && previewzoomslider.value === zoom;
+  const original = plan;
+  const current = () => revision === fitrevision && plan === original;
   if (!current() || original.length < 128 || !imageopaque || !sourceisopaque()) return false;
   const assets = [497, 495].map(id => library.find(asset => asset.id === id)).filter(Boolean);
   if (!assets.length) return false;
@@ -528,8 +528,8 @@ function smoothresiduals(source, screen, field, width) {
 }
 
 async function refinesmoothareas(revision) {
-  const original = plan, zoom = previewzoomslider.value;
-  const current = () => revision === fitrevision && plan === original && zoom === previewzoomslider.value;
+  const original = plan;
+  const current = () => revision === fitrevision && plan === original;
   if (!current() || !imageopaque || !sourceisopaque()) return false;
   const {width, height} = previewsize();
   if (width * height > 150000 || Math.min(width, height) < 12) return false;

@@ -106,8 +106,6 @@ body.imgpage {
   gap: 6px 8px; min-inline-size: 0;
 }
 
-.checkhelp { display: flex; align-items: center; }
-
 .dropzone {
   position: relative; flex: 1;
   min-block-size: max(40px, 1.67em);
@@ -176,19 +174,11 @@ body.imgpage {
   border: 0; background: transparent;
   color: inherit; font: inherit;
   text-align: start; cursor: help;
-  text-decoration: underline dotted;
+  text-decoration: underline dotted #ffffff80;
   text-underline-offset: .18em;
 }
 
 .helptrigger:focus-visible { outline: 2px solid var(--gdfocus); outline-offset: 3px; }
-
-.helpicon {
-  display: grid; place-items: center;
-  inline-size: 26px; block-size: 28px;
-  margin-inline-start: 1px;
-}
-
-.helpicon svg { inline-size: 17px; block-size: 17px; }
 
 .settingtooltip {
   inset: auto; margin: 0;
@@ -213,13 +203,6 @@ body.imgpage {
 .previewpanel {
   display: grid; grid-template-rows: minmax(0, 1fr);
   align-self: stretch; min-block-size: 0;
-}
-
-.previewport .previewempty {
-  position: absolute; inset-inline: 12px;
-  inset-block-start: 50%; translate: 0 -50%;
-  font-size: var(--gdlabelsize); text-align: center;
-  pointer-events: none; user-select: none;
 }
 
 .previewimage canvas,

@@ -590,7 +590,6 @@ async function refineregions(groups, analysis, tolerance, budget, revision) {
 async function fitcolorregions(limit, revision) {
   if (!limit) return null;
   if (!sourceisopaque()) return fittransparentregions(limit, revision);
-  if (!warptoggle.checked) return null;
   const reserved = limit > visibilitycost ? visibilitycost : 0;
   fitpixels = 64000;
   preparetarget();

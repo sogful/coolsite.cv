@@ -215,7 +215,6 @@ function transparentchoices(region, loops, analysis, later, budget, silhouette =
   for (const factor of [0.975, 1.025]) compare([{...coarse, asset: library.find(asset => asset.id === 497),
     width: coarse.width * factor, height: coarse.height * factor}]);
   compare(transparentrectangles(region, labels, color, Math.min(160, budget)));
-  if (!warptoggle.checked) return options;
   const holes = loops.slice(1).filter(loop => {
     if (polygonarea(loop) >= -2) return false;
     const [a, b] = loop;

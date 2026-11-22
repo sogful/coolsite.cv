@@ -27,6 +27,8 @@
   transform-origin: center;
 }
 
+.previewimage.isempty { inline-size: min(100cqw, 640px, calc(100cqh * var(--previewaspect))); }
+
 .previewimage.hasalpha:not(.hasoverhang),
 .previewimage.hasalpha.hasoverhang::before {
   background: repeating-conic-gradient(#eee 0 25%, #c9c9c9 0 50%) 0 0 / 24px 24px;

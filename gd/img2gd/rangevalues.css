@@ -18,7 +18,6 @@
 .objectlimitfield .gdslider { --gdfraction: calc(1450 / 2450); }
 .effortfield .gdslider { --gdfraction: .75; }
 .colourlevelsfield .gdslider { --gdfraction: 1; --gdfillstop: 100%; }
-.pngscalefield .gdslider { --gdfraction: calc(20 / 45); }
 
 .rangevalueeditor {
   position: absolute; inset-block-start: var(--gdthumbsize);

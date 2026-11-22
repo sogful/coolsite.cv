@@ -36,6 +36,10 @@ function tooltipleave(trigger, tooltip) {
 
 for (const trigger of document.querySelectorAll(".helptrigger")) {
   const tooltip = trigger.parentElement.querySelector(".settingtooltip");
+  let touchedopen = false;
+  trigger.addEventListener("pointerdown", event => {
+    touchedopen = event.pointerType === "touch" && opentooltip?.tooltip === tooltip && opentooltip.touch;
+  });
   trigger.addEventListener("pointerenter", event => {
     if (event.pointerType === "mouse") showtooltip(trigger, tooltip, false);
   });
@@ -50,7 +54,7 @@ for (const trigger of document.querySelectorAll(".helptrigger")) {
   });
   trigger.addEventListener("click", event => {
     const touch = event.pointerType === "touch" || matchMedia("(hover: none)").matches;
-    if (opentooltip?.tooltip === tooltip && opentooltip.touch && touch && event.detail) hidetooltip();
+    if (touch && touchedopen && event.detail) hidetooltip();
     else showtooltip(trigger, tooltip, touch);
   });
 }
@@ -70,5 +74,9 @@ document.addEventListener("close", event => {
   if (opentooltip && event.target.contains(opentooltip.trigger)) hidetooltip();
 }, true);
 form.addEventListener("submit", hidetooltip);
-window.addEventListener("resize", hidetooltip);
-window.addEventListener("scroll", hidetooltip, true);
+function hideanchoredtooltip() {
+  if (opentooltip && !opentooltip.touch) hidetooltip();
+}
+
+window.addEventListener("resize", hideanchoredtooltip);
+window.addEventListener("scroll", hideanchoredtooltip, true);

@@ -208,10 +208,8 @@ function refinegeometry(candidate) {
       {height: Math.max(0.25, best.height / scalefactor)}, {height: Math.min(maximumheight, best.height * scalefactor)},
     ];
     if (best.asset.freerotation && !best.warpx && !best.warpy) changes.push({angle: best.angle - angle}, {angle: best.angle + angle});
-    if (warptoggle.checked) {
-      changes.push({warpx: best.warpx - angle}, {warpx: best.warpx + angle},
-        {warpy: best.warpy - angle}, {warpy: best.warpy + angle});
-    }
+    changes.push({warpx: best.warpx - angle}, {warpx: best.warpx + angle},
+      {warpy: best.warpy - angle}, {warpy: best.warpy + angle});
     let bestscore = evaluatecandidate(best);
     for (const change of changes) {
       const variant = candidatevariant(best, change);
@@ -417,7 +415,7 @@ function makecandidate(focus, progress, trial, trials, random, buckets) {
   const fastwarps = [[0, 0], [0, 18], [0, 0], [18, 0], [0, 0], [0, -18], [0, 0], [-18, 0], [0, 0], [0, 30], [0, 0], [30, 0], [0, 0], [0, -30], [-30, 0]];
   const accuratewarps = [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 18], [0, -18], [0, 30], [0, -30], [18, 0], [-18, 0], [30, 0], [-30, 0]];
   const warps = trials <= 12 ? fastwarps : accuratewarps;
-  const [warpx, warpy] = warptoggle.checked ? warps[trial % warps.length] : [0, 0];
+  const [warpx, warpy] = warps[trial % warps.length];
   const jitter = Math.max(width, height) * (0.2 + random() * 0.75);
   return {
     asset,

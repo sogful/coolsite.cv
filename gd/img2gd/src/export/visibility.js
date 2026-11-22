@@ -26,6 +26,7 @@ function visibilitycount() {
 }
 
 function visibilitywarning() {
+  if (legacyactive) return "";
   return visibilityrequired() && !visibilitycount()
     ? " Low object limit: oversized shapes may unload during gameplay." : "";
 }
