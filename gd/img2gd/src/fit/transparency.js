@@ -481,6 +481,199 @@ async function filltransparentdetails(objects, analysis, budget, revision) {
   return result;
 }
 
+function transparentsums(source, rendered, width, height) {
+  const stride = width + 1;
+  const size = stride * (height + 1);
+  const tables = Array.from({length: 15}, () => new Float64Array(size));
+  const row = new Float64Array(tables.length);
+  let left = width, top = height, right = 0, bottom = 0;
+  for (let y = 0; y < height; y += 1) {
+    row.fill(0);
+    for (let x = 0; x < width; x += 1) {
+      const at = (y * width + x) * 4;
+      const actual = rendered[at + 3], expected = source[at + 3];
+      const delta = expected - actual, vacancy = 255 - actual;
+      const weight = expected <= 3 ? 24 : 2;
+      let error = delta * delta * weight;
+      for (let c = 0; c < 3; c += 1) {
+        const previous = rendered[at + c], difference = source[at + c] - previous;
+        row[c] += difference;
+        row[3 + c] += previous;
+        row[6 + c] += previous * difference;
+        row[9 + c] += previous * previous;
+        error += difference * difference;
+      }
+      row[12] += weight * vacancy * delta;
+      row[13] += weight * vacancy * vacancy;
+      row[14] += error;
+      if (expected > 3) {
+        left = Math.min(left, x);
+        top = Math.min(top, y);
+        right = Math.max(right, x + 1);
+        bottom = Math.max(bottom, y + 1);
+      }
+      const index = (y + 1) * stride + x + 1;
+      for (let table = 0; table < tables.length; table += 1) {
+        tables[table][index] = tables[table][index - stride] + row[table];
+      }
+    }
+  }
+  function measure(x0, y0, x1, y1, output) {
+    const a = y0 * stride + x0, b = y0 * stride + x1;
+    const c = y1 * stride + x0, d = y1 * stride + x1;
+    for (let j = 0; j < tables.length; j += 1) {
+      const table = tables[j];
+      output[j] = table[d] - table[b] - table[c] + table[a];
+    }
+  }
+  return {measure, left, top, right, bottom};
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+async function adaptivealphatiles(objects, analysis, budget, revision) {
+  const {width, height} = target;
+  const context = analysis.context, asset = library.find(item => item.id === 495);
+  const shared = new Set(objects.map(opacitybyte).filter(byte => byte < 255));
+  const room = budget - objects.length - shared.size;
+  if (!asset || room < 2) return objects;
+  context.clearRect(0, 0, width, height);
+  previewrenderer.renderpreview(context, objects, 1, 1, spriteatlasimages, spriteatlasdimensions);
+  const source = transparentpremultiply(analysis.pixels);
+  const rendered = transparentpremultiply(context.getImageData(0, 0, width, height).data);
+  const {measure, left, top, right, bottom} = transparentsums(source, rendered, width, height);
+  if (left >= right || top >= bottom) return objects;
+  const levels = Number(colourslider.value);
+  const measured = new Float64Array(15);
+  const alphas = [255, ...shared];
+  const alpha = new Float64Array(256);
+  for (let byte = 1; byte <= 255; byte += 1) {
+    alpha[byte] = Math.floor(Math.fround(Math.fround(Number(exportedopacity(byte))) * 255)) / 255;
+  }
+  function tile(x0, y0, x1, y1) {
+    measure(x0, y0, x1, y1, measured);
+    const output = {x0, y0, x1, y1, error: measured[14], gain: 0};
+    if (output.error < 400) return output;
+    const area = (x1 - x0) * (y1 - y0);
+    const ideal = measured[13] <= 1 ? 255 : 255 * measured[12] / measured[13];
+    let nearest = 255;
+    for (const byte of alphas) if (Math.abs(byte - ideal) < Math.abs(nearest - ideal)) nearest = byte;
+    const rounded = Math.max(16, Math.min(240, Math.round(ideal / 16) * 16));
+    for (const byte of [255, nearest, rounded]) {
+      const a = alpha[byte], square = a * a;
+      let gain = 2 * a * measured[12] - square * measured[13];
+      const color = [0, 0, 0];
+      for (let c = 0; c < 3; c += 1) {
+        const value = quantize(measured[c] / (area * a) + measured[3 + c] / area, levels);
+        color[c] = value;
+        gain += 2 * a * (value * measured[c] - measured[6 + c])
+          - square * (value * value * area - 2 * value * measured[3 + c] + measured[9 + c]);
+      }
+      if (gain > output.gain) Object.assign(output, {gain, byte, color});
+    }
+    return output;
+  }
+
+  function split(tiledata) {
+    const {x0, y0, x1, y1, gain, error} = tiledata;
+    if (x1 - x0 === 1 && y1 - y0 === 1 || error - gain < 250) return null;
+    let a, b, best = -Infinity;
+    function test(first, second) {
+      const combined = first.gain + second.gain;
+      if (combined > best) {best = combined; a = first; b = second;}
+    }
+    const dx = Math.max(1, Math.ceil((x1 - x0) / 10));
+    const dy = Math.max(1, Math.ceil((y1 - y0) / 10));
+    for (let x = x0 + dx; x < x1; x += dx) test(tile(x0, y0, x, y1), tile(x, y0, x1, y1));
+    for (let y = y0 + dy; y < y1; y += dy) test(tile(x0, y0, x1, y), tile(x0, y, x1, y1));
+    return a ? {a, b, priority: Math.max(best - gain, (error - gain) / 12)} : null;
+  }
+
+  const queue = [];
+  function push(data) {
+    const branch = split(data);
+    if (!branch) return;
+    branch.data = data;
+    let index = queue.length;
+    queue.push(branch);
+    while (index > 0) {
+      const parent = (index - 1) >> 1;
+      if (queue[parent].priority >= branch.priority) break;
+      queue[index] = queue[parent];
+      index = parent;
+    }
+    queue[index] = branch;
+  }
+  function take() {
+    const entry = queue[0], last = queue.pop();
+    if (!queue.length) return entry;
+    let index = 0;
+    while (index * 2 + 1 < queue.length) {
+      let child = index * 2 + 1;
+      if (child + 1 < queue.length && queue[child + 1].priority > queue[child].priority) child += 1;
+      if (queue[child].priority <= last.priority) break;
+      queue[index] = queue[child];
+      index = child;
+    }
+    queue[index] = last;
+    return entry;
+  }
+  const root = tile(left, top, right, bottom);
+  push(root);
+  let deadline = performance.now() + 14;
+  const targettiles = Math.ceil(room * 2.5) + 12;
+  for (let tiles = 1; queue.length && tiles < targettiles; tiles += 1) {
+    if (performance.now() >= deadline) {
+      await yieldfittask();
+      if (revision !== fitrevision) return null;
+      deadline = performance.now() + 14;
+    }
+    const {data, a, b} = take();
+    data.children = [a, b];
+    push(a);
+    push(b);
+  }
+  function choose(data, penalty, selected = null) {
+    const score = Math.max(0, data.gain - penalty);
+    if (data.children) {
+      const [left, right] = data.children;
+      const a = choose(left, penalty), b = choose(right, penalty);
+      if (a.score + b.score > score) {
+        if (selected) {
+          choose(left, penalty, selected);
+          choose(right, penalty, selected);
+        }
+        return {score: a.score + b.score, count: a.count + b.count};
+      }
+    }
+    if (score && selected) selected.push(data);
+    return {score, count: Number(score > 0)};
+  }
+  let low = 0, high = root.error;
+  const slots = Math.max(1, room - Math.min(13, Math.floor(room / 17)));
+  for (let i = 0; i < 21; i += 1) {
+    const middle = (low + high) / 2;
+    if (choose(root, middle).count <= slots) high = middle;
+    else low = middle;
+  }
+  const selected = [];
+  choose(root, high, selected);
+  const result = objects.slice();
+  let remaining = room;
+  for (const {x0, y0, x1, y1, gain, byte, color} of selected.sort((a, b) => b.gain - a.gain)) {
+    if (gain < 400) break;
+    const setup = byte < 255 && !shared.has(byte);
+    if (remaining < 1 + setup) continue;
+    if (setup) shared.add(byte);
+    remaining -= 1 + setup;
+    result.push({asset, x: (x0 + x1) / 2, y: (y0 + y1) / 2, width: x1 - x0, height: y1 - y0,
+      angle: 0, macro: true, zlayer: 7, red: color[0], green: color[1], blue: color[2], opacity: byte / 255});
+  }
+  return result;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
 async function fittransparentsilhouette(analysis, budget, revision) {
   const {pixels, context, palette} = analysis;
   const mask = new Uint8Array(pixels.length / 4);
@@ -515,19 +708,48 @@ async function fittransparentsilhouette(analysis, budget, revision) {
     if (!rectangles) return null;
     groups.push(...rectangles);
   }
-  return filltransparentdetails(groups, analysis, budget, revision);
+  return groups;
 }
 
-function transparentscore(objects, analysis) {
+function transparentquality(objects, analysis) {
   const {context, pixels} = analysis;
   const {width, height} = target;
   context.clearRect(0, 0, width, height);
   previewrenderer.renderpreview(context, objects, 1, 1, spriteatlasimages, spriteatlasdimensions);
   const rendered = transparentpremultiply(context.getImageData(0, 0, width, height).data);
   const source = transparentpremultiply(pixels);
-  let error = 0;
-  for (let at = 0; at < source.length; at += 4) error += transparentpixelerror(source, rendered, at);
-  return error + objects.length * 100;
+  let score = objects.length * 100, dark = 0, light = 0;
+  let clear = 0, leaks = 0, bright = 0, intersection = 0, union = 0;
+  for (let at = 0; at < source.length; at += 4) {
+    const expected = source[at + 3], actual = rendered[at + 3];
+    const delta = actual - expected;
+    score += Math.abs(delta) * (expected <= 3 ? 8 : 2);
+    if (expected <= 3) {
+      clear += 1;
+      if (actual > 15) leaks += 1;
+    }
+    for (let c = 0; c < 3; c += 1) {
+      const difference = rendered[at + c] - source[at + c];
+      dark += Math.abs(difference);
+      light += Math.abs(difference - delta);
+    }
+    const brightpixel = buffer => buffer[at] * 0.2126 + buffer[at + 1] * 0.7152 + buffer[at + 2] * 0.0722 > 166;
+    const expectedbright = brightpixel(source), actualbright = brightpixel(rendered);
+    if (expectedbright) bright += 1;
+    if (expectedbright || actualbright) union += 1;
+    if (expectedbright && actualbright) intersection += 1;
+  }
+  return {score: score + dark + light, dark, light, clear, leaks, bright,
+    brightoverlap: union ? intersection / union : 1, size: width * height};
+}
+
+function preservetransparentdetail(candidate, reference) {
+  const tolerance = reference.size * 1.5;
+  return candidate.leaks <= reference.leaks + Math.max(8, reference.clear * 0.0125)
+    && candidate.dark <= reference.dark * 1.04 + tolerance
+    && candidate.light <= reference.light * 1.04 + tolerance
+    && (reference.bright < reference.size * 0.005
+      || candidate.brightoverlap >= reference.brightoverlap * 0.85);
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
@@ -587,12 +809,31 @@ async function fittransparentregions(limit, revision) {
     const base = objects.flat();
     const completed = await filltransparentdetails(base, analysis, budget, revision);
     if (!completed || revision !== fitrevision) return false;
-    plan = completed;
-    if (limit <= 500) {
-      const silhouette = await fittransparentsilhouette(analysis, budget, revision);
-      if (revision !== fitrevision) return false;
-      if (silhouette && transparentscore(silhouette, analysis) < transparentscore(completed, analysis)) plan = silhouette;
+    const silhouette = await fittransparentsilhouette(analysis, budget, revision);
+    if (revision !== fitrevision) return false;
+    let best = completed;
+    let reference = transparentquality(best, analysis);
+    if (silhouette) {
+      const filled = await filltransparentdetails(silhouette, analysis, budget, revision);
+      if (!filled || revision !== fitrevision) return false;
+      const quality = transparentquality(filled, analysis);
+      if (quality.score < reference.score && (limit <= 500 || preservetransparentdetail(quality, reference))) {
+        best = filled;
+        reference = quality;
+      }
     }
+    let bestscore = reference.score;
+    for (const seed of [base, silhouette, []]) {
+      if (!seed || (seed === base && !base.length)) continue;
+      const candidate = await adaptivealphatiles(seed, analysis, budget, revision);
+      if (!candidate || revision !== fitrevision) return false;
+      const quality = transparentquality(candidate, analysis);
+      if (quality.score < bestscore && preservetransparentdetail(quality, reference)) {
+        best = candidate;
+        bestscore = quality.score;
+      }
+    }
+    plan = best;
     regionfitactive = true;
     updatefields();
     return true;
