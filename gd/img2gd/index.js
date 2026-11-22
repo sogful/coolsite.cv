@@ -453,13 +453,16 @@ function drawidlepreview(image) {
 
 function resizecanvases() {
   const ratio = sourceimage.naturalWidth / sourceimage.naturalHeight;
-  const longside = Math.max(520, Math.ceil(Math.max(ratio, 1 / ratio)));
   const size = previewsize();
+  const ready = fitreadyrevision === fitrevision;
+  const sourceedge = ready ? Math.min(1280, Math.max(sourceimage.naturalWidth, sourceimage.naturalHeight)) : 0;
+  const longside = Math.max(520, sourceedge, Math.ceil(Math.max(ratio, 1 / ratio)));
   const width = pixelartactive ? size.width : ratio >= 1 ? longside : Math.max(1, Math.round(longside * ratio));
   const height = pixelartactive ? size.height : ratio >= 1 ? Math.max(1, Math.round(longside / ratio)) : longside;
-  previewimage.style.setProperty("--previewaspect", size.width / size.height);
-  if (resultcanvas.width !== size.width) resultcanvas.width = size.width;
-  if (resultcanvas.height !== size.height) resultcanvas.height = size.height;
+  const resultwidth = ready ? width : size.width, resultheight = ready ? height : size.height;
+  previewimage.style.setProperty("--previewaspect", resultwidth / resultheight);
+  if (resultcanvas.width !== resultwidth) resultcanvas.width = resultwidth;
+  if (resultcanvas.height !== resultheight) resultcanvas.height = resultheight;
   if (sourcecanvas.width !== width) sourcecanvas.width = width;
   if (sourcecanvas.height !== height) sourcecanvas.height = height;
 }
@@ -551,18 +554,19 @@ function drawoverhang(context, objects, scale, yoffset) {
   return true;
 }
 
-function drawresult(objects = plan, canvas = resultcanvas) {
+function drawresult(objects = plan, canvas = resultcanvas, preservealpha = false) {
   if (pixelartactive) return drawpixelartresult(canvas, objects);
   const context = canvas.getContext("2d");
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.globalCompositeOperation = "source-over";
   context.globalAlpha = 1;
   const onscreen = canvas === resultcanvas;
-  const opaque = !onscreen || previewopaque();
+  const opaque = !onscreen && !preservealpha || previewopaque();
   if (onscreen) previewimage.classList.toggle("hasalpha", !opaque);
   if (opaque) {
-    previewrenderer.paintbackground(context, canvas.width, canvas.height, canvas.width,
-      canvas.height, backgroundtile, backgroundtilepixels, background);
+    const screen = previewsize();
+    previewrenderer.paintbackground(context, canvas.width, canvas.height, screen.width,
+      screen.height, backgroundtile, backgroundtilepixels, background);
   } else context.clearRect(0, 0, canvas.width, canvas.height);
   const scale = canvas.width / target.width;
   const yoffset = (canvas.height - target.height * scale) / 2;
@@ -791,11 +795,15 @@ function loadupload(files) {
 
 async function prepareexports(raw, name) {
   const revision = fitrevision;
-  const zoom = cleannumber(previewsize().zoom);
-  const png = new Promise(resolve => resultcanvas.toBlob(resolve, "image/png"));
+  const {width, height, zoom} = previewsize();
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  drawresult(plan, canvas, true);
+  const png = new Promise(resolve => canvas.toBlob(resolve, "image/png"));
   const [image, level] = await Promise.allSettled([png, gdlvldocument(raw, name)]);
   if (revision !== fitrevision) return;
-  if (image.status === "fulfilled" && image.value) enableexport(pngdownload, image.value, name + "-fit-" + zoom + "x.png");
+  if (image.status === "fulfilled" && image.value) enableexport(pngdownload, image.value, name + "-fit-" + cleannumber(zoom) + "x.png");
   else fitmessage.textContent = "PNG export failed.";
   if (level.status === "fulfilled") {
     enableexport(gdlvldownload, new Blob([level.value], {type: "application/octet-stream"}), name + ".gdlvl");
