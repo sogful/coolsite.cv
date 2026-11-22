@@ -1,4 +1,4 @@
-function transparentregions() {
+function transparentsource() {
   const canvas = document.createElement("canvas");
   canvas.width = target.width;
   canvas.height = target.height;
@@ -7,6 +7,11 @@ function transparentregions() {
   context.imageSmoothingQuality = "high";
   context.drawImage(sourceimage, 0, 0, canvas.width, canvas.height);
   const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  return {context, pixels};
+}
+
+function transparentregions() {
+  const {context, pixels} = transparentsource();
   const histogram = new Map();
   const length = pixels.length / 4;
   let foreground = 0;
@@ -359,12 +364,15 @@ async function refinetransparentplan(groups, choices, limit, revision) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-function transparentpixelerror(source, rendered, at, alpha = 0, color = null) {
+function transparentpixelerror(source, rendered, at, alpha = 0, color = null, behind = false) {
   const remaining = 1 - alpha / 255;
   const delta = rendered[at + 3] * remaining + alpha - source[at + 3];
   let error = Math.abs(delta) * (source[at + 3] <= 3 ? 8 : 2);
   for (let c = 0; c < 3; c += 1) {
-    const black = rendered[at + c] * remaining + (color ? color[c] * alpha / 255 : 0) - source[at + c];
+    const value = behind
+      ? rendered[at + c] + color[c] * alpha / 255 * (1 - rendered[at + 3] / 255)
+      : rendered[at + c] * remaining + (color ? color[c] * alpha / 255 : 0);
+    const black = value - source[at + c];
     error += Math.abs(black) + Math.abs(black - delta);
   }
   return error;
@@ -378,7 +386,105 @@ function transparentpremultiply(pixels) {
   return result;
 }
 
-async function filltransparentdetails(objects, analysis, budget, revision) {
+/*//////////////////////////////////////////////////////////////////////*/
+
+async function fitglowunderlay(objects, analysis, budget, revision) {
+  const {width, height} = target;
+  const {context, pixels} = analysis;
+  const room = Math.min(72, budget - objects.length - opacitycost(objects));
+  if (room < 2) return objects;
+  const gradients = [503, 1292, 504, 3958].map(id => library.find(asset => asset.id === id))
+    .filter(asset => asset && !asset.samplingdisabled);
+  if (!gradients.length) return objects;
+  const seeds = [];
+  for (let y = 3; y < height - 3; y += 3) {
+    for (let x = 3; x < width - 3; x += 3) {
+      const at = (y * width + x) * 4, alpha = pixels[at + 3];
+      if (alpha < 18 || alpha > 224) continue;
+      const neighbors = [-8, 8, -8 * width, 8 * width].map(offset => pixels[at + offset + 3]);
+      if (neighbors.filter(value => value > 8 && value < 244).length < 3) continue;
+      const dx = neighbors[1] - neighbors[0], dy = neighbors[3] - neighbors[2];
+      const gradient = Math.hypot(dx, dy);
+      if (gradient >= 12) seeds.push({x: x + 0.5, y: y + 0.5, at, dx: dx / gradient, dy: dy / gradient});
+    }
+  }
+  if (seeds.length < 12) return objects;
+
+  context.clearRect(0, 0, width, height);
+  previewrenderer.renderpreview(context, objects, 1, 1, spriteatlasimages, spriteatlasdimensions);
+  const base = transparentpremultiply(context.getImageData(0, 0, width, height).data);
+  const source = transparentpremultiply(pixels);
+  const rendered = base.slice();
+  const levels = Number(colourslider.value);
+  const additions = [];
+  const visited = new Set();
+  const score = (candidate, apply = false) => {
+    const bounds = candidatebounds(candidate);
+    let gain = 0;
+    for (let y = bounds.top; y < bounds.bottom; y += 1) {
+      for (let x = bounds.left; x < bounds.right; x += 1) {
+        const at = (y * width + x) * 4;
+        const remaining = 1 - base[at + 3] / 255;
+        if (remaining < 0.004) continue;
+        const texture = sampleasset(candidate, x + 0.5, y + 0.5);
+        const alpha = texture[3] / 255;
+        if (alpha < 0.004) continue;
+        const coverage = remaining * alpha;
+        const oldalpha = rendered[at + 3] - source[at + 3];
+        const newalpha = oldalpha + alpha * (255 - rendered[at + 3]);
+        gain += (Math.abs(oldalpha) - Math.abs(newalpha)) * (source[at + 3] <= 3 ? 8 : 2);
+        for (let c = 0; c < 3; c += 1) {
+          const color = c === 0 ? candidate.red : c === 1 ? candidate.green : candidate.blue;
+          const before = rendered[at + c] - source[at + c];
+          const change = coverage * color * texture[c] / 255 - alpha * (rendered[at + c] - base[at + c]);
+          const after = before + change;
+          gain += Math.abs(before) + Math.abs(before - oldalpha) - Math.abs(after) - Math.abs(after - newalpha);
+          if (apply) rendered[at + c] += change;
+        }
+        if (apply) rendered[at + 3] += newalpha - oldalpha;
+      }
+    }
+    return gain;
+  };
+  for (let attempt = 0; attempt < room * 3 && additions.length < room; attempt += 1) {
+    if (attempt % 8 === 0) {
+      await yieldfittask();
+      if (revision !== fitrevision) return null;
+    }
+    let seed = null, residual = 27;
+    for (const point of seeds) {
+      const error = source[point.at + 3] - rendered[point.at + 3];
+      if (!visited.has(point) && error > residual) {seed = point; residual = error;}
+    }
+    if (!seed) break;
+    visited.add(seed);
+    const [red, green, blue] = [0, 1, 2].map(c => quantize(pixels[seed.at + c], levels));
+    let best = null, gain = 480;
+    for (const asset of gradients) {
+      const strip = asset.id === 503 || asset.id === 1292;
+      const angle = Math.atan2(-seed.dx, seed.dy) * 180 / Math.PI;
+      for (const depth of [6, 10, 16, 24]) {
+        for (const aspect of strip ? [1.4, 2.6] : [1]) {
+          const bound = target.width / 240;
+          const candidate = {asset, red, green, blue, x: seed.x + seed.dx * depth * 0.08,
+            y: seed.y + seed.dy * depth * 0.08, width: Math.min(depth * aspect, asset.naturalwidth * bound),
+            height: Math.min(depth, asset.naturalheight * bound), angle, zlayer: 3};
+          const change = score(candidate);
+          if (change > gain) {best = candidate; gain = change;}
+        }
+      }
+    }
+    if (best) {
+      score(best, true);
+      additions.push(best);
+    }
+  }
+  return additions.length ? [...additions, ...objects] : objects;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+async function filltransparentdetails(objects, analysis, budget, revision, behind = false) {
   const {width, height} = target;
   const size = width * height;
   const context = analysis.context;
@@ -409,7 +515,11 @@ async function filltransparentdetails(objects, analysis, budget, revision) {
       weights[i] += Math.min(2.5, contrast / 32);
     }
   }
-  for (let i = 0; i < size; i += 1) errors[i] = weights[i] * transparentpixelerror(source, rendered, i * 4);
+  for (let i = 0; i < size; i += 1) {
+    const at = i * 4;
+    if (!behind || source[at + 3] >= 248 && rendered[at + 3] < 247)
+      errors[i] = weights[i] * transparentpixelerror(source, rendered, at);
+  }
   const stack = [[0, 0, width, height]];
   const yieldafter = 512;
   for (let visits = 0; stack.length; visits += 1) {
@@ -420,7 +530,7 @@ async function filltransparentdetails(objects, analysis, budget, revision) {
     const [left, top, right, bottom] = stack.pop();
     const w = right - left, h = bottom - top, area = w * h;
     const expected = [0, 0, 0, 0], actual = [0, 0, 0, 0];
-    let before = 0, totalweight = 0, minopacity = 255;
+    let before = 0, totalweight = 0, minopacity = 255, vacancy = 0;
     for (let y = top; y < bottom; y += 1) {
       for (let x = left; x < right; x += 1) {
         const i = y * width + x;
@@ -428,6 +538,8 @@ async function filltransparentdetails(objects, analysis, budget, revision) {
         before += errors[i];
         totalweight += weights[i];
         minopacity = Math.min(minopacity, source[at + 3]);
+        if (behind && !errors[i]) continue;
+        if (behind) vacancy += weights[i] * (1 - rendered[at + 3] / 255);
         for (let c = 0; c < 4; c += 1) {
           expected[c] += weights[i] * source[at + c];
           actual[c] += weights[i] * rendered[at + c];
@@ -436,22 +548,25 @@ async function filltransparentdetails(objects, analysis, budget, revision) {
     }
     if (before < 45 || !expected[3]) continue;
     let stamp = null;
-    if (minopacity >= 8) {
+    if (minopacity >= (behind ? 248 : 8)) {
       const needed = expected[3] / totalweight >= 248 ? 255
         : 255 * (expected[3] - actual[3]) / Math.max(1, totalweight * 255 - actual[3]);
       const nearby = [...opacities].reduce((best, alpha) => Math.abs(needed - alpha) < Math.abs(needed - best) ? alpha : best, 255);
       const shared = Math.max(16, Math.min(255, Math.round(needed / 16) * 16));
-      const bytes = new Set(needed >= 250 ? [255] : [shared, nearby]);
+      const bytes = new Set(behind || needed >= 250 ? [255] : [shared, nearby]);
       for (const byte of bytes) {
         if (needed < 8 || Math.abs(needed - byte) > 32) continue;
         const alpha = Math.floor(Math.fround(Math.fround(Number(exportedopacity(byte))) * 255));
-        const color = expected.slice(0, 3).map((value, c) =>
-          quantize(Math.max(0, Math.min(255, (value - actual[c] * (1 - alpha / 255)) * 255 / (totalweight * alpha))), levels));
+        const color = expected.slice(0, 3).map((value, c) => {
+          const tint = behind ? (value - actual[c]) / Math.max(1e-6, vacancy)
+            : (value - actual[c] * (1 - alpha / 255)) * 255 / (totalweight * alpha);
+          return quantize(Math.max(0, Math.min(255, tint)), levels);
+        });
         let after = 0;
         for (let y = top; y < bottom; y += 1) {
           for (let x = left; x < right; x += 1) {
             const i = y * width + x;
-            after += weights[i] * transparentpixelerror(source, rendered, i * 4, alpha, color);
+            if (!behind || errors[i]) after += weights[i] * transparentpixelerror(source, rendered, i * 4, alpha, color, behind);
           }
         }
         const gain = before - after;
@@ -469,16 +584,16 @@ async function filltransparentdetails(objects, analysis, budget, revision) {
     }
   }
   let remaining = budget - objects.length - opacities.size;
-  const result = objects.slice();
+  const result = [];
   for (const {byte, color, x, y, w, h} of additions.sort((a, b) => b.gain - a.gain)) {
     const setup = byte < 255 && !opacities.has(byte) ? 1 : 0;
     if (remaining <= setup) continue;
     if (setup) opacities.add(byte);
     remaining -= 1 + setup;
-    result.push({asset: rectangle, x, y, width: w, height: h, angle: 0, macro: true, zlayer: 7,
+    result.push({asset: rectangle, x, y, width: w, height: h, angle: 0, macro: true, zlayer: behind ? 3 : 7,
       red: color[0], green: color[1], blue: color[2], opacity: byte / 255});
   }
-  return result;
+  return behind ? [...result, ...objects] : [...objects, ...result];
 }
 
 function transparentsums(source, rendered, width, height) {
@@ -832,6 +947,18 @@ async function fittransparentregions(limit, revision) {
         best = candidate;
         bestscore = quality.score;
       }
+    }
+    const glowing = await fitglowunderlay(best, analysis, budget, revision);
+    if (!glowing || revision !== fitrevision) return false;
+    if (glowing !== best) {
+      const quality = transparentquality(glowing, analysis);
+      if (quality.score < bestscore && preservetransparentdetail(quality, reference)) best = glowing;
+    }
+    if (limit >= 350 && budget - best.length - opacitycost(best) >= 2) {
+      const covered = await filltransparentdetails(best, analysis, budget, revision, true);
+      if (!covered || revision !== fitrevision) return false;
+      if (covered.length > best.length && transparentquality(covered, analysis).score < transparentquality(best, analysis).score)
+        best = covered;
     }
     plan = best;
     regionfitactive = true;

@@ -87,14 +87,16 @@ function contourplanerror(source, rendered, width) {
 function prefercontourplan(candidate, original) {
   if (!candidate?.length) return false;
   if (!original?.length) return true;
-  const width = sourceimage.naturalWidth, height = sourceimage.naturalHeight;
+  const scale = Math.min(1, 480 / Math.max(sourceimage.naturalWidth, sourceimage.naturalHeight));
+  const width = Math.max(1, Math.round(sourceimage.naturalWidth * scale));
+  const height = Math.max(1, Math.round(sourceimage.naturalHeight * scale));
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext("2d", {willReadFrequently: true});
-  context.drawImage(sourceimage, 0, 0);
+  context.drawImage(sourceimage, 0, 0, width, height);
   const source = transparentpremultiply(context.getImageData(0, 0, width, height).data);
-  const sampling = 3;
+  const sampling = width * height > 30000 ? 2 : 3;
   canvas.width = width * sampling;
   canvas.height = height * sampling;
   const measure = objects => {

@@ -1,4 +1,4 @@
-function layerpalette(data, width) {
+function layerpalette(data, width, large) {
   const bins = new Map();
   let opaque = 0, clear = 0, translucent = 0;
   for (let offset = 0; offset < data.length; offset += 4) {
@@ -22,11 +22,12 @@ function layerpalette(data, width) {
     }
     if (flat) bin.flat += 1;
   }
-  if (!clear || opaque < 16 || translucent > opaque * 0.035) return null;
+  if (!clear || opaque < 16 || !large && translucent > opaque * 0.035) return null;
   const colors = [];
   const ranked = [...bins.values()].sort((a, b) => b.flat * 6 + b.count - a.flat * 6 - a.count);
   for (const bin of ranked) {
-    if (bin.count < Math.max(3, opaque * 0.0025) || bin.flat < opaque * 0.0005 && bin.count < opaque * 0.012) continue;
+    if (bin.count < Math.max(3, opaque * (large ? 0.0008 : 0.0025))
+      || bin.flat < opaque * 0.0005 && bin.count < opaque * 0.012) continue;
     const color = bin.sum.map(channel => Math.round(channel / bin.count));
     if (colors.some(prior => prior.reduce((sum, value, c) => sum + (value - color[c]) ** 2, 0) < 32 ** 2)) continue;
     if (bin.flat < bin.count * 0.25 && colors.some((a, index) => colors.slice(index + 1).some(b => {
@@ -35,14 +36,15 @@ function layerpalette(data, width) {
       return t > 0 && t < 1 && span.reduce((sum, v, c) => sum + (color[c] - a[c] - t * v) ** 2, 0) < 22 ** 2;
     }))) continue;
     colors.push(color);
-    if (colors.length > 12) return null;
+    if (large && colors.length === 24) break;
+    if (!large && colors.length > 12) return null;
   }
   return colors.length ? colors : null;
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-function layercomponents(data, colors, width, height) {
+function layercomponents(data, colors, width, height, large) {
   const length = width * height;
   const classes = new Uint8Array(length);
   const labels = new Int32Array(length);
@@ -58,7 +60,7 @@ function layercomponents(data, colors, width, height) {
   const cache = new Map();
   for (let i = 0; i < length; i += 1) {
     const at = i * 4;
-    if (data[at + 3] < 128) continue;
+    if (data[at + 3] < (large ? 192 : 128)) continue;
     const red = data[at], green = data[at + 1], blue = data[at + 2];
     const key = red * 65536 + green * 256 + blue;
     let label = cache.get(key);
@@ -85,7 +87,7 @@ function layercomponents(data, colors, width, height) {
   for (let i = 0; i < length; i += 1) {
     if (!classes[i] || labels[i]) continue;
     const id = groups.size + 1;
-    if (id > 320) return null;
+    if (id > (large ? 1600 : 320)) return null;
     const cells = [i];
     labels[i] = id;
     let left = width, top = height, right = 0, bottom = 0;
@@ -130,7 +132,7 @@ function joinlayergroup(front, back, groups, labels) {
   groups.delete(front.id);
 }
 
-function ordercolorlayers(segmentation, colors, width, height) {
+function ordercolorlayers(segmentation, colors, width, height, large) {
   const {groups, labels} = segmentation;
   const layers = [];
   while (groups.size) {
@@ -147,11 +149,11 @@ function ordercolorlayers(segmentation, colors, width, height) {
       }
     }
     if (!front) front = groups.values().next().value;
-    if (front.color !== back?.color && front.cells.length >= 4) {
+    if (front.color !== back?.color && front.cells.length >= (large ? 6 : 4)) {
       const loops = regioncontour(front, labels, true, width, height);
       const smooth = loops.filter(loop => Math.abs(polygonarea(loop)) >= 3).map(loop =>
         loop.map((point, i) => {
-          const radius = Math.min(5, (loop.length - 1) >> 1);
+          const radius = Math.min(large ? 2 : 5, (loop.length - 1) >> 1);
           let x = point[0] * (radius + 1), y = point[1] * (radius + 1);
           for (let k = 1; k <= radius; k += 1) {
             const before = loop[(i + loop.length - k) % loop.length], after = loop[(i + k) % loop.length];
@@ -198,22 +200,27 @@ function contourlayerobjects(layer, tolerance, scalex, scaley) {
 }
 
 function fitlayeredcontours(limit) {
-  const width = sourceimage.naturalWidth, height = sourceimage.naturalHeight;
-  if (!width || !height || Math.max(width, height) > 200 || width * height > 30000) return null;
+  const originalwidth = sourceimage.naturalWidth, originalheight = sourceimage.naturalHeight;
+  if (!originalwidth || !originalheight) return null;
+  const large = Math.max(originalwidth, originalheight) > 200 || originalwidth * originalheight > 30000;
+  if (large && limit < 350) return null;
+  const scale = Math.min(1, 480 / Math.max(originalwidth, originalheight));
+  const width = Math.max(1, Math.round(originalwidth * scale));
+  const height = Math.max(1, Math.round(originalheight * scale));
   const canvas = document.createElement("canvas");
   canvas.width = width; canvas.height = height;
   const context = canvas.getContext("2d", {willReadFrequently: true});
-  context.drawImage(sourceimage, 0, 0);
-  const colors = layerpalette(context.getImageData(0, 0, width, height).data, width);
+  context.drawImage(sourceimage, 0, 0, width, height);
+  const colors = layerpalette(context.getImageData(0, 0, width, height).data, width, large);
   if (!colors) return null;
-  const sampling = width * height <= 16000 ? 3 : 2;
+  const sampling = large ? 1 : width * height <= 16000 ? 3 : 2;
   canvas.width = width * sampling; canvas.height = height * sampling;
   context.imageSmoothingEnabled = true;
   context.drawImage(sourceimage, 0, 0, canvas.width, canvas.height);
   const segmentation = layercomponents(context.getImageData(0, 0, canvas.width, canvas.height).data,
-    colors, canvas.width, canvas.height);
+    colors, canvas.width, canvas.height, large);
   if (!segmentation) return null;
-  const layers = ordercolorlayers(segmentation, colors, canvas.width, canvas.height);
+  const layers = ordercolorlayers(segmentation, colors, canvas.width, canvas.height, large);
   if (!layers.length || layers.length > limit) return null;
   for (const layer of layers) {
     if (layer.loops.length !== 1) continue;
@@ -221,7 +228,9 @@ function fitlayeredcontours(limit) {
     const color = layer.color.map(channel => quantize(channel, Number(colourslider.value)));
     layer.ellipse = contourellipse(points, color);
   }
-  for (const tolerance of [0.22, 0.29, 0.36, 0.44, 0.53, 0.64, 0.77, 0.92, 1.12, 1.42, 1.8, 2.4]) {
+  const tolerances = large ? [0.52, 0.68, 0.85, 1, 1.25, 1.5, 1.8, 2.2, 2.8, 3.6]
+    : [0.22, 0.29, 0.36, 0.44, 0.53, 0.64, 0.77, 0.92, 1.12, 1.42, 1.8, 2.4];
+  for (const tolerance of tolerances) {
     const result = [];
     let complete = true;
     for (const layer of layers) {

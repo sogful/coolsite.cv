@@ -813,7 +813,15 @@ async function startfit() {
     } else {
       const limit = objectlimit();
       if (!await runfitsearch(limit, fittrials(), revision)) return;
-      const layers = !sourceisopaque() && fitlayeredcontours(limit - visibilitycost);
+      const layerbudget = limit - visibilitycost;
+      let layers = !sourceisopaque() && fitlayeredcontours(layerbudget);
+      if (layers && limit >= 350 && layers.length < layerbudget) {
+        const analysis = transparentsource();
+        layers = await fitglowunderlay(layers, analysis, layerbudget, revision);
+        if (!layers || revision !== fitrevision) return;
+        layers = await filltransparentdetails(layers, analysis, layerbudget, revision, true);
+        if (revision !== fitrevision) return;
+      }
       if (layers && layers.length + opacitycost(layers) + (visibilityrequired(layers) ? visibilitycost : 0) <= limit
         && prefercontourplan(layers, plan)) {
         plan = layers;
