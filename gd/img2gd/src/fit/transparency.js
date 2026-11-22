@@ -1,7 +1,7 @@
-function transparentsource() {
+function transparentsource({width, height} = target) {
   const canvas = document.createElement("canvas");
-  canvas.width = target.width;
-  canvas.height = target.height;
+  canvas.width = width;
+  canvas.height = height;
   const context = canvas.getContext("2d", {willReadFrequently: true});
   context.imageSmoothingEnabled = samplerselect.value === "average";
   context.imageSmoothingQuality = "high";
@@ -485,12 +485,13 @@ async function fitglowunderlay(objects, analysis, budget, revision) {
 /*//////////////////////////////////////////////////////////////////////*/
 
 async function filltransparentdetails(objects, analysis, budget, revision, behind = false) {
-  const {width, height} = target;
-  const size = width * height;
   const context = analysis.context;
+  const {width, height} = context.canvas;
+  const size = width * height;
+  const scalex = width / target.width, scaley = height / target.height;
   const source = transparentpremultiply(analysis.pixels);
   context.clearRect(0, 0, width, height);
-  previewrenderer.renderpreview(context, objects, 1, 1, spriteatlasimages, spriteatlasdimensions);
+  previewrenderer.renderpreview(context, objects, scalex, scaley, spriteatlasimages, spriteatlasdimensions);
   const rendered = transparentpremultiply(context.getImageData(0, 0, width, height).data);
   const rectangle = library.find(item => item.id === 495);
   const levels = Number(colourslider.value);
@@ -590,7 +591,8 @@ async function filltransparentdetails(objects, analysis, budget, revision, behin
     if (remaining <= setup) continue;
     if (setup) opacities.add(byte);
     remaining -= 1 + setup;
-    result.push({asset: rectangle, x, y, width: w, height: h, angle: 0, macro: true, zlayer: behind ? 3 : 7,
+    result.push({asset: rectangle, x: x / scalex, y: y / scaley, width: w / scalex, height: h / scaley,
+      angle: 0, macro: true, zlayer: behind ? 3 : 7,
       red: color[0], green: color[1], blue: color[2], opacity: byte / 255});
   }
   return behind ? [...result, ...objects] : [...objects, ...result];

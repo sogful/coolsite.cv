@@ -46,6 +46,7 @@
   <script src="../buttonmotion.js" defer></script>
   <script src="src/render/viewport.js" defer></script>
   <script src="src/rangevalues.js" defer></script>
+  <script src="src/fit/budget.js" defer></script>
   <script src="src/fit/session.js" defer></script>
   <script src="index.js" defer></script>
   <script src="src/tooltips.js" defer></script>
@@ -146,7 +147,7 @@
                 <option value="3" selected>3 starts</option>
                 <option value="6">6 starts</option>
               </select>
-              <small class="settingtooltip" role="tooltip" popover="manual">Try more starting points when Effort is 100.</small>
+              <small class="settingtooltip" role="tooltip" popover="manual">More starting points when Effort is maxxed out.</small>
             </div>
             <div class="fieldlabel">
               <button class="optionlabel helptrigger" type="button">Sampling</button>
@@ -154,16 +155,16 @@
                 <option value="average" selected>Area average</option>
                 <option value="nearest">Nearest pixel</option>
               </select>
-              <small class="settingtooltip" role="tooltip" popover="manual">Area average blends source pixels. Nearest pixel keeps their colors.</small>
+              <small class="settingtooltip" role="tooltip" popover="manual">Area average blends source pixels, meanwhile Nearest pixel keeps their colors.</small>
             </div>
             <div class="fieldlabel sliderlabel colourlevelsfield">
-              <button class="rangecaption helptrigger" type="button">Color levels</button>
+              <button class="rangecaption helptrigger" type="button">Colors</button>
               <div class="gdslider">
                 <input class="colourslider gdrange" type="range" min="2" max="256" value="256" step="1" data-snap="16">
                 <input class="rangevalueeditor" type="text" inputmode="numeric" value="256" autocomplete="off" spellcheck="false">
               </div>
               <span class="rangevaluemessage" role="status" hidden><cr></cr></span>
-              <small class="settingtooltip" role="tooltip" popover="manual">Lower values limit the shades the search can use.</small>
+              <small class="settingtooltip" role="tooltip" popover="manual">Limit the shades the search can use.</small>
             </div>
             <div class="fieldlabel">
               <span class="optionlabel">Color channels</span>
@@ -172,6 +173,10 @@
                 <option value="channels">Separate</option>
               </select>
             </div>
+            <label class="checklabel">
+              <input class="underbudget gdcheck" type="checkbox">
+              <span>Allow fewer objects</span>
+            </label>
           </div>
         </dialog>
       </form>

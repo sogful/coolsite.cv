@@ -2,6 +2,7 @@ let nextlivepreview = 0;
 let fitpartial = null;
 let fitbest = null;
 let fitpublishing = false;
+const underbudget = document.querySelector(".underbudget");
 
 function rememberfit(objects, complete = true) {
   if (!fitting || !objects.length) return;
@@ -54,6 +55,7 @@ function updatefields() {
   seedsearchselect.disabled = !textures || !maximumfit();
   coverageselect.disabled = !textures || !detailfit();
   samplerselect.disabled = exact;
+  underbudget.disabled = exact || legacytoggle.checked;
   croptoggle.disabled = exact || legacytoggle.checked || clearborder;
   for (const slider of [limitslider, effortslider, colourslider]) {
     slider.disabled = exact;
@@ -204,6 +206,7 @@ async function startfit() {
         rememberfit(plan);
       }
       if (!await finishcrop(revision, limit)) return;
+      if (!await spendfitbudget(limit, revision)) return;
     }
     if (revision === fitrevision) await publishfit(revision);
   } catch (error) {
