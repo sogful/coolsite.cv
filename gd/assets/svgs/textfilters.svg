@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="oxygeneupperedgefilter" x="-10%" y="-10%" width="120%" height="130%">
+      <feOffset in="SourceAlpha" dx="0" dy="8" result="offset"/>
+      <feComposite in="offset" in2="SourceAlpha" operator="out" result="edge"/>
+      <feFlood flood-color="#88cc33" result="edgeColor"/>
+      <feComposite in="edgeColor" in2="edge" operator="in"/>
+    </filter>
+    <filter id="oxygeneloweredgefilter" x="-10%" y="-10%" width="120%" height="130%">
+      <feOffset in="SourceAlpha" dx="0" dy="8" result="innerOffset"/>
+      <feOffset in="SourceAlpha" dx="0" dy="14" result="outerOffset"/>
+      <feComposite in="outerOffset" in2="innerOffset" operator="out" result="edge"/>
+      <feFlood flood-color="#66aa22" result="edgeColor"/>
+      <feComposite in="edgeColor" in2="edge" operator="in"/>
+    </filter>
+    <filter id="oxygeneblackborderfilter" x="-10%" y="-10%" width="120%" height="120%">
+      <feOffset in="SourceAlpha" dx="0" dy="14" result="extrusion"/>
+      <feComposite in="extrusion" in2="SourceAlpha" operator="over" result="silhouette"/>
+      <feGaussianBlur in="silhouette" stdDeviation="2" result="softExpansion"/>
+      <feComponentTransfer in="softExpansion" result="expanded">
+        <feFuncA type="linear" slope="12" intercept="-1.2"/>
+      </feComponentTransfer>
+      <feComposite in="expanded" in2="silhouette" operator="out" result="outerRing"/>
+      <feFlood flood-color="#000" result="borderColor"/>
+      <feComposite in="borderColor" in2="outerRing" operator="in"/>
+    </filter>
+    <filter id="oxygenelightfilter" x="-10%" y="-10%" width="120%" height="120%">
+      <feOffset in="SourceAlpha" dx="0" dy="2" result="below"/>
+      <feComposite in="SourceAlpha" in2="below" operator="out" result="topEdge"/>
+      <feOffset in="SourceAlpha" dx="2" dy="0" result="right"/>
+      <feComposite in="SourceAlpha" in2="right" operator="out" result="leftEdge"/>
+      <feComposite in="topEdge" in2="leftEdge" operator="over" result="highlightEdge"/>
+      <feFlood flood-color="#ffffaa" result="highlightColor"/>
+      <feComposite in="highlightColor" in2="highlightEdge" operator="in"/>
+    </filter>
+  <filter id="gdlogobevel" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+    <feOffset in="SourceAlpha" dy="-.061" result="raised"/>
+    <feComposite in="SourceAlpha" in2="raised" operator="out" result="bottom"/>
+    <feColorMatrix in="SourceGraphic" values=".5 0 0 0 .1333  .5 0 0 0 .4  0 0 .5 0 .0333  0 0 0 1 0" result="shade"/>
+    <feComposite in="shade" in2="bottom" operator="in" result="bevel"/>
+    <feOffset in="SourceAlpha" dy=".012" result="lowered"/>
+    <feComposite in="SourceAlpha" in2="lowered" operator="out" result="top"/>
+    <feColorMatrix in="SourceGraphic" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 .6667  3.75 0 0 0 -2"/>
+    <feComposite in2="top" operator="in" result="shine"/>
+    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="bevel"/><feMergeNode in="shine"/></feMerge>
+  </filter>
+  </defs>
+</svg>

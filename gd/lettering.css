@@ -93,13 +93,9 @@
 .gdlogoface {
   display: block; color: transparent;
   background: linear-gradient(to bottom, #ccff55 0 .486em, #88ff33 .486em);
-  background-clip: text; filter: url(#gdlogobevel);
+  background-clip: text; filter: url("assets/svgs/textfilters.svg#gdlogobevel");
 }
 
-.gdletterfilters {
-  position: absolute; pointer-events: none;
-  inline-size: 0; block-size: 0;
-}
 
 @media (forced-colors: active) {
   .gdplain,
