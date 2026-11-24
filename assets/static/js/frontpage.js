@@ -12,23 +12,27 @@
     const status = page.querySelector(".status");
     const badgepillar = page.querySelector(".badgepillar");
     const logo = page.querySelector(".cv");
+
+    /*//////////////////////////////////////////////////////////////////////*/
+
     const splashes = [
         "a MYSTERIOUS fellow..",
-        "nothing to see here",
-        "probably in the clouds",
-        "insert splash here",
-        "what a nice day",
-        "look, a website!"
+        "cv cv cv cv cv",
+        "i'm not actually a real person",
     ];
     page.querySelector(".splash").textContent = splashes[Math.floor(Math.random() * splashes.length)];
+    
     logo.classList.add("spin");
     const maskimage = new Image();
     maskimage.src = "/assets/images/bg/cloudmask.webp";
     const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
+   
     let area, circle, terrain;
     let stationary = [], solids = [];
     let bodies = [], grab = null;
     let pending = 0, previous = 0, still = 0, dirty = true;
+
+    /*//////////////////////////////////////////////////////////////////////*/
 
     function box(element) {
         const rect = element.getBoundingClientRect();

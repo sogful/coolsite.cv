@@ -86,7 +86,7 @@ html::after {bottom: 0; background-position: 74% 100%}
   position: absolute; top: calc(var(--scene-top) + var(--profile-controls-height) + 3px);
   left: var(--scene-pad); z-index: 999;
   display: grid; justify-items: center;
-  gap: 10px; box-sizing: border-box;
+  box-sizing: border-box;
   width: max-content; min-width: clamp(180px, 13.5vw, 258px);
   padding: 9px 16px 12px; border-radius: var(--panel-radius);
   background: var(--panel-bg); text-align: center;
