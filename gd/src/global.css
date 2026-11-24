@@ -1,26 +1,26 @@
 @font-face {
   font-family: oxygene;
-  src: url("cbf/assets/fonts/oxygene.woff2") format("woff2");
+  src: url("../cbf/assets/fonts/oxygene.woff2") format("woff2");
   font-display: swap;
 }
 
 @font-face {
   font-family: aller;
-  src: url("assets/fonts/aller.woff2") format("woff2");
+  src: url("../assets/fonts/aller.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }
 
 @font-face {
   font-family: aller;
-  src: url("assets/fonts/allerbold.woff2") format("woff2");
+  src: url("../assets/fonts/allerbold.woff2") format("woff2");
   font-weight: 700;
   font-display: swap;
 }
 
 @font-face {
   font-family: aller;
-  src: url("cbf/assets/fonts/alleritalic.woff2") format("woff2");
+  src: url("../cbf/assets/fonts/alleritalic.woff2") format("woff2");
   font-weight: 400;
   font-style: italic;
   font-display: swap;
@@ -28,7 +28,7 @@
 
 @font-face {
   font-family: pusab;
-  src: url("assets/fonts/pusab.woff2") format("woff2");
+  src: url("../assets/fonts/pusab.woff2") format("woff2");
   font-display: swap;
 }
 
@@ -57,7 +57,7 @@ a, p {
 }
 
 .oxygene {
-  --oxygenecorners: url("assets/svgs/textfilters.svg#oxygenecorners");
+  --oxygenecorners: url("../assets/svgs/textfilters.svg#oxygenecorners");
   position: relative;
   display: block;
   width: fit-content;
@@ -119,12 +119,12 @@ a, p {
 }
 
 .oxygeneupperedge {
-  filter: var(--oxygenecorners) url("assets/svgs/textfilters.svg#oxygeneupperedgefilter");
+  filter: var(--oxygenecorners) url("../assets/svgs/textfilters.svg#oxygeneupperedgefilter");
 }
 
 .oxygeneloweredge {
   z-index: 6;
-  filter: var(--oxygenecorners) url("assets/svgs/textfilters.svg#oxygeneloweredgefilter");
+  filter: var(--oxygenecorners) url("../assets/svgs/textfilters.svg#oxygeneloweredgefilter");
 }
 
 .oxygenewhite {
@@ -154,7 +154,7 @@ a, p {
   inset: 0;
   color: #000;
   text-shadow: none;
-  filter: var(--oxygenecorners) url("assets/svgs/textfilters.svg#oxygeneblackborderfilter");
+  filter: var(--oxygenecorners) url("../assets/svgs/textfilters.svg#oxygeneblackborderfilter");
   -webkit-text-stroke: 0;
 }
 
@@ -163,7 +163,7 @@ a, p {
   z-index: 7;
   inset: 0;
   color: #ffffaa;
-  filter: var(--oxygenecorners) url("assets/svgs/textfilters.svg#oxygenelightfilter");
+  filter: var(--oxygenecorners) url("../assets/svgs/textfilters.svg#oxygenelightfilter");
   mask-image: repeating-linear-gradient(to bottom, #000 0 0.5em, transparent 0.5em 1em);
   mask-size: 100% 1em;
   mask-repeat: repeat;

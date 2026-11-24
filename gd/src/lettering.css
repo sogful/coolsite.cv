@@ -1,6 +1,6 @@
 @font-face {
   font-family: gdoxygene;
-  src: url("assets/fonts/oxygene.woff2") format("woff2");
+  src: url("../assets/fonts/oxygene.woff2") format("woff2");
   font-display: swap;
 }
 
@@ -72,7 +72,7 @@
 /*//////////////////////////////////////////////////////////////////////*/
 
 .gdlogo {
-  --oxygenecorners: url("assets/svgs/textfilters.svg#oxygenecorners");
+  --oxygenecorners: url("../assets/svgs/textfilters.svg#oxygenecorners");
   font-family: gdoxygene, sans-serif; text-transform: uppercase;
   word-spacing: .335em; color: #ccff55;
 }
@@ -96,7 +96,7 @@
   display: block; color: transparent;
   background: linear-gradient(to bottom, #ccff55 0 .486em, #88ff33 .486em);
   background-clip: text; -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent; filter: var(--oxygenecorners) url("assets/svgs/textfilters.svg#gdlogobevel");
+  -webkit-text-fill-color: transparent; filter: var(--oxygenecorners) url("../assets/svgs/textfilters.svg#gdlogobevel");
 }
 
 

@@ -9,7 +9,7 @@
 
 .gdpane {
   color: var(--gdtext); background: transparent;
-  border: 2px solid transparent; border-image: url("assets/svgs/panel.svg") 48 fill / 17.5px;
+  border: 2px solid transparent; border-image: url("../assets/svgs/panel.svg") 48 fill / 17.5px;
 }
 
 .gdwell {

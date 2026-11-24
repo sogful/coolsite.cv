@@ -8,7 +8,7 @@
   content: ""; position: absolute;
   inset: 0; z-index: -1;
   border: 0 solid transparent; pointer-events: none;
-  border-image-source: url("assets/svgs/button.svg"); border-image-slice: 38 fill;
+  border-image-source: url("../assets/svgs/button.svg"); border-image-slice: 38 fill;
   border-image-width: var(--gdbuttonrim); border-image-repeat: stretch;
 }
 
@@ -17,21 +17,21 @@
 
 .gdcircle::before {
   border-image: none; border-radius: 50%;
-  background: url("assets/svgs/circle.svg") center / contain no-repeat;
+  background: url("../assets/svgs/circle.svg") center / contain no-repeat;
 }
 
 .gdcloseicon {
   display: block; inline-size: 100%;
   block-size: 100%; pointer-events: none;
-  background: url("assets/svgs/cross.svg") center / contain no-repeat;
+  background: url("../assets/svgs/cross.svg") center / contain no-repeat;
 }
 
-.upload-icon { background: url("assets/svgs/folder.svg") center / contain no-repeat; }
+.upload-icon { background: url("../assets/svgs/folder.svg") center / contain no-repeat; }
 
 .advanced-toggle::after {
   content: ""; flex: none;
   inline-size: 15px; block-size: 17px;
-  background: url("assets/svgs/arrow.svg") center / contain no-repeat;
+  background: url("../assets/svgs/arrow.svg") center / contain no-repeat;
   transform: rotate(180deg);
 }
 
@@ -44,17 +44,17 @@
   appearance: none; position: relative;
   inline-size: var(--gdchecksize); block-size: var(--gdchecksize);
   border: 0; border-radius: 4px;
-  background: url("assets/svgs/checkbox.svg") center / contain no-repeat;
+  background: url("../assets/svgs/checkbox.svg") center / contain no-repeat;
 }
 
 .gdcheck:checked::before {
   content: ""; position: absolute;
   inset: -5.645% -6.452%; pointer-events: none;
-  background: url("assets/svgs/checkmark.svg") center / contain no-repeat;
+  background: url("../assets/svgs/checkmark.svg") center / contain no-repeat;
 }
 
 .gdslider {
-  --gdthumbsize: 30px; --gdthumb: url("assets/svgs/thumb.svg");
+  --gdthumbsize: 30px; --gdthumb: url("../assets/svgs/thumb.svg");
   --gdthumbcenter: calc(var(--gdthumbsize) / 2 + (100% - var(--gdthumbsize)) * var(--gdfraction, 0));
   inline-size: 100%; min-inline-size: 0;
   grid-template-columns: minmax(0, 1fr); isolation: isolate;
@@ -70,12 +70,12 @@
 
 .gdslider::before {
   z-index: 1; block-size: 10px;
-  border: 0 solid transparent; border-image: url("assets/svgs/groove.svg") 16 30 fill / 3.6px 6.8px;
+  border: 0 solid transparent; border-image: url("../assets/svgs/groove.svg") 16 30 fill / 3.6px 6.8px;
 }
 
 .gdslider::after {
   block-size: 6px; border-radius: 4px;
-  background: url("assets/svgs/fill.svg") left center / 24px 100% repeat-x;
+  background: url("../assets/svgs/fill.svg") left center / 24px 100% repeat-x;
   clip-path: inset(0 calc(100% - var(--gdfillstop, var(--gdprogress))) 0 0);
 }
 
@@ -104,7 +104,7 @@
   background: var(--gdthumb) center / contain no-repeat;
 }
 
-.gdslider:has(> .gdrange:active) { --gdthumb: url("assets/svgs/thumb.svg#pressed"); }
+.gdslider:has(> .gdrange:active) { --gdthumb: url("../assets/svgs/thumb.svg#pressed"); }
 
 /*//////////////////////////////////////////////////////////////////////*/
 
@@ -117,11 +117,11 @@
   .gdbutton::before { display: none; }
 
   .gdcloseicon {
-    background: ButtonText; mask: url("assets/svgs/cross.svg") center / contain no-repeat;
+    background: ButtonText; mask: url("../assets/svgs/cross.svg") center / contain no-repeat;
   }
 
   .advanced-toggle::after {
-    background: ButtonText; mask: url("assets/svgs/arrow.svg") center / contain no-repeat;
+    background: ButtonText; mask: url("../assets/svgs/arrow.svg") center / contain no-repeat;
   }
 
   .gdcheck,
