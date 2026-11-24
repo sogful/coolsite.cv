@@ -22,7 +22,7 @@
   display: inline-flex; align-items: center;
   justify-content: center; vertical-align: middle;
   min-inline-size: 0; min-block-size: max(40px, 1.67em);
-  padding: 7px 13px; cursor: pointer;
+  padding: 7px 13px; cursor: var(--gdactioncursor);
   font: 400 var(--gdlabelsize)/1.08 pusab, sans-serif;
   color: #ffcf40; text-align: center;
   user-select: none;
@@ -59,7 +59,7 @@
 
 .gdcheck {
   flex: none; margin: 0;
-  cursor: pointer;
+  cursor: var(--gdactioncursor);
 }
 
 .gdslider {
@@ -70,7 +70,7 @@
 .gdrange {
   appearance: none; position: relative;
   margin: 0;
-  background: transparent; cursor: pointer;
+  background: transparent; cursor: var(--gdactioncursor);
 }
 
 .gdcheck:disabled,

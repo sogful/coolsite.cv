@@ -111,13 +111,13 @@ body.imgpage {
   min-block-size: max(40px, 1.67em);
   display: flex; align-items: center;
   padding: 5px 9px;
-  min-inline-size: 0; cursor: pointer;
+  min-inline-size: 0; cursor: var(--gdactioncursor);
 }
 
 .imagefile {
   position: absolute; inset: 0;
   inline-size: 100%; opacity: 0;
-  cursor: pointer; outline: none;
+  cursor: var(--gdactioncursor); outline: none;
 }
 
 .controlerror {

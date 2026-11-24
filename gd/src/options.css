@@ -25,7 +25,7 @@
   inline-size: 36px; min-block-size: 42px;
   border: 0; border-radius: 20px;
   padding: 3px; background: none;
-  cursor: pointer;
+  cursor: var(--gdactioncursor);
 }
 
 .optionarrow::after {
