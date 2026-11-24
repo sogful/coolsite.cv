@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Have I been CBFed?</title>
+  <link rel="icon" type="image/png" href="../assets/images/favicons/cbf.png">
+  <link rel="preload" as="font" type="font/woff2" href="../assets/fonts/oxygene.woff2" crossorigin>
+  <link rel="stylesheet" href="../src/global.css">
+  <link rel="stylesheet" href="../src/theme.css">
+  <link rel="stylesheet" href="../src/controls.css">
+  <link rel="stylesheet" href="../src/lettering.css">
+  <link rel="stylesheet" href="cbf.css">
+  <script src="../src/global.js" defer></script>
+  <script src="../src/lettering.js" defer></script>
+  <script src="../src/buttonmotion.js" defer></script>
+  <script src="cbf.js" defer></script>
+</head>
+<body class="gdtheme cbfpage">
+  <main class="cbfcontent">
+    <header class="cbfbox">
+      <h1 class="cbfmark">
+        <oxygene class="gdlogo">Have I been</oxygene>
+        <oxygene class="gdlogo">CBFed?</oxygene>
+      </h1>
+      <p class="cbfintro">This checks Geometry Dash infostealer records to see if any of your details were leaked, because Geometry Dash is more important than all of your other accounts! <img class="cbfsmiley" src="../assets/images/smiley.png" alt="" width="128" height="64"></p>
+    </header>
+
+    <section class="gdpane exposurepanel">
+      <div class="lookupchoices hasphone">
+        <button class="gdbutton lookupchoice" type="button" data-field="username" aria-pressed="false"><gold>Username</gold></button>
+        <button class="gdbutton lookupchoice" type="button" data-field="email" aria-pressed="false"><gold>Email</gold></button>
+        <button class="gdbutton lookupchoice" type="button" data-field="password" aria-pressed="true"><gold>Password</gold></button>
+        <button class="gdbutton lookupchoice" type="button" data-field="phone" aria-pressed="false"><gold>Phone</gold></button>
+      </div>
+
+      <form class="passwordform" autocomplete="off">
+        <div class="passwordrow">
+          <label class="passwordfield">
+            <span class="screenreadertext">Password to check</span>
+            <input class="gdinput passwordinput" type="password" placeholder="Password" autocomplete="off" maxlength="512" required>
+          </label>
+          <button class="gdbutton gdcircle passwordsubmit" type="submit"><img src="../assets/images/check.png" alt="Check password" width="72" height="72"></button>
+        </div>
+        <p class="lookupresult" role="status"></p>
+      </form>
+    </section>
+    <footer class="cbfstats" hidden>
+      <p class="cbfstat" data-field="username"><pusab class="cbfstatnumber"></pusab><pusab class="cbfstatlabel">usernames</pusab></p>
+      <p class="cbfstat" data-field="email"><pusab class="cbfstatnumber"></pusab><pusab class="cbfstatlabel">emails</pusab></p>
+      <p class="cbfstat" data-field="password"><pusab class="cbfstatnumber"></pusab><pusab class="cbfstatlabel">passwords</pusab></p>
+      <p class="cbfstat" data-field="phone"><pusab class="cbfstatnumber"></pusab><pusab class="cbfstatlabel">phone numbers</pusab></p>
+    </footer>
+  </main>
+</body>
+</html>

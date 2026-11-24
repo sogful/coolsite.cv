@@ -1,0 +1,137 @@
+.cbfpage {
+  min-height: 100vh; margin: 0;
+  display: grid; justify-items: center;
+  font: 400 var(--gdreadsize)/1.35 aller, sans-serif;
+}
+
+.cbfcontent {
+  display: flex; flex-direction: column;
+  box-sizing: border-box; min-height: 100vh; min-height: 100dvh;
+  width: min(38rem, calc(100% - 2rem));
+  padding-block: clamp(1.75rem, 10vh, 5rem) max(.75rem, env(safe-area-inset-bottom));
+}
+
+.cbfbox {
+  text-align: center;
+  margin-bottom: clamp(1rem, 5vw, 2rem);
+}
+
+.cbfmark {
+  display: grid; justify-items: center;
+  gap: .09em; margin: 0;
+  font-size: clamp(1.7rem, 8.2vw, 3.75rem); font-weight: 400;
+}
+
+.cbfintro { margin: 1.2rem auto 0; }
+
+.cbfsmiley {
+  width: 2em; height: 1em;
+  vertical-align: -.14em;
+}
+
+.exposurepanel {
+  display: grid; gap: .85rem;
+  padding: clamp(.65rem, 3vw, 1.2rem);
+}
+
+.lookupchoices {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .25rem;
+}
+
+.lookupchoices.hasphone { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.lookupchoice[hidden] { display: none; }
+
+.cbfpage .lookupchoice {
+  font-size: clamp(1.1rem, 3.7vw, 1.55rem);
+  min-height: 42px; padding: 5px 8px;
+}
+
+.passwordform {
+  display: grid; justify-items: center;
+  gap: .65rem;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.passwordrow {
+  --cbfcontrolheight: clamp(44px, 10vw, 54px); --cbfinputpad: calc(var(--cbfcontrolheight) * .32);
+  display: flex; width: 100%; gap: .4rem;
+}
+
+.passwordfield {
+  position: relative; flex: 1;
+  min-width: 0; display: block;
+  font: 400 clamp(1.28rem, 4.6vw, 1.625rem)/1.15 pusab, Arial, sans-serif;
+}
+
+.passwordinput {
+  box-sizing: border-box; width: 100%;
+  height: 100%; padding-inline: var(--cbfinputpad);
+  border-radius: calc(var(--cbfcontrolheight) / 2); color: #fff;
+  caret-color: #fff; outline: none;
+}
+
+.passwordinput,
+.passwordinput::placeholder {
+  -webkit-text-stroke: .085em #000; paint-order: stroke fill;
+  text-shadow: .045em .065em 0 #000;
+}
+
+.passwordinput::placeholder {
+  font-family: pusab, Arial, sans-serif;
+  color: #fff; opacity: .5;
+}
+
+.passwordinput[type="password"] { font-family: Arial, sans-serif; }
+
+.passwordinput:focus-visible { outline: none; }
+
+.cbfpage .passwordsubmit {
+  padding: .45rem;
+  inline-size: var(--cbfcontrolheight); block-size: var(--cbfcontrolheight);
+}
+
+.passwordsubmit img {
+  display: block; width: calc(clamp(27px, 7vw, 36px) * .75);
+  height: auto; pointer-events: none;
+}
+
+.lookupresult {
+  margin: 0; white-space: pre-line;
+  text-align: center;
+}
+.lookupresult:empty {min-height: 0; margin-top: -.65rem}
+.lookupresult.isunsafe {color: #ff5a5a}
+.lookupresult.isclear {color: #40e348}
+
+.screenreadertext {
+  position: absolute; width: 1px; height: 1px;
+  overflow: hidden; clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.cbfstats {
+  margin-top: auto; padding-top: clamp(1.4rem, 5vw, 2.4rem);
+  text-align: center;
+}
+
+.cbfstats:not([hidden]) {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.1rem .45rem;
+}
+
+.cbfstat:not([hidden]) {
+  display: grid; align-content: start; justify-items: center;
+  gap: .22rem; margin: 0;
+}
+
+.cbfstatnumber { font-size: clamp(1.65rem, 5.35vw, 2.2rem); }
+.cbfstatlabel { font-size: clamp(1.05rem, 2.8vw, 1.2rem); }
+
+@media (max-width: 36rem) {
+  .cbfstats:not([hidden]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lookupchoices.hasphone { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

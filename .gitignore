@@ -6,10 +6,10 @@ __pycache__/
 /tools/desktopdestroyer/data
 /tools/iwbtg/build/
 /tools/iwbtg/.compatibility.csv
+/gd/cbf/data
 
 /ucg/game/index.pck
 
 # unfinished:
 /blog/
 /gd/audio2sfx/
-/gd/cbf

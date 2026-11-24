@@ -1,0 +1,92 @@
+.cbfbox {
+  --logo-width: min(924px, 90vw);
+  inline-size: var(--logo-width); block-size: calc(var(--logo-width) * 7 / 22);
+  margin: 0 auto 12px; overflow: clip;
+}
+
+.cbfmark {
+  position: relative; inset-block-start: 0.00638em;
+  inline-size: var(--logo-width); margin: 0;
+  font: normal calc(var(--logo-width) * 0.169642857) / 0.92504em oxygene, sans-serif;
+  letter-spacing: -0.0085em; word-spacing: -0.03362em;
+  font-kerning: none;
+  text-align: center; text-transform: uppercase;
+  --split: 0.44019em; --inner: 0.04em;
+  filter: drop-shadow(0.05742em 0.0319em 0 #0000004d);
+}
+
+.cbfline {
+  display: block; position: relative;
+  isolation: isolate; white-space: pre;
+  inset-inline-start: 0.00638em;
+}
+
+.cbfline + .cbfline {
+  inset-inline-start: -0.00383em; letter-spacing: -0.00563em;
+}
+
+.cbfmark .letterface {
+  display: block; position: relative;
+  color: transparent; user-select: text;
+  background: linear-gradient(to bottom, #ccff55 0 var(--split), #88ff33 var(--split));
+  background-clip: text; -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.cbfmark .letterface::selection { color: #132614; background: #caff68; }
+
+.cbfcrisp .letterface { filter: url(#cbfalphasnap); }
+
+.cbfline::before,
+.cbfline::after,
+.cbfmark .letterface::before,
+.cbfmark .letterface::after,
+.cbfshine::after {
+  content: attr(data-text) / "";
+  position: absolute; inset: 0;
+  white-space: inherit; pointer-events: none;
+  user-select: none;
+}
+
+.cbfline::before,
+.cbfline::after {
+  color: #000; text-shadow: var(--outline);
+}
+
+.cbfline::before { z-index: -2; filter: url(#cbfrim); }
+.cbfline::after { z-index: -1; }
+
+.cbfmark .letterface::before {
+  color: #fff; filter: url(#cbfshadeupper);
+  mask-image: linear-gradient(to bottom, #000 0 var(--split), transparent var(--split));
+}
+
+.cbfmark .letterface::after {
+  color: #fff; filter: url(#cbfshadelower);
+  mask-image: linear-gradient(to bottom, transparent 0 var(--split), #000 var(--split));
+}
+
+.cbfshine {
+  position: absolute; inset: 0;
+  pointer-events: none;
+}
+
+.cbfshine::after {
+  color: #fff; filter: url(#cbfhighlight);
+  mask-image: linear-gradient(to bottom, #000 0 var(--split), transparent var(--split));
+}
+
+.cbffilters { position: absolute; inline-size: 0; block-size: 0; }
+
+@media (forced-colors: active) {
+  .cbfmark .letterface {
+    background: none; color: CanvasText; -webkit-text-fill-color: CanvasText;
+    filter: none;
+  }
+  .cbfline::before,
+  .cbfline::after,
+  .cbfmark .letterface::before,
+  .cbfmark .letterface::after,
+  .cbfshine { display: none; }
+  .cbfmark { filter: none; }
+}
