@@ -81,12 +81,18 @@ function sampleasset(candidate, x, y) {
   return sampledtexture;
 }
 
+let fitsamples = new Float64Array();
+
 function fitcandidate(candidate, step) {
   if (batchfitteractive) return batchfitter.fit(candidate, step);
   if (candidate.asset.samplingdisabled) return Number.NEGATIVE_INFINITY;
   const bounds = candidatebounds(candidate);
   const numerator = [0, 0, 0];
   const denominator = [0, 0, 0];
+  const columns = Math.max(0, Math.ceil((bounds.right - bounds.left) / step));
+  const rows = Math.max(0, Math.ceil((bounds.bottom - bounds.top) / step));
+  const size = columns * rows * 5;
+  if (fitsamples.length < size) fitsamples = new Float64Array(Math.max(size, fitsamples.length * 2));
   let count = 0;
   for (let y = bounds.top; y < bounds.bottom; y += step) {
     for (let x = bounds.left; x < bounds.right; x += step) {
@@ -94,7 +100,11 @@ function fitcandidate(candidate, step) {
       const alpha = texture[3] / 255;
       if (alpha < 0.005) continue;
       const offset = (y * target.width + x) * 3;
+      const sample = count * 5;
+      fitsamples[sample] = offset;
+      fitsamples[sample + 4] = alpha;
       for (let channel = 0; channel < 3; channel += 1) {
+        fitsamples[sample + 1 + channel] = texture[channel];
         const coefficient = texture[channel] * alpha / 255;
         const residual = targetpixels[offset + channel] - fittedpixels[offset + channel] * (1 - alpha);
         numerator[channel] += coefficient * residual;
@@ -116,20 +126,15 @@ function fitcandidate(candidate, step) {
   }
   const tint = [candidate.red, candidate.green, candidate.blue];
   let benefit = 0;
-  for (let y = bounds.top; y < bounds.bottom; y += step) {
-    for (let x = bounds.left; x < bounds.right; x += step) {
-      const texture = sampleasset(candidate, x + 0.5, y + 0.5);
-      const alpha = texture[3] / 255;
-      if (alpha < 0.005) continue;
-      const offset = (y * target.width + x) * 3;
-      for (let channel = 0; channel < 3; channel += 1) {
-        const before = fittedpixels[offset + channel];
-        const channelTint = candidate.asset.fixedonly ? 255 : tint[channel];
-        const after = before * (1 - alpha) + texture[channel] * alpha * channelTint / 255;
-        const olddifference = targetpixels[offset + channel] - before;
-        const newdifference = targetpixels[offset + channel] - after;
-        benefit += olddifference * olddifference - newdifference * newdifference;
-      }
+  for (let sample = 0; sample < count * 5; sample += 5) {
+    const offset = fitsamples[sample], alpha = fitsamples[sample + 4];
+    for (let channel = 0; channel < 3; channel += 1) {
+      const before = fittedpixels[offset + channel];
+      const channeltint = candidate.asset.fixedonly ? 255 : tint[channel];
+      const after = before * (1 - alpha) + fitsamples[sample + 1 + channel] * alpha * channeltint / 255;
+      const olddifference = targetpixels[offset + channel] - before;
+      const newdifference = targetpixels[offset + channel] - after;
+      benefit += olddifference * olddifference - newdifference * newdifference;
     }
   }
   return benefit * step * step;

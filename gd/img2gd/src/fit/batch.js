@@ -182,19 +182,34 @@ function createbatchfitter(prepare = preparecoveragetarget) {
 
   /*//////////////////////////////////////////////////////////////////////*/
 
+  let scoresamples = new Float64Array();
+  const scoresums = Array.from({length: 3}, () => new Float64Array(5));
+
+  function preparescore(bounds, step, stride) {
+    const columns = Math.max(0, Math.ceil((bounds.right - bounds.left) / step));
+    const rows = Math.max(0, Math.ceil((bounds.bottom - bounds.top) / step));
+    const size = columns * rows * samplecount * stride;
+    if (scoresamples.length < size) scoresamples = new Float64Array(Math.max(size, scoresamples.length * 2));
+    for (const sum of scoresums) sum.fill(0);
+    return scoresums;
+  }
+
   function scorecandidate(candidate, step, separate = false) {
     if (samplecount > 1) return scorecoverage(candidate, step, separate);
     if (candidate.asset.samplingdisabled) return Number.NEGATIVE_INFINITY;
     const bounds = candidatebounds(candidate);
     if (Math.abs(candidate.matrixdeterminant) < 1e-8) return Number.NEGATIVE_INFINITY;
     const groups = meshes(candidate.asset);
-    const sums = Array.from({length: 3}, () => new Float64Array(5));
-    const samples = [];
+    const stride = 10;
+    const sums = preparescore(bounds, step, stride);
+    let end = 0;
     for (let y = bounds.top; y < bounds.bottom; y += step) {
       for (let x = bounds.left; x < bounds.right; x += step) {
         const offset = (y * target.width + x) * 3;
         subcoefficients(candidate, groups, x, y, 0);
-        samples.push({offset, basis: new Float64Array(basis)});
+        scoresamples[end] = offset;
+        scoresamples.set(basis, end + 1);
+        end += stride;
         for (let channel = 0; channel < 3; channel += 1) {
           const baseweight = basis[3 + channel];
           const detailweight = basis[6 + channel];
@@ -230,11 +245,12 @@ function createbatchfitter(prepare = preparecoveragetarget) {
       candidate.detailRGB = detail;
     }
     let benefit = 0;
-    for (const {offset, basis} of samples) {
+    for (let sample = 0; sample < end; sample += stride) {
+      const offset = scoresamples[sample], at = sample + 1;
       for (let channel = 0; channel < 3; channel += 1) {
         const before = fittedpixels[offset + channel];
-        const after = Math.max(0, Math.min(255, basis[channel] + basis[3 + channel] * base[channel]
-          + basis[6 + channel] * detail[channel]));
+        const after = Math.max(0, Math.min(255, scoresamples[at + channel] + scoresamples[at + 3 + channel] * base[channel]
+          + scoresamples[at + 6 + channel] * detail[channel]));
         const olddifference = targetpixels[offset + channel] - before;
         const difference = targetpixels[offset + channel] - after;
         benefit += olddifference * olddifference - difference * difference;
@@ -250,15 +266,19 @@ function createbatchfitter(prepare = preparecoveragetarget) {
     const bounds = candidatebounds(candidate);
     if (Math.abs(candidate.matrixdeterminant) < 1e-8) return Number.NEGATIVE_INFINITY;
     const groups = meshes(candidate.asset);
-    const sums = Array.from({length:3}, () => new Float64Array(5));
-    const samples = [];
+    const stride = 13;
+    const sums = preparescore(bounds, step, stride);
+    let end = 0;
     for (let y = bounds.top; y < bounds.bottom; y += step) {
       for (let x = bounds.left; x < bounds.right; x += step) {
         const index = y * target.width + x;
         for (let sampleindex = 0; sampleindex < samplecount; sampleindex += 1) {
           const offset = (index * samplecount + sampleindex) * 3;
           subcoefficients(candidate, groups, x, y, sampleindex);
-          samples.push({offset, basis:new Float64Array(basis), before:new Float64Array(prior)});
+          scoresamples[end] = offset;
+          scoresamples.set(basis, end + 1);
+          scoresamples.set(prior, end + 10);
+          end += stride;
           for (let channel = 0; channel < 3; channel += 1) {
             const baseweight = basis[3 + channel];
             const detailweight = basis[6 + channel];
@@ -295,11 +315,12 @@ function createbatchfitter(prepare = preparecoveragetarget) {
       candidate.detailRGB = detail;
     }
     let benefit = 0;
-    for (const {offset, basis, before} of samples) {
+    for (let sample = 0; sample < end; sample += stride) {
+      const offset = scoresamples[sample], at = sample + 1;
       for (let channel = 0; channel < 3; channel += 1) {
-        const after = Math.max(0, Math.min(255, basis[channel] + basis[3 + channel] * base[channel]
-          + basis[6 + channel] * detail[channel]));
-        const olddifference = targetsubpixels[offset + channel] - before[channel];
+        const after = Math.max(0, Math.min(255, scoresamples[at + channel] + scoresamples[at + 3 + channel] * base[channel]
+          + scoresamples[at + 6 + channel] * detail[channel]));
+        const olddifference = targetsubpixels[offset + channel] - scoresamples[at + 9 + channel];
         const difference = targetsubpixels[offset + channel] - after;
         benefit += olddifference * olddifference - difference * difference;
       }
