@@ -18,9 +18,9 @@ const GRID = 24, FIT = 22, DIM = GRID * GRID;
 
 const FONTS = [
     {fam: "GoNotoScribble", url: "/assets/fonts/gonoto.woff2"},
-    {fam: "Symbols2Scribble", url: "/assets/fonts/symbols2.woff2"},
-    {fam: "MathScribble", url: "/assets/fonts/math.woff2"},
-    {fam: "MusicScribble", url: "/assets/fonts/music.woff2"},
+    {fam: "Symbols2Scribble", url: "/assets/fonts/symbols/symbols2.woff2"},
+    {fam: "MathScribble", url: "/assets/fonts/symbols/math.woff2"},
+    {fam: "MusicScribble", url: "/assets/fonts/symbols/music.woff2"},
     {fam: "UnifontScribble", url: "/assets/fonts/unifont.woff2"},
     {fam: "UnifontUpperScribble", url: "/assets/fonts/unifontupper.woff2"},
 ];
