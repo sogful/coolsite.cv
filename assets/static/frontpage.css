@@ -1,0 +1,221 @@
+@font-face {
+  font-family: "chirp"; font-weight: 400;
+  src: url("../fonts/chirp.woff") format("woff"); font-display: swap;
+}
+
+@font-face {
+  font-family: "chirp"; font-weight: 700;
+  src: url("../fonts/chirpbold.woff2") format("woff2"); font-display: swap;
+}
+
+html {
+  background: #030303; overflow: hidden;
+}
+
+html::before {
+  content: ""; position: fixed;
+  inset: -16%; pointer-events: none;
+  background: url("../images/bg/clouds.avif") 60% 55% / 100% 160% no-repeat;
+  filter: grayscale(1) contrast(1.35) blur(12px);
+  transform: skewX(-16deg) scaleY(1.2); opacity: .09;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+}
+
+.frontpage {
+  --edge: 9%;
+  --scene-pad: clamp(14px, 4vw, 64px);
+  --scene-top: 12%;
+  --scene-bottom: calc(var(--edge) + clamp(11px, 1vw, 19px));
+  --panel-bg: #17131e45;
+  --panel-radius: clamp(12px, 1vw, 19px);
+  --profile-logo: clamp(56px, 8.8vh, 84px);
+  --profile-controls-height: clamp(27px, 1.75vw, 34px);
+  --ring: clamp(130px, 14vw, 194px);
+  --ring-stroke: clamp(4px, .36vw, 7px);
+  --gamesize: clamp(28px, 2vw, 37px);
+  --badge-width: min(460px, 46vw);
+  --badge-columns: 4;
+  --doodle-width: clamp(27px, 2.2vw, 42px);
+  --doodle-cap: clamp(12px, 1vw, 19px);
+  position: absolute; top: 50%;
+  width: 100%; height: clamp(50vh, 46.154vw, 100vh);
+  height: clamp(50svh, 46.154vw, 100svh);
+  transform: translateY(-50%); isolation: isolate;
+  overflow: hidden; margin: 0;
+  background: #a9a3b4 url("../images/bg/clouds.avif") center / cover no-repeat;
+  -webkit-mask: url("../images/bg/cloudmask.webp") center / auto 100% repeat-x;
+  mask: url("../images/bg/cloudmask.webp") center / auto 100% repeat-x;
+  color: #eee; font: 700 clamp(13px, 1vw, 18px)/1.25 "chirp", sans-serif;
+}
+
+.frontpage .profilecontrols {
+  display: flex; align-items: center; gap: 4px;
+  position: absolute; bottom: calc(100% + 3px);
+  left: clamp(8px, .75vw, 12px); height: var(--profile-controls-height);
+}
+
+.frontpage .profilecontrols .soggytraybtn {
+  position: static; border-radius: 8px;
+  width: clamp(19px, 1.4vw, 26px); height: auto;
+  padding: 4px; background: var(--panel-bg);
+}
+
+.frontpage .soggyoverlay {
+  inset: 0; width: 100%; height: 100%;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.frontpage .main {
+  position: absolute; top: calc(var(--scene-top) + var(--profile-controls-height) + 3px);
+  left: var(--scene-pad); z-index: 999;
+  display: grid; justify-items: center;
+  gap: 10px; box-sizing: border-box;
+  width: max-content; min-width: clamp(180px, 13.5vw, 258px);
+  padding: 9px 16px 12px; border-radius: var(--panel-radius);
+  background: var(--panel-bg); text-align: center;
+}
+
+.frontpage .main > span {
+  font-size: clamp(15px, 1.15vw, 21px);
+  white-space: nowrap;
+}
+
+.frontpage .status::before,
+.frontpage .status::after,
+.frontpage .badgepillar {
+  position: absolute; width: var(--doodle-width);
+  border: 0 solid transparent;
+  border-image: url("../images/bg/doodlestem.webp") 16 0 0 0 fill / var(--doodle-cap) 0 0 0 stretch;
+  pointer-events: none; image-rendering: pixelated;
+}
+
+.frontpage .status::before,
+.frontpage .status::after {
+  content: "";
+  top: calc(100% - 1px); left: 14%; height: 92vh;
+  --post-gap-start: var(--left-gap-start, 0px);
+  --post-gap-end: var(--left-gap-end, 0px);
+  mask-image: linear-gradient(to bottom, #000 var(--post-gap-start),
+    transparent var(--post-gap-start) var(--post-gap-end), #000 var(--post-gap-end));
+}
+
+.frontpage .status::after {
+  left: min(86%, calc(100% - var(--doodle-width)));
+  --post-gap-start: var(--right-gap-start, 0px);
+  --post-gap-end: var(--right-gap-end, 0px);
+}
+
+.frontpage .badgepillar {
+  right: calc(var(--scene-pad) + var(--badge-width) * .77); bottom: 0;
+  height: var(--scene-bottom); z-index: 997;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.otherstuff {
+  position: absolute; inset: 0;
+  z-index: 1001; pointer-events: none;
+}
+
+.iconring {
+  position: absolute; left: var(--scene-pad); bottom: var(--scene-bottom);
+  width: var(--ring); aspect-ratio: 1;
+  box-sizing: border-box; border: var(--ring-stroke) solid transparent;
+  border-radius: 50%; background: var(--panel-bg);
+  background-clip: padding-box;
+}
+
+.iconring::before {
+  content: ""; position: absolute;
+  inset: calc(-1 * var(--ring-stroke));
+  background: url("../images/bg/doodlering.webp") center / 100% 100% no-repeat;
+  image-rendering: pixelated;
+}
+
+.iconstand {
+  position: absolute; bottom: 0;
+  left: var(--scene-pad); width: var(--ring);
+  height: calc(var(--scene-bottom) + var(--ring) * .039 + 5px);
+  pointer-events: none;
+}
+
+.iconstand .doodlepost {
+  position: absolute; top: 0; left: calc(69.13% - 2px);
+  width: var(--doodle-width); height: calc(100% * 1.083 + 2px);
+  transform-origin: top center; transform: translateX(-50%) rotate(-22.5deg);
+  image-rendering: pixelated;
+}
+
+.iconstand .doodlepost:first-child {
+  left: calc(30.87% + 2px); transform: translateX(-50%) rotate(22.5deg);
+}
+
+.gameicons {
+  position: absolute;
+  left: calc(var(--scene-pad) + var(--ring) / 2 - var(--gamesize) - 5px);
+  bottom: calc(var(--scene-bottom) + var(--ring) / 2 - var(--gamesize) - 5px);
+  display: grid; grid-template-columns: repeat(2, var(--gamesize));
+  gap: 10px; white-space: normal;
+}
+
+.gameicons.islive {inset: 0; display: block}
+
+.gameicons a {
+  display: block; pointer-events: auto;
+  width: var(--gamesize); height: var(--gamesize);
+  cursor: grab; touch-action: none;
+  -webkit-user-drag: none;
+}
+
+.gameicons.islive a {
+  position: absolute; top: 0; left: 0;
+}
+
+.gameicons a:active {cursor: grabbing}
+
+.gameicons img {
+  display: block; width: 100%; height: 100%;
+  pointer-events: none;
+}
+
+@media (max-width: 540px) {
+  .frontpage {
+    --scene-top: 10%; --profile-logo: 42px;
+    --ring: clamp(99px, 27vw, 116px); --gamesize: 24px;
+    --badge-width: 46vw; --doodle-width: 23px;
+  }
+
+  .frontpage .main {
+    min-width: min(44vw, 166px);
+    gap: 6px; padding: 4px 7px 7px;
+  }
+
+  .frontpage .main > span {font-size: clamp(12px, 3.35vw, 15px)}
+  .frontpage .status {padding: 7px 8px}
+  .frontpage .status .s1 {font-size: clamp(13px, 3.55vw, 16px)}
+
+  .frontpage .bottom {
+    max-height: 32%; overflow: hidden auto;
+    scrollbar-width: thin;
+  }
+}
+
+@media (max-width: 700px) {
+  .frontpage {--badge-columns: 3}
+}
+
+@media (max-width: 455px) and (min-height: 641px) {
+  .frontpage {--badge-columns: 2}
+}
+
+@media (min-width: 541px) and (max-height: 480px) {
+  .frontpage {
+    --ring: 96px; --gamesize: 22px;
+    --profile-logo: 36px;
+  }
+
+  .frontpage .main {
+    gap: 4px; padding: 6px 8px 8px;
+  }
+}

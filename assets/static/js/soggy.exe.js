@@ -52,7 +52,6 @@
 		    display: flex; padding: 6px;
 		    z-index: 999; border-radius: 0 0 16px 0;
 		    background: rgba(0,0,0,0.1);
-		    backdrop-filter: grayscale(100%) blur(10px);
 		    left: 0; top: 0;
 		}
 
@@ -64,7 +63,7 @@
 		    z-index: 2147483648;
 		    padding: 0.25em 0; min-width: 190px;
 		    font-family: Helvetica !important;
-		    font-size: 1.5em;
+		    font-size: 12px;
 		}
 
 		.soggymenunote {
@@ -258,29 +257,25 @@
         }
 
         applyscale(force) {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
+            const w = this.el.clientWidth;
+            const h = this.el.clientHeight;
+            if (!w || !h) return;
+            const resizefactor = this.floory ? h / this.floory : 1;
             if (this.canvas.width !== w || this.canvas.height !== h || force) {
                 this.canvas.width = w;
                 this.canvas.height = h;
-                this.floory = h;
             }
+            this.floory = h;
             if (!this.sogs) return;
-            if (!this.isrunning) { // fix sogs appearing when changing window size
-                this.update();
-                return;
-            }
             for (let s of this.sogs) {
-                let floor = this.floory;
-                let oldbottom = s.posy + s.sizeh;
-                let olddistanceabove = floor - oldbottom;
-
+                const clearance = Math.max(0, s.basey - s.posy);
+                s.basesizew *= resizefactor;
+                s.basesizeh *= resizefactor;
                 s.sizew = s.basesizew * this.scale;
                 s.sizeh = s.basesizeh * this.scale;
-                s.basey = floor - s.sizeh;
-                let newbottom = floor - olddistanceabove;
-                let newy = newbottom - s.sizeh; s.posy = newy;
-                s.cachedcanvas = null; s.cachedwidth = null;
+                s.basey = h - s.sizeh;
+                s.posy = s.basey - clearance;
+                s.posx = Math.max(0, Math.min(s.posx, w - s.sizew));
             }
             this.update();
         }
@@ -324,8 +319,11 @@
             this.traybtn = document.createElement('img');
             this.traybtn.src = this.logopixmap.src;
             this.traybtn.className = "soggytraybtn";
-            this.traybtn.title = "soggy overlay";
-            document.body.appendChild(this.traybtn);
+            this.traybtn.title = "soggy.exe";
+            this.traybtn.alt = "soggy.exe";
+            this.traybtn.draggable = false;
+            const controls = document.querySelector(".frontpage .profilecontrols") || document.body;
+            controls.prepend(this.traybtn);
             this.traybtn.addEventListener('click', evt => {
                 evt.preventDefault();
                 if (this.runontrayclick && !this.isrunning) {
@@ -342,8 +340,9 @@
             }
             const menu = document.createElement('div');
             menu.className = "soggymenu";
-            menu.style.left = x + "px";
-            menu.style.top = y + "px";
+            const page = document.querySelector(".frontpage")?.getBoundingClientRect();
+            menu.style.left = (x - (page?.left || 0)) + "px";
+            menu.style.top = (y - (page?.top || 0)) + "px";
 
             let note = document.createElement('div');
             note.innerText = "evil sogs..................";
@@ -424,11 +423,12 @@
             }
         }
         beginrun() {
+            this.applyscale();
             this.isrunning = true;
             this.startintro();
         }
         afterloading() {
-            const w = window.innerWidth; const h = window.innerHeight;
+            const w = this.el.clientWidth; const h = this.el.clientHeight;
             this.canvas.width = w; this.canvas.height = h;
             this.floory = h;
             this.inittimestamp = performance.now() / 1000;
