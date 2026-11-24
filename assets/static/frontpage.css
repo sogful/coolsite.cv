@@ -56,6 +56,14 @@ html::after {bottom: 0; background-position: 74% 100%}
   color: #eee; font: 700 clamp(13px, 1vw, 18px)/1.25 "chirp", sans-serif;
 }
 
+.frontpage .badgetint {
+  position: absolute; inset: -90px;
+  z-index: -1; pointer-events: none;
+  background-position: center; background-size: 100% 100%;
+  filter: blur(78px) saturate(1.35); mix-blend-mode: soft-light;
+  opacity: 0;
+}
+
 .frontpage .profilecontrols {
   display: flex; align-items: center; gap: 4px;
   position: absolute; bottom: calc(100% + 3px);
@@ -167,6 +175,7 @@ html::after {bottom: 0; background-position: 74% 100%}
   gap: 10px; white-space: normal;
 }
 
+.gameicons:not(.islive) {visibility: hidden}
 .gameicons.islive {inset: 0; display: block}
 
 .gameicons a {

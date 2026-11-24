@@ -17,6 +17,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/assets/static/frontpage.css">
     <script src="/assets/static/js/frontpage.js" defer></script>
+    <script src="/assets/static/js/buttonmusic.js" defer></script>
     <style>
         * {
             user-select: none;
@@ -193,32 +194,30 @@
             border-radius: 4px; margin-bottom: 4px; z-index: 9999;
         }
 
+        .logoslot {
+            display: grid; place-items: center;
+            width: calc(var(--profile-logo) * 3 / 2); height: var(--profile-logo);
+        }
+
         .cv {
-            image-rendering: pixelated; height: var(--profile-logo);
+            image-rendering: pixelated; height: calc(var(--profile-logo) * .72);
             cursor: pointer;
         }
         .cv.spin {animation: spin 3s linear infinite}
 
-        .cvtuah {
-            image-rendering: pixelated;
-            height: var(--profile-logo); opacity: 1;
-            animation: spinno 3s linear infinite;
-            display: none; position: fixed; z-index: 999
+        .cv.isbouncing {
+            position: absolute; z-index: 1002;
+            pointer-events: none;
         }
 
         @keyframes spin {
             0% {transform: rotateY(0)}
             100% {transform: rotateY(360deg)}
         }
-        @keyframes spinno {
-            0% {transform: rotateY(0)}
-            100% {transform: rotateY(360deg)}
-        }
-
     </style>
 
     <noscript>
-        <style>.morebutton, .status {display: none}</style>
+        <style>.morebutton, .status {display: none} .gameicons:not(.islive) {visibility: visible}</style>
     </noscript>
     
 </head>
@@ -230,14 +229,12 @@
         <a class="projflyer ssoggycat" href="https://discord.gg/soggycat"><img draggable="false" src="/assets/images/projects/ssoggycat.webp"></a>
     </div> -->
 
-    <!-- this is a horrifying approach. since you peeked into the code you'll have to endure it now. no, i won't be fixing it -->
-    <img draggable="false" class="cvtuah" title="cv" src="data:image/webp;base64,UklGRmAAAABXRUJQVlA4WAoAAAAQAAAACwAABwAAQUxQSCIAAAARDzD/ERFCISRJzuX7qPAop/dgEeO1IvofAz68tvry6cEBVlA4IBgAAAAwAQCdASoMAAgAD8D+KaQAA3AA/uRoAAA=" />
     <div class="main">
         <div class="profilecontrols">
             <button class="kofi" type="button" aria-expanded="false">support!</button>
         </div>
-        <img draggable="false" class="cv" title="cv" src="data:image/webp;base64,UklGRmAAAABXRUJQVlA4WAoAAAAQAAAACwAABwAAQUxQSCIAAAARDzD/ERFCISRJzuX7qPAop/dgEeO1IvofAz68tvry6cEBVlA4IBgAAAAwAQCdASoMAAgAD8D+KaQAA3AA/uRoAAA=" />
-        <span>a MYSTERIOUS fellow.. <br>
+        <div class="logoslot"><img draggable="false" class="cv" title="cv" src="data:image/webp;base64,UklGRmAAAABXRUJQVlA4WAoAAAAQAAAACwAABwAAQUxQSCIAAAARDzD/ERFCISRJzuX7qPAop/dgEeO1IvofAz68tvry6cEBVlA4IBgAAAAwAQCdASoMAAgAD8D+KaQAA3AA/uRoAAA=" /></div>
+        <span><span class="splash">a MYSTERIOUS fellow..</span> <br>
         <span class="links"><a href="https://x.com/cvsilly_">twitter</a> // <a href="https://discord.com/users/763502120333869116">discord</a></span></span>
     </div>
     <div class="otherstuff">
@@ -261,8 +258,8 @@
         <span class="bigtext">middle click to copy!</span>
         <div class="buttons">
             <a href="https://coolsite.cv"><img class="button" src="/assets/images/88x31/me.gif"></a>
-            <a href="https://s.soggy.cat"><img class="button smooth" src="/assets/images/88x31/ssoggycat.webp"></a>
-            <a href="https://deltarune.eu.cc/swatchlings"><img class="button smooth" src="/assets/images/88x31/swatchlings.gif"></a>
+            <a href="https://s.soggy.cat" data-track="ssoggycat.ogg"><img class="button smooth" src="/assets/images/88x31/ssoggycat.webp"></a>
+            <a href="https://deltarune.eu.cc/swatchlings" data-track="swatchlings.ogg"><img class="button smooth" src="/assets/images/88x31/swatchlings.gif"></a>
             <a><img title="MS YURI ⚢ (@museofdeity) on Twitter:
 pride flag i made for people who just don't know" class="button" src="/assets/images/88x31/idk.webp"></a>
             <a><img title="emoji from bluemoji.io" class="button smooth" src="/assets/images/88x31/bluemoji.webp"></a>
@@ -273,28 +270,29 @@ pride flag i made for people who just don't know" class="button" src="/assets/im
                 <span class="bigtext">cool people!</span>
                 <div class="buttons">
                     <a href="https://web.archive.org/web/20260104171115im_/https://nazvex.neocities.org/"><img class="button" data-src="/assets/images/88x31/nazvex.gif"></a>
-                    <a href="https://s1nez.nekoweb.org"><img class="button" data-src="/assets/images/88x31/s1nez.gif"></a>
-                    <a href="https://theawesomeblue.nekoweb.org"><img class="button" data-src="/assets/images/88x31/hq/blue.gif"></a>
-                    <a href="https://shabble.fun"><img class="button" data-src="/assets/images/88x31/shabble.gif"></a>
+                    <a href="https://s1nez.nekoweb.org" data-track="s1nez.ogg"><img class="button" data-src="/assets/images/88x31/s1nez.gif"></a>
+                    <a href="https://theawesomeblue.nekoweb.org" data-track="blue.ogg"><img class="button" data-src="/assets/images/88x31/hq/blue.gif"></a>
+                    <a href="https://shabble.fun" data-track="shabble.ogg"><img class="button" data-src="/assets/images/88x31/shabble.gif"></a>
                     <a href="https://240109.xyz/buttons"><img class="button smooth" data-src="/assets/images/88x31/hq/simon.gif"></a>
                     <a href="https://rooot.gay"><img class="button" data-src="/assets/images/88x31/rooot.webp"></a>
                     <a href="https://tiago.zip"><img class="button" data-src="/assets/images/88x31/tiago.gif"></a>
+                    <a href="https://fishpog.lol" data-track="fishpog.ogg"><img class="button" data-src="/assets/images/88x31/fishpog.gif"></a>
                 </div>
             </div>
             <div class="section">
                 <span class="bigtext">other stuff</span>
                 <div class="buttons">
-                    <a href="https://ne0nbandit.art/cable"><img class="button" data-src="/assets/images/88x31/swatch.gif"></a>
+                    <a href="https://ne0nbandit.art/cable" data-track="swatch.ogg"><img class="button" data-src="/assets/images/88x31/swatch.gif"></a>
                     <a href="https://spacehey.com/holidaygirl1224"><img class="button" data-src="/assets/images/88x31/hq/holidaygirl.gif"></a>
                     <a href="https://spamtonsucks.neocities.org/"><img class="button" data-src="/assets/images/88x31/KILL.gif"></a>
                     <a href="https://lyra.horse"><img class="button" data-src="/assets/images/88x31/rebane.webp"></a>
                     <a href="https://soap.systems"><img class="button smooth" data-src="/assets/images/88x31/soap.webp"></a>
-                    <a href="https://xpvm.net"><img class="button smooth" data-src="/assets/images/88x31/neptune.webp"></a>
-                    <a href="https://yugoslavia.best"><img class="button smooth" data-src="/assets/images/88x31/penis.webp"></a>
+                    <a href="https://xpvm.net" data-track="neptune.ogg"><img class="button smooth" data-src="/assets/images/88x31/neptune.webp"></a>
+                    <a href="https://yugoslavia.best" data-track="penis.ogg"><img class="button smooth" data-src="/assets/images/88x31/penis.webp"></a>
                     <a href="https://wavesmiley.com"><img class="button smooth" data-src="/assets/images/88x31/hq/wavesmiley.gif"></a>
                     <a href="https://tracker.archiveteam.org"><img class="button smooth" data-src="/assets/images/88x31/archiveteam.gif"></a>
                     <a href="https://ezgif.com"><img class="button" data-src="/assets/images/88x31/hq/ezgif.gif"></a>
-                    <a href="https://lambyland.net/play"><img class="button" data-src="/assets/images/88x31/hq/lambyland.png"></a>
+                    <a href="https://lambyland.net/play" data-track="lambyland.ogg"><img class="button" data-src="/assets/images/88x31/hq/lambyland.png"></a>
                     <a><img title="from germanpit.de" class="button" data-src="/assets/images/88x31/w3c.webp"></a>
                 </div>
             </div>
@@ -461,73 +459,6 @@ pride flag i made for people who just don't know" class="button" src="/assets/im
         })();
 
         /*//////////////////////////////////////////////////////////////////////*/
-
-        (function() {
-            const bounce = document.querySelector(".cv");
-            const cvtuah = document.querySelector(".cvtuah");
-            const page = document.querySelector(".frontpage");
-            if (!bounce || !cvtuah) return;
-
-            let x = 0, y = 0, dx = 2, dy = 2;
-            let animating = false;
-
-            function getdims(el) {
-                const r = el.getBoundingClientRect();
-                return {width: r.width, height: r.height};
-            }
-
-            function animate() {
-                const maxx = page.clientWidth - cvtuah.offsetWidth;
-                const edge = page.clientHeight * .09;
-                const maxy = page.clientHeight - cvtuah.offsetHeight - edge;
-                if (x + dx <= 0 || x + dx >= maxx) dx = -dx;
-                if (y + dy <= edge || y + dy >= maxy) dy = -dy;
-                x = Math.max(0, Math.min(maxx, x + dx));
-                y = Math.max(edge, Math.min(maxy, y + dy));
-                cvtuah.style.left = x + "px";
-                cvtuah.style.top = y + "px";
-
-                requestAnimationFrame(animate);
-            }
-
-            function initpos() {
-                bounce.classList.add("spin");
-            }
-            if (bounce.complete) {initpos()}
-            else {bounce.addEventListener("load", initpos)}
-
-            bounce.addEventListener("click", function () {
-                if (animating) return;
-                bounce.style.opacity = "0.5";
-                const r = bounce.getBoundingClientRect();
-                const area = page.getBoundingClientRect();
-                x = r.left - area.left; y = r.top - area.top;
-
-                cvtuah.style.left = x + "px";
-                cvtuah.style.top = y + "px";
-                cvtuah.style.display = "block";
-
-                animating = true;
-                animate();
-            });
-
-            let rtimeout;
-            window.addEventListener("resize", function () {
-                clearTimeout(rtimeout);
-                rtimeout = setTimeout(function () {
-                    if (!animating) {initpos()}
-                    else {
-                        const dims = getdims(cvtuah);
-                        const maxx = page.clientWidth - dims.width;
-                        const maxy = page.clientHeight - dims.height;
-                        x = Math.max(0, Math.min(x, maxx));
-                        y = Math.max(0, Math.min(y, maxy));
-                        cvtuah.style.left = x + "px";
-                        cvtuah.style.top = y + "px";
-                    }
-                }, 50);
-            });
-        })();
 
     </script>
 </body>

@@ -11,8 +11,17 @@
     const badges = page.querySelector(".bottom");
     const status = page.querySelector(".status");
     const badgepillar = page.querySelector(".badgepillar");
-    const logos = [...page.querySelectorAll(".cv, .cvtuah")];
-    const support = page.querySelector(".kofipanel");
+    const logo = page.querySelector(".cv");
+    const splashes = [
+        "a MYSTERIOUS fellow..",
+        "nothing to see here",
+        "probably in the clouds",
+        "insert splash here",
+        "what a nice day",
+        "look, a website!"
+    ];
+    page.querySelector(".splash").textContent = splashes[Math.floor(Math.random() * splashes.length)];
+    logo.classList.add("spin");
     const maskimage = new Image();
     maskimage.src = "/assets/images/bg/cloudmask.webp";
     const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
@@ -150,10 +159,10 @@
                 if (badges.contains(image)) shape.clip = clip;
                 stationary.push(shape);
             }
-            if (support.classList.contains("open")) stationary.push(box(support));
             dirty = false;
         }
-        solids = stationary.concat(logos.map(imageshape).filter(Boolean));
+        const emblem = logo.classList.contains("isbouncing") ? null : imageshape(logo);
+        solids = emblem ? stationary.concat(emblem) : stationary;
     }
 
     /*//////////////////////////////////////////////////////////////////////*/
@@ -481,12 +490,7 @@
         body.link.toggleAttribute("data-outside", body.outside);
     }
 
-    function frame(now) {
-        pending = 0;
-        const dt = Math.min(.025, (now - previous) / 1000 || 1 / 60);
-        previous = now;
-        refreshsolids();
-        const held = grab?.body;
+    function advance(dt, held = grab?.body) {
         const speed = Math.max(100, ...bodies.map(body => Math.hypot(body.vx, body.vy) + Math.abs(body.spin) * body.radius));
         const nearsolid = bodies.some(body => body !== held && solids.some(shape => boundsmeet(body, shape, dt * speed)));
         const steps = Math.max(2, Math.ceil(dt * speed / (nearsolid ? .7 : 1.7)));
@@ -512,6 +516,14 @@
                 }
             }
         }
+    }
+
+    function frame(now) {
+        pending = 0;
+        const dt = Math.min(.025, (now - previous) / 1000 || 1 / 60);
+        previous = now;
+        refreshsolids();
+        advance(dt);
         for (const body of bodies) paint(body);
         still = grab || bodies.some(body => Math.hypot(body.vx, body.vy) > 4 || Math.abs(body.spin) > .25) ? 0 : still + 1;
         if (still < 14) pending = requestAnimationFrame(frame);
@@ -558,6 +570,44 @@
         }
         return {top, bottom, hightop, lowbottom};
     }
+
+    function launchlogo() {
+        if (!terrain || logo.classList.contains("isbouncing")) return;
+        const slot = box(logo.parentElement);
+        let x = slot.x + (slot.width - logo.offsetWidth) / 2;
+        let y = slot.y + (slot.height - logo.offsetHeight) / 2;
+        let vx = 125, vy = 105, last = performance.now();
+        logo.classList.add("isbouncing");
+        page.append(logo);
+        wake();
+
+        function bounce(now) {
+            const elapsed = Math.min(.04, (now - last) / 1000);
+            last = now;
+            const width = logo.offsetWidth, height = logo.offsetHeight;
+            const right = Math.max(0, area.width - width);
+            x += vx * elapsed;
+            y += vy * elapsed;
+            if (x <= 0 || x >= right) vx = x <= 0 ? Math.abs(vx) : -Math.abs(vx);
+            x = clamp(x, 0, right);
+
+            let top = 0, bottom = area.height;
+            for (let column = Math.floor(x); column <= Math.ceil(x + width); column += 1) {
+                top = Math.max(top, maskedge(terrain.top, column));
+                bottom = Math.min(bottom, maskedge(terrain.bottom, column));
+            }
+            const floor = Math.max(top, bottom - height);
+            if (y <= top || y >= floor) vy = y <= top ? Math.abs(vy) : -Math.abs(vy);
+            y = clamp(y, top, floor);
+            logo.style.left = `${x}px`;
+            logo.style.top = `${y}px`;
+            requestAnimationFrame(bounce);
+        }
+
+        bounce(last);
+    }
+
+    /*//////////////////////////////////////////////////////////////////////*/
 
     function layout() {
         const prior = circle;
@@ -650,18 +700,25 @@
         });
     }
 
+    logo.addEventListener("click", launchlogo);
+
     Promise.allSettled([maskimage.decode(), ...links.map(link => link.querySelector("img").decode())]).then(() => {
         layout();
-        bodies = links.map((link, index) => {
+        bodies = links.map(link => {
             const bounds = box(link);
             const mask = imagepixels(link.querySelector("img")) || {width: 1, height: 1, rgba: [0, 0, 0, 255]};
-            const body = {...bounds, link, mask, vx: 0, vy: 0, spin: index % 2 ? -.65 : .65,
+            const body = {...bounds, link, mask, vx: 0, vy: 0, spin: 0,
                 outside: false, angle: 0};
             makebodymask(body, bounds.width, bounds.height);
             attach(body);
-            paint(body);
             return body;
         });
+        refreshsolids();
+        for (let step = 0; step < 56; step += 1) advance(1 / 60);
+        for (const body of bodies) {
+            body.vx = body.vy = body.spin = 0;
+            paint(body);
+        }
         nav.classList.add("islive");
         nav.addEventListener("dragstart", event => event.preventDefault());
         window.addEventListener("pointermove", drag);
@@ -672,7 +729,7 @@
         const invalidate = () => {dirty = true; wake();};
         const mutations = new MutationObserver(invalidate);
         const sizes = new ResizeObserver(invalidate);
-        for (const group of [...textgroups, support]) {
+        for (const group of textgroups) {
             mutations.observe(group, {childList: true, subtree: true, characterData: true});
             sizes.observe(group);
         }
