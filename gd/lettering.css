@@ -37,7 +37,8 @@
 
 .gdgoldrun {
   padding-block: .16em; box-decoration-break: clone;
-  background-clip: text;
+  background-clip: text; -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   background-image: linear-gradient(to bottom in srgb,
     #ffae00 .378em, #ffc228 .597em, #ffdc4b .81em, #ffe659 .985em);
 }
@@ -94,7 +95,8 @@
 .gdlogoface {
   display: block; color: transparent;
   background: linear-gradient(to bottom, #ccff55 0 .486em, #88ff33 .486em);
-  background-clip: text; filter: var(--oxygenecorners) url("assets/svgs/textfilters.svg#gdlogobevel");
+  background-clip: text; -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; filter: var(--oxygenecorners) url("assets/svgs/textfilters.svg#gdlogobevel");
 }
 
 
@@ -103,7 +105,7 @@
   .gdgoldrun,
   .gdlogoface {
     color: CanvasText; background-image: none;
-    -webkit-text-stroke: 0;
+    -webkit-text-stroke: 0; -webkit-text-fill-color: CanvasText;
   }
 
   .gdplain::before,
