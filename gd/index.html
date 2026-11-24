@@ -24,6 +24,7 @@
             
         }
         canvas, img, p, a {user-select: none}
+
         /*//////////////////////////////////////////////////////////////////////*/
 
         .me {
@@ -44,27 +45,30 @@
 
         .bottom {
             position: fixed; display: flex;
-            flex-direction: row;
-            bottom: 3em; gap: 1rem;
-            justify-content: center; align-items: center;
+            bottom: 3em; gap: clamp(.5rem, 4vw, 1rem);
+            justify-content: center; align-items: flex-start;
         }
         .button {
             display: flex; user-select: none;
-            width: clamp(3rem, 13vw, 4.5rem); aspect-ratio: 1;
-            justify-content: center; align-items: center;
+            flex-direction: column; align-items: center;
+            width: clamp(4rem, 24vw, 7rem); gap: .4rem;
+            color: inherit; font-size: .8rem;
+            line-height: 1.2; text-decoration: none;
         }
         .button img {
-            width: 100%; height: 100%;
+            width: clamp(3rem, 13vw, 4.5rem); aspect-ratio: 1;
             object-fit: contain;
         }
         .wip {filter: grayscale(1); opacity: 0.5}
 
     </style>
     <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="/assets/static/bg.css">
     <script src="global.js" defer></script>
+    <script src="/assets/static/js/bg.js" defer></script>
 
 </head>
-<body>
+<body class="gdhub">
 
     <img class="me" src="assets/svgs/me.svg" draggable="false">
     <a class="text pusab">hello bro<sup>2</sup></a>
@@ -74,10 +78,16 @@
             <img src="cbf/icon.png">
         </a-->
         <a class="button" href="audio/">
-            <img src="audio/icon.png" alt="Audio">
+            <img src="audio/favicon.png" alt="">
+            <span>Audio</span>
         </a>
         <a class="button" href="img2gd/">
-            <img src="img2gd/favicon.png" alt="img2gd">
+            <img src="img2gd/favicon.png" alt="">
+            <span>img2gd</span>
+        </a>
+        <a class="button" href="https://github.com/sogful/newgroundsforgd">
+            <img src="assets/images/newgroundsforgd/favicon.png" alt="">
+            <span>Newgrounds for GD</span>
         </a>
     </nav>
 
