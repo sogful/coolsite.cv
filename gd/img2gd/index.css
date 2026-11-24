@@ -31,7 +31,7 @@ body.imgpage {
 .pagehead .pagetitle {
   margin: 0;
   font-size: clamp(var(--gdlogosize), 4.5vw, 60px); font-weight: 400;
-  line-height: 1.15;
+  line-height: 1;
 }
 
 .workspace {

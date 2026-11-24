@@ -4,7 +4,7 @@
   font-display: swap;
 }
 
-.gdplain,
+pusab,
 .gdgold,
 .gdlogo {
   position: relative; isolation: isolate;
@@ -12,17 +12,16 @@
   font-weight: 400; font-synthesis: none;
 }
 
-.gdplain,
+pusab,
 .gdgold {
   font-family: pusab, Arial, sans-serif; font-kerning: normal;
   letter-spacing: normal; word-spacing: normal;
 }
 
-.gdplain {
-  --gdstroke: .048em;
-  --gdshadow: .034em .045em .015em #0006;
-  color: var(--gdfill, #faffff);
-  -webkit-text-stroke: .036em #000;
+pusab {
+  font-size: clamp(1rem, 4vw, 1.3125rem); color: var(--gdfill, #fff);
+  -webkit-text-stroke: clamp(.043em, .92px, .05em) #000;
+  text-shadow: .027em .044em .012em #0008;
 }
 
 .gdgold {
@@ -39,16 +38,15 @@
   padding-block: .16em; box-decoration-break: clone;
   background-clip: text; -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-image: linear-gradient(to bottom in srgb,
+  background-image: linear-gradient(to bottom,
     #ffae00 .378em, #ffc228 .597em, #ffdc4b .81em, #ffe659 .985em);
 }
 
 .gdgoldsmall {
-  background-image: linear-gradient(to bottom in srgb,
+  background-image: linear-gradient(to bottom,
     #ffae00 .465em, #ffc933 .705em, #ffe659 .965em);
 }
 
-.gdplain::before,
 .gdgold::before,
 .gdlogo::before,
 .gdlogo::after {
@@ -62,11 +60,10 @@
   color: #082653; background: #c9ff55;
 }
 
-.gdplain::before,
 .gdgold::before {
   z-index: -1; color: #000;
   -webkit-text-stroke: var(--gdstroke) #000;
-  filter: drop-shadow(var(--gdshadow));
+  text-shadow: var(--gdshadow);
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
@@ -75,6 +72,7 @@
   --oxygenecorners: url("../assets/svgs/textfilters.svg#oxygenecorners");
   font-family: gdoxygene, sans-serif; text-transform: uppercase;
   word-spacing: .335em; color: #ccff55;
+  font-size: 1.06em; line-height: .98;
 }
 
 .gdlogo[data-text] {
@@ -101,14 +99,14 @@
 
 
 @media (forced-colors: active) {
-  .gdplain,
+  pusab,
   .gdgoldrun,
   .gdlogoface {
     color: CanvasText; background-image: none;
     -webkit-text-stroke: 0; -webkit-text-fill-color: CanvasText;
+    text-shadow: none;
   }
 
-  .gdplain::before,
   .gdgold::before,
   .gdlogo::before,
   .gdlogo::after { display: none; }

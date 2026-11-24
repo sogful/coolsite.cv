@@ -3,10 +3,7 @@ const optionsteppers = [];
 function updateoptions() {
   for (const {select, value, previous, next, title} of optionsteppers) {
     const label = select.selectedOptions[0]?.label || "";
-    if (value.textContent !== label) {
-      value.textContent = label;
-      value.dataset.text = label;
-    }
+    if (value.textContent !== label) value.textContent = label;
     for (const [button, action] of [[previous, "Previous"], [next, "Next"]]) {
       button.querySelector(".optionarrowtext").textContent = action + " " + title.textContent.trim() + " option. Selected " + label;
     }
@@ -30,8 +27,8 @@ for (const select of document.querySelectorAll("select.gdinput")) {
   stepper.setAttribute("role", "group");
   stepper.ariaLabelledByElements = [title];
 
-  const value = document.createElement("span");
-  value.className = "optionvalue gdplain";
+  const value = document.createElement("pusab");
+  value.className = "optionvalue";
   value.setAttribute("aria-live", "polite");
   value.setAttribute("aria-atomic", "true");
 
@@ -39,8 +36,8 @@ for (const select of document.querySelectorAll("select.gdinput")) {
   labels.className = "optionlabels";
   labels.append(value);
   for (const choice of select.options) {
-    const measure = document.createElement("span");
-    measure.className = "optionmeasure optionvalue gdplain";
+    const measure = document.createElement("pusab");
+    measure.className = "optionmeasure optionvalue";
     measure.textContent = choice.label;
     measure.setAttribute("aria-hidden", "true");
     labels.append(measure);

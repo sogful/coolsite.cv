@@ -319,7 +319,7 @@ async function ungzipjson(path) {
 }
 
 async function loadnativeatlas() {
-  const asseturl = name => `assets/${name}?v=${catalogversion}`;
+  const asseturl = name => `../assets/atlases/${name}?v=${catalogversion}`;
   const [metadata, nativeorders] = await Promise.all([
     ungzipjson(asseturl("objectatlas.gz")).then(expandatlas),
     ungzipjson(asseturl("objectorder.gz")).then(expandorders),
@@ -880,7 +880,7 @@ imagefile.addEventListener("change", () => {
   imagefile.value = "";
 });
 
-examplebutton.addEventListener("click", () => loadimage("assets/soggycat.jpg", "soggycat.jpg"));
+examplebutton.addEventListener("click", () => loadimage("../assets/images/soggycat.jpg", "soggycat.jpg"));
 
 form.addEventListener("rangevaluechange", updatefields);
 form.addEventListener("change", event => {

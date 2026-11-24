@@ -23,7 +23,7 @@
   justify-content: center; vertical-align: middle;
   min-inline-size: 0; min-block-size: max(40px, 1.67em);
   padding: 7px 13px; cursor: var(--gdactioncursor);
-  font: 400 var(--gdlabelsize)/1.08 pusab, sans-serif;
+  font: 400 clamp(1rem, 4vw, 1.3125rem)/1.08 pusab, sans-serif;
   color: #ffcf40; text-align: center;
   user-select: none;
   text-decoration: none; font-synthesis: none;

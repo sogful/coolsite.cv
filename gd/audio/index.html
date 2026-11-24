@@ -3,7 +3,7 @@
 <head>
 
     <title>audio archive</title>
-    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="icon" type="image/png" href="../assets/images/favicons/audio.png">
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,7 +20,7 @@
         position: fixed; z-index: -999;
         top: 0; left: 0; opacity: 0.5;
         width: 100vw; height: 100vh;
-        background-image: url("../assets/images/audio/bg.webp");
+        background-image: url("../assets/images/audioarchive-bg.webp");
         background-repeat: repeat-x;
         background-size: 100vh 100vh;
         animation: bgscroll 10s linear infinite;
@@ -57,13 +57,8 @@
     }
     .label {
         position: absolute; top: var(--label-top, 65px);
-        font-family: pusab, sans-serif; font-size: var(--label-size, 19px);
-        color: #fff; -webkit-text-stroke: .15em #000;
+        font-size: var(--label-size, 19px);
         white-space: nowrap; pointer-events: none;
-    }
-    .label::before {
-        position: absolute; content: attr(data-text);
-        -webkit-text-stroke: 0;
     }
     .folderinfo {
         font: 11px aller, sans-serif; color: #d6d6d6;
@@ -115,7 +110,9 @@
     }
     </style>
     <link rel="stylesheet" href="../src/global.css">
+    <link rel="stylesheet" href="../src/lettering.css">
     <script src="../src/global.js" defer></script>
+    <script src="../src/lettering.js" defer></script>
 
 </head>
 <body>
@@ -123,127 +120,127 @@
 <div class="bg"></div>
 <div class="scrollable"><div class="page">
 
-    <img class="logo" src="../assets/images/audio/logo.webp" alt="SFX + audio portal">
+    <img class="logo" src="../assets/images/audioarchive-logo.webp" alt="SFX + audio portal">
 
     <div class="list">
 
         <div class="box">
-            <img class="folder" src="../assets/images/audio/folders/sfx.png" alt="">
-            <span class="label" data-text="ALL">ALL</span>
+            <img class="folder" src="../assets/images/folders/sfx.png" alt="">
+            <pusab class="label">ALL</pusab>
             <span class="folderinfo">973MB · 23037 files · v109</span>
             <div class="buttons">
                 <a href="https://mega.nz/folder/RYpVgIBZ#tt3LteLYuzUg6pZtSUmqjA">
-                    <img class="button" src="../assets/images/audio/buttons/meganz.webp" alt="MEGA">
+                    <img class="button" src="../assets/images/buttons/meganz.webp" alt="MEGA">
                 </a>
             </div>
         </div>
 
         <div class="box">
-            <img class="folder" src="../assets/images/audio/folders/library.png" alt="">
-            <span class="label" style="--label-size: 17px; --label-top: 65px" data-text="19-2000²">19-2000²</span>
+            <img class="folder" src="../assets/images/folders/library.png" alt="">
+            <pusab class="label" style="--label-size: 17px; --label-top: 65px">19-2000²</pusab>
             <span class="folderinfo">4.46GB · 1966 files · v134</span>
             <div class="buttons">
                 <a href="https://mega.nz/folder/e5QgRL5C#q90C8pDoJEk-IC9fqM0IvQ">
-                    <img class="button" src="../assets/images/audio/buttons/meganz.webp" alt="MEGA">
+                    <img class="button" src="../assets/images/buttons/meganz.webp" alt="MEGA">
                 </a>
             </div>
         </div>
 
         <div class="box">
-            <img class="folder" src="../assets/images/audio/folders/library.png" alt="">
-            <span class="label" style="--label-size: 14px; --label-top: 67px" data-text="2001-5000">2001-5000</span>
+            <img class="folder" src="../assets/images/folders/library.png" alt="">
+            <pusab class="label" style="--label-size: 14px; --label-top: 67px">2001-5000</pusab>
             <span class="folderinfo">5.83GB · 3000 files · v134</span>
             <div class="buttons">
                 <a href="https://mega.nz/folder/2wgikaiT#u6rsjakPsuBXi8OtNk_Lug">
-                    <img class="button" src="../assets/images/audio/buttons/meganz.webp" alt="MEGA">
+                    <img class="button" src="../assets/images/buttons/meganz.webp" alt="MEGA">
                 </a>
             </div>
         </div>
 
         <div class="box">
-            <img class="folder" src="../assets/images/audio/folders/library.png" alt="">
-            <span class="label" style="--label-size: 14px; --label-top: 67px" data-text="5001-8000">5001-8000</span>
+            <img class="folder" src="../assets/images/folders/library.png" alt="">
+            <pusab class="label" style="--label-size: 14px; --label-top: 67px">5001-8000</pusab>
             <span class="folderinfo">6.70GB · 2999 files · v134</span>
             <div class="buttons">
                 <a href="https://mega.nz/folder/flp2CZZR#rySfncv7O0M1TMCUYSL3uw">
-                    <img class="button" src="../assets/images/audio/buttons/meganz.webp" alt="MEGA">
+                    <img class="button" src="../assets/images/buttons/meganz.webp" alt="MEGA">
                 </a>
             </div>
         </div>
 
         <div class="box">
-            <img class="folder" src="../assets/images/audio/folders/library.png" alt="">
-            <span class="label" style="--label-size: 13px; --label-top: 68px" data-text="8001-11000">8001-11000</span>
+            <img class="folder" src="../assets/images/folders/library.png" alt="">
+            <pusab class="label" style="--label-size: 13px; --label-top: 68px">8001-11000</pusab>
             <span class="folderinfo">9.33GB · 3000 files · v134</span>
             <div class="buttons">
                 <a href="https://mega.nz/folder/UJo0RbRb#zKtByrGCGUrrmrxthwkChA">
-                    <img class="button" src="../assets/images/audio/buttons/meganz.webp" alt="MEGA">
+                    <img class="button" src="../assets/images/buttons/meganz.webp" alt="MEGA">
                 </a>
             </div>
         </div>
 
         <div class="box">
-            <img class="folder" src="../assets/images/audio/folders/library.png" alt="">
-            <span class="label" style="--label-size: 13px; --label-top: 68px" data-text="11001-12756">11001-12756</span>
+            <img class="folder" src="../assets/images/folders/library.png" alt="">
+            <pusab class="label" style="--label-size: 13px; --label-top: 68px">11001-12756</pusab>
             <span class="folderinfo">3.95GB · 1748 files · v134</span>
             <div class="buttons">
                 <a href="https://mega.nz/folder/NcBEUDQK#crq5bYnoc3SLsp06x04XVg">
-                    <img class="button" src="../assets/images/audio/buttons/meganz.webp" alt="MEGA">
+                    <img class="button" src="../assets/images/buttons/meganz.webp" alt="MEGA">
                 </a>
             </div>
         </div>
 
         <div class="box">
-            <img class="folder" src="../assets/images/audio/folders/newgrounds.png" alt="">
-            <span class="label" data-text="1-10000">1-10000</span>
+            <img class="folder" src="../assets/images/folders/newgrounds.png" alt="">
+            <pusab class="label">1-10000</pusab>
             <span class="folderinfo">5.96GB · 5249 files</span>
             <div class="buttons">
                 <a href="https://mega.nz/folder/JU4xQJAD#HqqpA15puQvULFf8UOmRLA">
-                    <img class="button" src="../assets/images/audio/buttons/meganz.webp" alt="MEGA">
+                    <img class="button" src="../assets/images/buttons/meganz.webp" alt="MEGA">
                 </a>
             </div>
         </div>
 
         <div class="box">
-            <img class="folder" src="../assets/images/audio/folders/newgrounds.png" alt="">
-            <span class="label" style="--label-size: 12px; --label-top: 69px" data-text="10001-20000">10001-20000</span>
+            <img class="folder" src="../assets/images/folders/newgrounds.png" alt="">
+            <pusab class="label" style="--label-size: 12px; --label-top: 69px">10001-20000</pusab>
             <span class="folderinfo">9.16GB · 5392 files</span>
             <div class="buttons">
                 <a href="https://mega.nz/folder/BNxyAarY#FlWQvCrCpP80WIe1Dx812Q">
-                    <img class="button" src="../assets/images/audio/buttons/meganz.webp" alt="MEGA">
+                    <img class="button" src="../assets/images/buttons/meganz.webp" alt="MEGA">
                 </a>
             </div>
         </div>
 
         <div class="box">
-            <img class="folder" src="../assets/images/audio/folders/newgrounds.png" alt="">
-            <span class="label" style="--label-size: 12px; --label-top: 69px" data-text="20001-30000">20001-30000</span>
+            <img class="folder" src="../assets/images/folders/newgrounds.png" alt="">
+            <pusab class="label" style="--label-size: 12px; --label-top: 69px">20001-30000</pusab>
             <span class="folderinfo">10.42GB · 5642 files</span>
             <div class="buttons">
                 <a href="https://mega.nz/folder/OhIjGIII#ydrktzCAvkHkE5mm94D9Mw">
-                    <img class="button" src="../assets/images/audio/buttons/meganz.webp" alt="MEGA">
+                    <img class="button" src="../assets/images/buttons/meganz.webp" alt="MEGA">
                 </a>
             </div>
         </div>
 
         <div class="box">
-            <img class="folder" src="../assets/images/audio/folders/newgrounds.png" alt="">
-            <span class="label" style="--label-size: 11px; --label-top: 70px" data-text="30001-40000">30001-40000</span>
+            <img class="folder" src="../assets/images/folders/newgrounds.png" alt="">
+            <pusab class="label" style="--label-size: 11px; --label-top: 70px">30001-40000</pusab>
             <span class="folderinfo">11.08GB · 5735 files</span>
             <div class="buttons">
                 <a href="https://mega.nz/folder/GwgH3ZIZ#8uOIfeAWpM3uRPXsZlOsxA">
-                    <img class="button" src="../assets/images/audio/buttons/meganz.webp" alt="MEGA">
+                    <img class="button" src="../assets/images/buttons/meganz.webp" alt="MEGA">
                 </a>
             </div>
         </div>
 
         <div class="box">
-            <img class="folder" src="../assets/images/audio/folders/newgrounds.png" alt="">
-            <span class="label" style="--label-size: 11px; --label-top: 70px" data-text="40001-50000">40001-50000</span>
+            <img class="folder" src="../assets/images/folders/newgrounds.png" alt="">
+            <pusab class="label" style="--label-size: 11px; --label-top: 70px">40001-50000</pusab>
             <span class="folderinfo">11.35GB · 5699 files</span>
             <div class="buttons">
                 <a href="https://mega.nz/folder/2g5SSKKb#TDAuIvM_SiQx1Cp0df1A_Q">
-                    <img class="button" src="../assets/images/audio/buttons/meganz.webp" alt="MEGA">
+                    <img class="button" src="../assets/images/buttons/meganz.webp" alt="MEGA">
                 </a>
             </div>
         </div>

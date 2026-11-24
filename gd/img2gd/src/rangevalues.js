@@ -37,7 +37,7 @@ const {rangevalue, validrangevalues} = (() => {
       warning.hidden = !text;
       editor.setAttribute("aria-invalid", String(!control.valid));
       if (limitmessages) {
-        if (overkill && !emoji.getAttribute("src")) emoji.src = "assets/gulpemoji.webp";
+        if (overkill && !emoji.getAttribute("src")) emoji.src = "../assets/images/gulpemoji.webp";
         emoji.hidden = !overkill;
       }
     }

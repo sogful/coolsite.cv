@@ -3,7 +3,7 @@
 <head>
 
     <title>gd stuff</title>
-    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="icon" type="image/png" href="assets/images/favicons/gd.png">
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -39,13 +39,16 @@
         .text {
             margin-top: 0; max-width: 90%;
             width: auto; object-fit: contain;
+            font-size: 50px; line-height: 1.05;
         }
+        .text pusab {font-size: inherit}
 
         /*//////////////////////////////////////////////////////////////////////*/
 
         .bottom {
             position: fixed; display: flex;
             bottom: 3em; gap: clamp(.5rem, 4vw, 1rem);
+            max-width: calc(100% - 1rem);
             justify-content: center; align-items: flex-start;
         }
         .button {
@@ -54,41 +57,49 @@
             width: clamp(4rem, 24vw, 7rem); gap: .4rem;
             color: inherit; font-size: .8rem;
             line-height: 1.2; text-decoration: none;
+            min-width: 0;
         }
         .button img {
             width: clamp(3rem, 13vw, 4.5rem); aspect-ratio: 1;
             object-fit: contain;
         }
         .wip {filter: grayscale(1); opacity: 0.5}
+        .cbflink[hidden] {display: none}
 
     </style>
     <link rel="stylesheet" href="src/global.css">
+    <link rel="stylesheet" href="src/lettering.css">
     <link rel="stylesheet" href="/assets/static/bg.css">
     <script src="src/global.js" defer></script>
+    <script src="src/lettering.js" defer></script>
     <script src="/assets/static/js/bg.js" defer></script>
 
 </head>
 <body class="gdhub">
 
     <img class="me" src="assets/svgs/me.svg" draggable="false">
-    <a class="text pusab">hello bro<sup>2</sup></a>
+    <a class="text"><pusab>hello bro</pusab><sup><pusab>2</pusab></sup></a>
 
     <nav class="bottom">
-        <!--a class="button" href="cbf">
-            <img src="cbf/icon.png">
-        </a-->
+        <a class="button cbflink" href="cbf/" hidden>
+            <img src="assets/images/favicons/cbf.png" alt="">
+            <span>cbf</span>
+        </a>
         <a class="button" href="audio/">
-            <img src="audio/favicon.png">
+            <img src="assets/images/favicons/audio.png">
             <span>audio archive</span>
         </a>
         <a class="button" href="img2gd/">
-            <img src="img2gd/favicon.png">
+            <img src="assets/images/favicons/img2gd.png">
             <span>img2gd</span>
         </a>
         <a class="button" href="https://github.com/sogful/newgroundsforgd">
-            <img src="assets/images/newgroundsforgd/favicon.png">
+            <img src="assets/images/favicons/newgroundsforgd.png">
             <span>newgrounds for gd</span>
         </a>
     </nav>
+    <script>
+        document.querySelector(".cbflink").hidden = !["127.0.0.1", "localhost", "[::1]"].includes(location.hostname);
+    </script>
 
 </body>

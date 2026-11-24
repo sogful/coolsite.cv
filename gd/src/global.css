@@ -1,6 +1,6 @@
 @font-face {
   font-family: oxygene;
-  src: url("../cbf/assets/fonts/oxygene.woff2") format("woff2");
+  src: url("../assets/fonts/oxygenelegacy.woff2") format("woff2");
   font-display: swap;
 }
 
@@ -20,7 +20,7 @@
 
 @font-face {
   font-family: aller;
-  src: url("../cbf/assets/fonts/alleritalic.woff2") format("woff2");
+  src: url("../assets/fonts/alleritalic.woff2") format("woff2");
   font-weight: 400;
   font-style: italic;
   font-display: swap;
@@ -54,18 +54,6 @@ a, p {
   text-align: center;
   font-size: 20px;
   font-style: normal;
-}
-
-.pusab:not(.gold) {
-  position: relative;
-  display: inline-block;
-  font-family: pusab, sans-serif;
-  font-size: 50px;
-  text-shadow:
-    -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000,
-    2px 0 0 #000, 2px 2px 0 #000, 0 2px 0 #000,
-    -2px 2px 0 #000, -2px 0 0 #000,
-    5.4px 5.4px 0 rgba(0,0,0,0.35);
 }
 
 .oxygene {

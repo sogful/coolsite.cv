@@ -17,12 +17,6 @@ function setgoldtext(label, content) {
   document.querySelectorAll("gold").forEach(label => label.classList.add("gdgold"));
   document.querySelectorAll("oxygene").forEach(label => label.classList.add("gdlogo"));
 
-  for (const label of document.querySelectorAll(".gdplain")) {
-    const synctext = () => {label.dataset.text = label.textContent;};
-    synctext();
-    new MutationObserver(synctext).observe(label, {childList: true, characterData: true, subtree: true});
-  }
-
   for (const label of document.querySelectorAll(".gdgold")) setgoldtext(label, label.textContent);
 
   /*//////////////////////////////////////////////////////////////////////*/
