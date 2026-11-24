@@ -36,7 +36,7 @@
             justify-content: flex-start; align-items: center;
             bottom: var(--scene-bottom); right: var(--scene-pad);
             width: var(--badge-width); height: auto;
-            box-sizing: border-box; padding: 8px;
+            box-sizing: border-box; padding: 6px;
             border-radius: var(--panel-radius); background: var(--panel-bg);
             z-index: 1000;
         }
@@ -45,11 +45,11 @@
         .buttons {
             display: flex; flex-direction: row;
             justify-content: center; flex-wrap: wrap;
-            width: 100%; gap: 4px;
+            width: 100%;
         }
         .buttons > a {
             display: block; min-width: 0;
-            flex: 0 0 calc((100% - (var(--badge-columns) - 1) * 4px) / var(--badge-columns));
+            flex: 0 0 calc(100% / var(--badge-columns));
         }
         .more {
             display: none; flex-direction: column;
@@ -57,14 +57,13 @@
         }
 
         .button {
-            padding: 2px; transition: filter 0.15s ease;
+            transition: filter 0.15s ease;
             image-rendering: pixelated; background-repeat: no-repeat
         }
         img.button {
             display: block; box-sizing: border-box;
             width: 100%; height: auto;
         }
-        .button iframe {padding: 2px}
         .smooth {
             image-rendering: smooth !important;
             image-rendering: auto !important;

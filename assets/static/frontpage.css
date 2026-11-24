@@ -9,17 +9,24 @@
 }
 
 html {
+  --cloudfog: url("../images/bg/clouds.avif");
   background: #030303; overflow: hidden;
+  isolation: isolate;
 }
 
-html::before {
+html::before,
+html::after {
   content: ""; position: fixed;
-  inset: -16%; pointer-events: none;
-  background: url("../images/bg/clouds.avif") 60% 55% / 100% 160% no-repeat;
-  filter: grayscale(1) contrast(1.35) blur(12px);
-  transform: skewX(-16deg) scaleY(1.2); opacity: .09;
-  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  inset-inline: 0; height: 54vh;
+  background: var(--cloudfog) 26% 100% / max(116%, 130vh) 200% no-repeat;
+  filter: grayscale(1) brightness(.79) contrast(3.4);
+  opacity: .22; pointer-events: none;
+  mix-blend-mode: screen; z-index: 0;
+  mask-image: linear-gradient(to bottom, transparent, #000 65%);
 }
+
+html::before {top: 0; transform: scaleY(-1)}
+html::after {bottom: 0; background-position: 74% 100%}
 
 .frontpage {
   --edge: 9%;
@@ -33,7 +40,7 @@ html::before {
   --ring: clamp(130px, 14vw, 194px);
   --ring-stroke: clamp(4px, .36vw, 7px);
   --gamesize: clamp(28px, 2vw, 37px);
-  --badge-width: min(460px, 46vw);
+  --badge-width: min(428px, 43vw);
   --badge-columns: 4;
   --doodle-width: clamp(27px, 2.2vw, 42px);
   --doodle-cap: clamp(12px, 1vw, 19px);
@@ -41,6 +48,7 @@ html::before {
   width: 100%; height: clamp(50vh, 46.154vw, 100vh);
   height: clamp(50svh, 46.154vw, 100svh);
   transform: translateY(-50%); isolation: isolate;
+  z-index: 1;
   overflow: hidden; margin: 0;
   background: #a9a3b4 url("../images/bg/clouds.avif") center / cover no-repeat;
   -webkit-mask: url("../images/bg/cloudmask.webp") center / auto 100% repeat-x;
@@ -183,7 +191,7 @@ html::before {
   .frontpage {
     --scene-top: 10%; --profile-logo: 42px;
     --ring: clamp(99px, 27vw, 116px); --gamesize: 24px;
-    --badge-width: 46vw; --doodle-width: 23px;
+    --doodle-width: 23px;
   }
 
   .frontpage .main {
