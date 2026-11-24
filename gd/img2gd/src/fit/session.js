@@ -74,7 +74,7 @@ async function updatepreview() {
   const result = buildsource();
   invalidateexports();
   const name = levelname();
-  const level = new Blob([gmddocument(result.raw, name, legacyactive)], {type: "application/xml"});
+  const level = new Blob([gmddocument(result.raw, name, legacyactive)], {type: "application/octet-stream"});
   updatestat(tilecount, result.objects.toLocaleString());
   updatestat(gridcount, fiterror.toFixed(1) + "%");
   updatestat(channelcount, result.channels.toLocaleString());

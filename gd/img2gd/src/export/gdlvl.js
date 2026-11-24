@@ -7,7 +7,6 @@ async function gzipbase64(value) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-async function gdlvldocument(raw, name) {
-  const encoded = await gzipbase64(raw);
-  return gzipbase64(leveldocument(encoded, name, 51));
+async function gdlvldocument(raw, name, packed = gzipbase64(raw)) {
+  return gzipbase64(leveldocument(await packed, name, 51));
 }

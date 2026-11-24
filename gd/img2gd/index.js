@@ -35,6 +35,7 @@ const timecount = document.querySelector(".timecount");
 const assetstatus = document.querySelector(".assetstatus");
 const renderstate = document.querySelector(".renderstate");
 const downloadlink = document.querySelector(".downloadlink");
+const gmd2download = document.querySelector(".gmd2download");
 const gdlvldownload = document.querySelector(".gdlvldownload");
 const pngdownload = document.querySelector(".pngdownload");
 const statuscopy = document.querySelector(".statuscopy");
@@ -342,7 +343,9 @@ async function loadnativeatlas() {
   });
   const animatedids = new Set(metadata.excluded?.animatedObjectIds || []);
   const unmodeledids = new Set(nativeorders.unresolvedids || []);
-  library = metadata.objects.filter(item => !animatedids.has(item.id) && !unmodeledids.has(item.id)).map(item => {
+  const editorids = new Set([914, 2065, 3608]);
+  const drawable = id => !unmodeledids.has(id) && !editorids.has(id);
+  library = metadata.objects.filter(item => drawable(item.id) && !animatedids.has(item.id)).map(item => {
     const [left, bottom, right, top] = item.bounds;
     return {
       ...item,
@@ -361,7 +364,7 @@ async function loadnativeatlas() {
   const assetmap = new Map(library.map(asset => [asset.id, asset]));
   samplinglibrary = (metadata.samplingorder || library.map(asset => asset.id))
     .sort((left, right) => left - right)
-    .filter(identifier => !unmodeledids.has(identifier))
+    .filter(drawable)
     .map(identifier => {
       const asset = assetmap.get(identifier);
       if (asset) return asset;
@@ -705,7 +708,7 @@ function buildsource() {
 }
 
 function levelname() {
-  const name = imagename.replace(/\.[^/.]+$/, "").trim();
+  const name = imagename.replace(/\.[^/.]+$/, "");
   return name || "Image mosaic";
 }
 
@@ -716,7 +719,7 @@ function enableexport(link, blob, filename) {
 }
 
 function invalidateexports() {
-  for (const link of [downloadlink, gdlvldownload, pngdownload]) {
+  for (const link of [downloadlink, gmd2download, gdlvldownload, pngdownload]) {
     const url = link.getAttribute("href");
     if (url) URL.revokeObjectURL(url);
     link.removeAttribute("href");
@@ -800,13 +803,18 @@ async function prepareexports(raw, name) {
   canvas.height = height;
   drawresult(plan, canvas, true);
   const png = new Promise(resolve => canvas.toBlob(resolve, "image/png"));
-  const [image, level] = await Promise.allSettled([png, gdlvldocument(raw, name)]);
+  const packed = gzipbase64(raw);
+  const [image, level, archive] = await Promise.allSettled([
+    png, gdlvldocument(raw, name, packed), gmd2document(raw, name, legacyactive, packed),
+  ]);
   if (revision !== fitrevision) return;
   if (image.status === "fulfilled" && image.value) enableexport(pngdownload, image.value, name + "-fit-" + cleannumber(zoom) + "x.png");
   else fitmessage.textContent = "PNG export failed.";
   if (level.status === "fulfilled") {
     enableexport(gdlvldownload, new Blob([level.value], {type: "application/octet-stream"}), name + ".gdlvl");
   } else fitmessage.textContent = "GDLVL export failed.";
+  if (archive.status === "fulfilled") enableexport(gmd2download, archive.value, name + ".gmd2");
+  else fitmessage.textContent = "GMD2 export failed.";
 }
 
 const advanceddialog = document.querySelector(".advanceddialog");
