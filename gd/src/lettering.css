@@ -37,18 +37,20 @@ pusab {
 .gdgoldrun {
   padding: .16em .18em; margin-inline: -.18em;
   box-decoration-break: clone; -webkit-box-decoration-break: clone;
+}
+
+.gdgoldface .gdgoldrun {
   background-clip: text; -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-image: linear-gradient(to bottom,
     #ffae00 .378em, #ffc228 .597em, #ffdc4b .81em, #ffe659 .985em);
 }
 
-.gdgoldsmall {
+.gdgoldface .gdgoldsmall {
   background-image: linear-gradient(to bottom,
     #ffae00 .465em, #ffc933 .705em, #ffe659 .965em);
 }
 
-.gdgold::before,
 .gdlogo::before,
 .gdlogo::after {
   content: attr(data-text) / "";
@@ -61,11 +63,15 @@ pusab {
   color: #082653; background: #c9ff55;
 }
 
-.gdgold::before {
+.gdgoldoutline {
+  position: absolute; inset: 0;
+  pointer-events: none; user-select: none;
   z-index: -1; color: #000;
   -webkit-text-stroke: var(--gdstroke) #000;
   text-shadow: var(--gdshadow);
 }
+
+.gdgoldoutline .gdgoldrun::before { content: attr(data-text); }
 
 /*//////////////////////////////////////////////////////////////////////*/
 
@@ -101,14 +107,14 @@ pusab {
 
 @media (forced-colors: active) {
   pusab,
-  .gdgoldrun,
+  .gdgoldface .gdgoldrun,
   .gdlogoface {
     color: CanvasText; background-image: none;
     -webkit-text-stroke: 0; -webkit-text-fill-color: CanvasText;
     text-shadow: none;
   }
 
-  .gdgold::before,
+  .gdgoldoutline,
   .gdlogo::before,
   .gdlogo::after { display: none; }
 

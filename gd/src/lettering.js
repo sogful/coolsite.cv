@@ -8,7 +8,15 @@ function setgoldtext(label, content) {
     run.textContent = text;
     face.append(run);
   }
-  label.replaceChildren(face);
+  const outline = face.cloneNode(false);
+  outline.className = "gdgoldoutline";
+  outline.setAttribute("aria-hidden", "true");
+  for (const run of face.children) {
+    const copy = run.cloneNode(false);
+    copy.dataset.text = run.textContent;
+    outline.append(copy);
+  }
+  label.replaceChildren(outline, face);
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
