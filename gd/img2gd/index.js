@@ -83,7 +83,6 @@ let opacitycheck = Promise.resolve(false);
 let imagerevision = 0;
 let alphaready = false;
 let pixelartactive = false;
-let autoselectedpixelart = false;
 let dominantcolor = null;
 let plan = [];
 let underlaycount = 0;
@@ -851,10 +850,6 @@ sourceimage.addEventListener("load", async () => {
     renderstate.textContent = "ERROR";
     return;
   }
-  if (fitselect.value === "auto" || autoselectedpixelart) {
-    autoselectedpixelart = sourceimage.naturalWidth < 150 && sourceimage.naturalHeight < 150;
-    fitselect.value = autoselectedpixelart ? "pixelart" : "auto";
-  }
   drawidlepreview(sourceimage);
   clearborder = cropclearborder(sourceimage);
   updatefields();
@@ -887,7 +882,6 @@ form.addEventListener("change", event => {
   if (!event.target.matches("select, .croptoggleinput, .legacytoggleinput")) return;
   regionfitactive = false;
   if (event.target === fitselect) {
-    autoselectedpixelart = false;
     if (fitselect.value === "regions") coverageselect.value = "2";
     if (alphaready && fitreadyrevision !== fitrevision) {
       previewimage.classList.toggle("ispixelart", fitselect.value === "pixelart");

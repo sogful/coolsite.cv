@@ -75,7 +75,7 @@ function budgetruns(objects, analysis, room) {
 /*//////////////////////////////////////////////////////////////////////*/
 
 async function spendfitbudget(limit, revision) {
-  if (underbudget.checked) return true;
+  if (underbudget.checked || !plan.length) return true;
   const budget = limit - visibilitycost * Number(visibilityrequired(plan));
   const room = budget - plan.length - opacitycost(plan);
   if (room <= 0) return true;
