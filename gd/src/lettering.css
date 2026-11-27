@@ -35,7 +35,8 @@ pusab {
 }
 
 .gdgoldrun {
-  padding-block: .16em; box-decoration-break: clone;
+  padding: .16em .18em; margin-inline: -.18em;
+  box-decoration-break: clone; -webkit-box-decoration-break: clone;
   background-clip: text; -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-image: linear-gradient(to bottom,
