@@ -215,17 +215,6 @@ body.imgpage {
 
 .sourcecanvas { clip-path: inset(0 calc(100% - var(--sourcepart)) 0 0); }
 
-.variantcontrols:not([hidden]) {
-  display: flex; flex-wrap: wrap;
-  align-items: center; gap: 6px;
-  margin-block-end: 6px;
-}
-
-.variantchoice:not([hidden]) {
-  display: inline-flex; align-items: center;
-  gap: 5px;
-}
-
 /*//////////////////////////////////////////////////////////////////////*/
 
 .previewfooter {

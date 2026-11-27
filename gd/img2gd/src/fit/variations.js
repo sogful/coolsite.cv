@@ -41,6 +41,7 @@ function showvariants() {
   variantchoice.hidden = variants.length < 2;
   variantselect.disabled = variantbuilding;
   variantmore.disabled = variantbuilding || variants.length >= 16;
+  updateoptions();
 }
 
 function openvariants() {
@@ -58,6 +59,7 @@ function selectvariant(index) {
   fitreadyrevision = revision;
   variantindex = index;
   variantselect.value = String(index);
+  updateoptions();
   usevariant(variants[index]);
   invalidateexports();
   drawresult();
