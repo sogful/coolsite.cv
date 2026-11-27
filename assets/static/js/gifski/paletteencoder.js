@@ -13,7 +13,7 @@ export function encodepalette(frames, input) {
     let quality = 256;
     for (let index = 0; index < input.count; index += 1) {
         const pixels = frames.slice(index * framebytes, (index + 1) * framebytes);
-        const protectedpixels = protectpixels(pixels);
+        const protectedpixels = input.sticker ? protectpixels(pixels) : null;
         const budget = Math.floor((input.budget - used - 64) / (input.count - index));
         const frame = input.start + index;
         const delay = (Math.round((frame + 1) * 100 / input.fps) - Math.round(frame * 100 / input.fps)) * 10;
@@ -32,21 +32,26 @@ export function encodepalette(frames, input) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-function fitpalette(pixels, input, colors, budget, protectedpixels, delay) {
-    let low = 2;
+function fitpalette(pixels, input, colors, budget, protectedpixels, delay, blocks = null) {
+    const sample = blocks || pixels;
+    let low = input.sticker ? 2 : (input.smoothing || 1) > 4 ? 8 : 16;
     let high = 256;
     let best = null;
     let candidate = Math.max(low, Math.min(high, colors));
     for (let attempt = 0; attempt < 9; attempt += 1) {
-        const palette = quantize(pixels, candidate, {format: "rgb444"});
-        const anchors = anchorpalette(palette, protectedpixels);
-        const indices = applypalette(pixels, palette, "rgb444");
-        for (let index = 0; index < indices.length; index += 1) {
-            const anchor = protectedpixels.mask[index];
-            if (anchor) indices[index] = anchors[anchor - 1];
+        const palette = quantize(sample, candidate, {format: "rgb444"});
+        const anchors = protectedpixels && anchorpalette(palette, protectedpixels);
+        const mapped = applypalette(sample, palette, "rgb444");
+        const indices = blocks ? expandblocks(mapped, input.width, input.height, input.smoothing) : mapped;
+        if (anchors) {
+            for (let index = 0; index < indices.length; index += 1) {
+                const anchor = protectedpixels.mask[index];
+                if (anchor) indices[index] = anchors[anchor - 1];
+            }
         }
         const probe = gifencoder({auto: false});
-        probe.writeFrame(indices, input.width, input.height, {palette, delay, dispose: 1});
+        const colordepth = Math.max(2, Math.ceil(Math.log2(palette.length)));
+        probe.writeFrame(indices, input.width, input.height, {palette, delay, dispose: 1, colorDepth: colordepth});
         const frame = probe.bytesView();
         const size = frame.length + 18;
         if (size <= budget) {
@@ -61,9 +66,13 @@ function fitpalette(pixels, input, colors, budget, protectedpixels, delay) {
     }
     if (best) return best;
     const smoothing = (input.smoothing || 1) * 2;
-    if (smoothing <= 16) {
-        soften(pixels, input.width, input.height, smoothing);
-        return fitpalette(pixels, {...input, smoothing}, 64, budget, protectpixels(pixels), delay);
+    if (smoothing <= (input.sticker ? 16 : 32)) {
+        if (input.sticker) {
+            soften(pixels, input.width, input.height, smoothing);
+            return fitpalette(pixels, {...input, smoothing}, 64, budget, protectpixels(pixels), delay);
+        }
+        const smaller = sampleblocks(pixels, input.width, input.height, smoothing);
+        return fitpalette(pixels, {...input, smoothing}, 48, budget, null, delay, smaller);
     }
     throw new Error("the size limit is too small for this duration, resolution, and fps");
 }
@@ -104,6 +113,47 @@ function anchorpalette(palette, protectedpixels) {
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
+
+function sampleblocks(pixels, width, height, size) {
+    const output = new Uint8Array(Math.ceil(width / size) * Math.ceil(height / size) * 4);
+    let index = 0;
+    for (let top = 0; top < height; top += size) {
+        for (let left = 0; left < width; left += size) {
+            const right = Math.min(width, left + size);
+            const bottom = Math.min(height, top + size);
+            let red = 0, green = 0, blue = 0;
+            for (let y = top; y < bottom; y += 1) {
+                let offset = (y * width + left) * 4;
+                for (let x = left; x < right; x += 1, offset += 4) {
+                    red += pixels[offset];
+                    green += pixels[offset + 1];
+                    blue += pixels[offset + 2];
+                }
+            }
+            const count = (right - left) * (bottom - top);
+            output[index++] = Math.round(red / count);
+            output[index++] = Math.round(green / count);
+            output[index++] = Math.round(blue / count);
+            output[index++] = 255;
+        }
+    }
+    return output;
+}
+
+function expandblocks(mapped, width, height, size) {
+    const output = new Uint8Array(width * height);
+    let index = 0;
+    for (let top = 0; top < height; top += size) {
+        const row = top * width;
+        for (let left = 0; left < width; left += size) {
+            output.fill(mapped[index++], row + left, row + Math.min(left + size, width));
+        }
+        for (let y = top + 1; y < Math.min(top + size, height); y += 1) {
+            output.copyWithin(y * width, row, row + width);
+        }
+    }
+    return output;
+}
 
 function soften(pixels, width, height, size) {
     for (let top = 0; top < height; top += size) {

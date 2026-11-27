@@ -33,9 +33,11 @@ export function convertvideo(file, settings, onprogress, signal, session = null)
         const parts = new Map();
         const cached = [];
         const framecount = Math.max(2, Math.round(settings.duration * settings.fps));
-        const target = settings.autolimit ? Math.floor(settings.limit * 0.975) : 0;
+        const target = settings.autolimit ? Math.floor(settings.limit) - 1024 : 0;
         let decoded = false;
         let completed = 0;
+        let dispatched = 0;
+        let settledbytes = 0;
         let colors = 64;
         let ended = false;
         const finish = (error, output)=>{
@@ -60,21 +62,25 @@ export function convertvideo(file, settings, onprogress, signal, session = null)
                 if (!item.ready || item.busy || !queue.length) continue;
                 const batch = queue.shift();
                 item.busy = true;
-                const budget = target ? Math.floor(target * batch.count / framecount) : 0;
-                item.worker.postMessage({...batch, width: settings.width, height: settings.height, fps: settings.fps, colors, budget}, [batch.frames]);
+                const reserved = pool.reduce((sum, entry)=>sum + (entry.budget || 0), 0);
+                const budget = target ? Math.max(1, Math.floor((target - settledbytes - reserved) * batch.count / (framecount - dispatched))) : 0;
+                item.budget = budget;
+                dispatched += batch.count;
+                item.worker.postMessage({...batch, width: settings.width, height: settings.height, fps: settings.fps, sticker: settings.sticker, colors, budget}, [batch.frames]);
             }
             if (!decoded || completed !== framecount || pool.some(item=>!item.ready || item.busy)) return;
             try {
                 const ordered = [...parts.entries()].sort((first, second)=>first[0] - second[0]).map(item=>item[1]);
                 const output = joingifs(ordered, settings);
                 if (settings.autolimit && output.size > settings.limit) throw new Error("the GIF exceeds the selected size limit");
-                if (target && output.size < settings.limit * 0.947 && cached.length) {
+                if (target && settings.limit - output.size > 100000 && cached.length) {
                     const batch = cached.shift();
-                    const budget = batch.bytes + Math.floor((target - output.size) * 0.95);
+                    const budget = batch.bytes + target - output.size;
                     const item = pool[0];
                     item.busy = true;
+                    item.upgrade = batch;
                     onprogress(98, "improving GIF quality", `${completed}/${framecount} frames - ${settings.width}x${settings.height} - ${settings.fps}fps`);
-                    item.worker.postMessage({...batch, width: settings.width, height: settings.height, fps: settings.fps, budget, upgrade: true}, [batch.frames]);
+                    item.worker.postMessage({...batch, width: settings.width, height: settings.height, fps: settings.fps, sticker: settings.sticker, budget, upgrade: true}, [batch.frames]);
                     return;
                 }
                 onprogress(99, "checking GIF", `${completed}/${framecount} frames`);
@@ -108,7 +114,13 @@ export function convertvideo(file, settings, onprogress, signal, session = null)
             listen(item.worker,"message", event=>{
                 if (ended) return;
                 const reply = event.data;
-                if (reply.error) return finish(new Error(reply.error));
+                if (reply.error) {
+                    if (!item.upgrade) return finish(new Error(reply.error));
+                    item.upgrade = null;
+                    item.busy = false;
+                    next();
+                    return;
+                }
                 if (reply.type === "ready") {
                     item.ready = true;
                     if (index + 1 < pool.length && !pool[index + 1].worker) startworker(index + 1);
@@ -117,9 +129,15 @@ export function convertvideo(file, settings, onprogress, signal, session = null)
                 }
                 try {
                     inspectgif(reply.gif);
-                    if (!reply.upgrade || reply.gif.byteLength > parts.get(reply.start).byteLength) parts.set(reply.start, new Uint8Array(reply.gif));
+                    if (!reply.upgrade || (reply.averagecolors > item.upgrade.averagecolors
+                        && reply.gif.byteLength > parts.get(reply.start).byteLength)) {
+                        parts.set(reply.start, new Uint8Array(reply.gif));
+                    }
+                    item.upgrade = null;
+                    item.budget = 0;
                     if (!reply.upgrade) {
                         completed += reply.count;
+                        settledbytes += reply.bytes;
                         if (reply.frames && reply.averagecolors < 200) {
                             cached.push({frames: reply.frames, start: reply.start, count: reply.count, colors: reply.colors, averagecolors: reply.averagecolors, bytes: reply.bytes});
                             cached.sort((first, second)=>first.averagecolors - second.averagecolors);
