@@ -7,27 +7,17 @@
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-.optiongroup {
-    min-width: 0; margin: 0;
-    border: 0; border-bottom: 1px solid #c7d0d9;
-    padding: 0 0 0.75em;
-}
-.optiontitle {
-    color: #394b5b; padding: 0 0.25em;
-    font-weight: 700;
-}
+.controls :is(.hint, .status, label, input, select, button) {color: inherit}
+
 .optionrow {
     display: flex; flex-wrap: wrap;
     align-items: center; gap: 0.7em 1.2em;
-}
-.optionrow + .optionrow {
-    margin-top: 0.7em;
 }
 
 /*//////////////////////////////////////////////////////////////////////*/
 
 .automatic {
-    color: #39546d; white-space: nowrap;
+    white-space: nowrap;
 }
 .actionrow {
     display: flex; flex-wrap: wrap;
@@ -47,11 +37,11 @@
 .adjustmentstage .previewmedia {max-width: 100%}
 .cropcontrols {
     display: flex; flex-wrap: wrap; gap: 0.45em;
-    padding: 0.45em;
+    margin-bottom: 0.45em;
 }
 .cropcontrols select {
     min-width: 0; max-width: 15em;
-    color: #000000; background: #ffffff;
+    background: #fff;
 }
 .cropsurface {
     position: relative; width: fit-content;
@@ -116,7 +106,7 @@
 }
 .trimtime {
     width: 8.6em; border: 1px solid #000000;
-    color: #000000; background: #ffffff;
+    background: #fff;
     font: inherit; text-align: center;
 }
 .fullvideocontrol {margin-top: 0.55em}
@@ -124,7 +114,7 @@
 /*//////////////////////////////////////////////////////////////////////*/
 
 .status {
-    color: #52616e; font-size: 0.9em;
+    font-size: 0.9em;
 }
 .output {
     margin-top: 0.75em; font-family: monospace;

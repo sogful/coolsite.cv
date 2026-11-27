@@ -131,8 +131,8 @@ convert.addEventListener("click", async ()=>{
         if (!running) return;
         showoutput(file, settings);
         if (!running) return;
-        const resulttext = output.textContent.match(/[\d.]+ MB/)?.[0] || "GIF";
-        setprogress(100, "conversion complete", `${resulttext} created in ${formattime(performance.now() - conversionstarted)}.`);
+        const resulttext = formatbytes(file.size);
+        setprogress(100, "conversion complete!", `${resulttext} created in ${formattime(performance.now() - conversionstarted)}.`);
         status.textContent = "done";
     } catch (error) {
         if (running) {
@@ -174,14 +174,14 @@ function showvideo(){
     controls.className = "cropcontrols";
     const resolutionselect = document.createElement("select");
     const sizelabel = document.createElement("label");
-    sizelabel.append("Size ", resolutionselect);
+    sizelabel.append("size ", resolutionselect);
     const aspectselect = document.createElement("select");
     const croplabel = document.createElement("label");
-    croplabel.append("Crop ", aspectselect);
+    croplabel.append("crop ", aspectselect);
     for (const ratio of cropratios) {
         const option = document.createElement("option");
         option.value = ratio;
-        option.textContent = ratio === "source" ? "None" : ratio === "free" ? "Free crop" : ratio;
+        option.textContent = ratio === "source" ? "none" : ratio === "free" ? "free crop" : ratio;
         aspectselect.append(option);
     }
     controls.append(sizelabel, croplabel);
@@ -193,8 +193,8 @@ function showvideo(){
     const surface = document.createElement("div");
     surface.className = "cropsurface";
     surface.append(video, overlay);
-    stage.append(surface, controls);
-    videostage.append(stage);
+    stage.append(surface);
+    videostage.append(controls, stage);
     video.addEventListener("loadedmetadata", ()=>{
         setuptrim(video);
         setupcrop(video, resolutionselect, aspectselect, cropbox);
@@ -644,7 +644,7 @@ function setrunning(value){
 }
 
 function formatbytes(bytes){
-    return `${(bytes / 1000000).toFixed(bytes >= 1000000 ? 2 : 1)} MB`;
+    return `${(bytes / 1000000).toFixed(1)}mb`;
 }
 
 syncautomaticinputs();

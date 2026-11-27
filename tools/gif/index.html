@@ -20,38 +20,26 @@
     </h2>
     <div class="controls">
         <form class="form" id="form">
-            <fieldset class="optiongroup">
-                <legend class="optiontitle">source</legend>
-                <div class="optionrow">
-                    <label>video <input class="videoinput" type="file" id="videofile" accept="video/*"></label>
-                    <span class="hint" id="filesize"></span>
-                </div>
-            </fieldset>
-            <fieldset class="optiongroup">
-                <legend class="optiontitle">output</legend>
-                <div class="optionrow">
-                    <label>fps <input type="number" id="fps" min="1" max="50" value="24"></label>
-                    <label class="automatic"><input type="checkbox" id="autofps"> choose a safe fps</label>
-                    <label><input type="checkbox" id="loop" checked> loop GIF</label>
-                </div>
-            </fieldset>
-            <fieldset class="optiongroup">
-                <legend class="optiontitle">compression</legend>
-                <div class="optionrow">
-                    <label>max size <input type="number" id="limit" min="0.1" step="0.1" value="9">MB</label>
-                    <label class="automatic"><input type="checkbox" id="autolimit" checked> fit the size limit</label>
-                </div>
-            </fieldset>
-            <fieldset class="optiongroup">
-                <legend class="optiontitle">conversion</legend>
-                <div class="actionrow">
-                    <button class="btn" id="convert" type="button">convert</button>
-                    <button class="btn" id="stop" type="button" disabled>stop</button>
-                    <span class="status" id="status"></span>
-                </div>
-                <div class="hint" id="estimate"></div>
-                <p class="warning" id="warning"></p>
-            </fieldset>
+            <div class="optionrow">
+                <label>video <input class="videoinput" type="file" id="videofile" accept="video/*"></label>
+                <span class="hint" id="filesize"></span>
+            </div>
+            <div class="optionrow">
+                <label>fps <input type="number" id="fps" min="1" max="50" value="24"></label>
+                <label class="automatic"><input type="checkbox" id="autofps"> choose a safe fps</label>
+                <label><input type="checkbox" id="loop" checked> loop GIF</label>
+            </div>
+            <div class="optionrow">
+                <label>max size <input type="number" id="limit" min="0.1" step="0.1" value="9">mb</label>
+                <label class="automatic"><input type="checkbox" id="autolimit" checked> fit the size limit</label>
+            </div>
+            <div class="actionrow">
+                <button class="btn" id="convert" type="button">convert</button>
+                <button class="btn" id="stop" type="button" disabled>stop</button>
+                <span class="status" id="status"></span>
+            </div>
+            <div class="hint" id="estimate"></div>
+            <p class="warning" id="warning"></p>
         </form>
         <div class="progresspanel" id="progresspanel" hidden>
             <div class="progressheader"><strong id="progresstitle">preparing conversion</strong><span id="progresspercent">0%</span></div>
