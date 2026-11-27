@@ -21,13 +21,13 @@
     <div class="controls">
         <form class="form" id="form">
             <div class="optionrow">
-                <label>video <input class="videoinput" type="file" id="videofile" accept="video/*"></label>
+                <label>video <input class="videoinput" type="file" id="videofile" accept="video/*" autocomplete="off"></label>
                 <span class="hint" id="filesize"></span>
             </div>
             <div class="optionrow">
                 <label>fps <input type="number" id="fps" min="1" max="50" value="24"></label>
                 <label class="automatic"><input type="checkbox" id="autofps"> choose a safe fps</label>
-                <label><input type="checkbox" id="loop" checked> loop GIF</label>
+                <label><input type="checkbox" id="loop" checked> loop</label>
             </div>
             <div class="optionrow">
                 <label>max size <input type="number" id="limit" min="0.1" step="0.1" value="9">mb</label>

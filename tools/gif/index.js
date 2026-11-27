@@ -39,6 +39,7 @@ const outputedges = [256, 320, 426, 640, 854, 960, 1280, 1920, 2560, 3840, 5120]
 const cropratios = ["source", "free", "1:1", "4:5", "5:4", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "16:10", "18:9", "19.5:9", "21:9", "32:9", "69:9"];
 
 let fileurl = null;
+let sourcevideo = null;
 let outputurl = null;
 let currentconversion = null;
 const disabledcontrols = new Map();
@@ -49,6 +50,11 @@ let cropstate = null;
 let selectededge = "640";
 
 /*//////////////////////////////////////////////////////////////////////*/
+
+videofile.value = "";
+window.addEventListener("pageshow", event=>{
+    if (!event.persisted) videofile.value = "";
+});
 
 videofile.addEventListener("change", ()=>{
     const file = videofile.files[0];
@@ -62,6 +68,7 @@ videofile.addEventListener("change", ()=>{
     output.replaceChildren();
     output.hidden = true;
     progresspanel.hidden = true;
+    sourcevideo = null;
     showvideo();
     updateestimate();
 });
@@ -109,7 +116,6 @@ stopbutton.addEventListener("click", ()=>{
 
 convert.addEventListener("click", async ()=>{
     if (running) return;
-    const sourcevideo = videostage.querySelector("video");
     if (!sourcevideo || !fileurl) {
         status.textContent = "pick a video first";
         return;
@@ -157,7 +163,7 @@ function showvideo(){
     if (!fileurl) return;
     const stage = document.createElement("div");
     stage.className = "adjustmentstage";
-    const video = document.createElement("video");
+    const video = sourcevideo = document.createElement("video");
     video.className = "previewmedia";
     video.controls = true;
     video.muted = true;
@@ -432,7 +438,7 @@ function syncautomaticinputs(){
 }
 
 function updateestimate(){
-    const video = videostage.querySelector("video");
+    const video = sourcevideo;
     const duration = video && Number.isFinite(video.duration) ? selectedduration(video) : numbervalue(durationinput, 3, 0.001);
     const resolution = currentresolution(video);
     const settings = resolveautosettings({
@@ -555,13 +561,15 @@ function timestampvalue(input, fallback, minimum, maximum) {
 function showoutput(file, settings){
     if (outputurl) URL.revokeObjectURL(outputurl);
     outputurl = URL.createObjectURL(file);
-    videostage.replaceChildren();
-    trimeditor.hidden = true;
     preview.hidden = false;
     const image = document.createElement("img");
-    image.className = "previewmedia";
+    image.className = "previewmedia gifpreview";
     image.src = outputurl;
     image.alt = "GIF preview";
+    videostage.querySelector(".gifpreview")?.remove();
+    const adjustments = [...videostage.children];
+    for (const element of adjustments) element.hidden = true;
+    trimeditor.hidden = true;
     videostage.append(image);
     const link = document.createElement("a");
     link.className = "btn";
@@ -574,7 +582,9 @@ function showoutput(file, settings){
     adjust.textContent = "adjust video";
     adjust.addEventListener("click", ()=>{
         output.hidden = true;
-        showvideo();
+        image.remove();
+        for (const element of adjustments) element.hidden = false;
+        trimeditor.hidden = false;
     });
     const detail = document.createElement("span");
     detail.className = "hint";
@@ -586,7 +596,8 @@ function showoutput(file, settings){
 function showfailure(error, settings, failedstage){
     const heading = document.createElement("strong");
     heading.textContent = "conversion details";
-    const detail = document.createElement("pre");
+    const detail = document.createElement("p");
+    detail.className = "conversiondetails";
     detail.textContent = `stage: ${failedstage}\nerror: ${error.message || String(error)}\nsettings: ${settings.width}x${settings.height}, ${settings.fps}fps, ${settings.duration.toFixed(3)}s`;
     output.replaceChildren(heading, detail);
     output.hidden = false;
