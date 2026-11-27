@@ -34,37 +34,9 @@ const autofpsinput = document.querySelector("#autofps");
 const loopinput = document.querySelector("#loop");
 const limitinput = document.querySelector("#limit");
 const autolimitinput = document.querySelector("#autolimit");
-const widepreset = document.querySelector("#widepreset");
-const smallpreset = document.querySelector("#smallpreset");
 const automaticmemorybudget = 1024 * 1024 * 1024;
-const resolutionpresets = [
-    {name: "144p", width: 256, height: 144, ratio: "16:9"},
-    {name: "180p", width: 320, height: 180, ratio: "16:9"},
-    {name: "240p", width: 426, height: 240, ratio: "16:9"},
-    {name: "360p", width: 640, height: 360, ratio: "16:9"},
-    {name: "480p", width: 854, height: 480, ratio: "16:9"},
-    {name: "540p", width: 960, height: 540, ratio: "16:9"},
-    {name: "720p HD", width: 1280, height: 720, ratio: "16:9"},
-    {name: "1080p Full HD", width: 1920, height: 1080, ratio: "16:9"},
-    {name: "1440p QHD", width: 2560, height: 1440, ratio: "16:9"},
-    {name: "2160p 4K UHD", width: 3840, height: 2160, ratio: "16:9"},
-    {name: "CGA", width: 320, height: 240, ratio: "4:3"},
-    {name: "VGA", width: 640, height: 480, ratio: "4:3"},
-    {name: "SVGA", width: 800, height: 600, ratio: "4:3"},
-    {name: "XGA", width: 1024, height: 768, ratio: "4:3"},
-    {name: "SXGA", width: 1280, height: 960, ratio: "4:3"},
-    {name: "WXGA", width: 1280, height: 800, ratio: "16:10"},
-    {name: "UWHD", width: 2560, height: 1080, ratio: "21:9"},
-    {name: "DQHD", width: 5120, height: 1440, ratio: "32:9"},
-    {name: "Square", width: 320, height: 320, ratio: "1:1"},
-    {name: "Square", width: 640, height: 640, ratio: "1:1"},
-    {name: "Square", width: 1080, height: 1080, ratio: "1:1"},
-    {name: "Vertical SD", width: 240, height: 426, ratio: "9:16"},
-    {name: "Vertical HD", width: 720, height: 1280, ratio: "9:16"},
-    {name: "Vertical Full HD", width: 1080, height: 1920, ratio: "9:16"},
-    {name: "Banner", width: 690, height: 90, ratio: "69:9"},
-];
-const cropratios = ["source", "1:1", "4:5", "5:4", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "16:10", "18:9", "19.5:9", "21:9", "32:9", "69:9"];
+const outputedges = [256, 320, 426, 640, 854, 960, 1280, 1920, 2560, 3840, 5120];
+const cropratios = ["source", "free", "1:1", "4:5", "5:4", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "16:10", "18:9", "19.5:9", "21:9", "32:9", "69:9"];
 
 let fileurl = null;
 let outputurl = null;
@@ -74,7 +46,7 @@ let running = false;
 let progressstage = "preparing conversion";
 let conversionstarted = 0;
 let cropstate = null;
-let selectedresolution = "";
+let selectededge = "640";
 
 /*//////////////////////////////////////////////////////////////////////*/
 
@@ -84,7 +56,7 @@ videofile.addEventListener("change", ()=>{
     if (fileurl) URL.revokeObjectURL(fileurl);
     fileurl = file ? URL.createObjectURL(file) : null;
     cropstate = null;
-    selectedresolution = "";
+    selectededge = "640";
     if (outputurl) URL.revokeObjectURL(outputurl);
     outputurl = null;
     output.replaceChildren();
@@ -99,28 +71,6 @@ videofile.addEventListener("change", ()=>{
         syncautomaticinputs();
         updateestimate();
     });
-});
-
-widepreset.addEventListener("click", ()=>{
-    fpsinput.value = 24;
-    limitinput.value = 9;
-    autofpsinput.checked = false;
-    autolimitinput.checked = true;
-    applycropratio("69:9");
-    selectresolution("690x90");
-    syncautomaticinputs();
-    updateestimate();
-});
-
-smallpreset.addEventListener("click", ()=>{
-    fpsinput.value = 12;
-    limitinput.value = 3;
-    autofpsinput.checked = false;
-    autolimitinput.checked = true;
-    applycropratio("16:9");
-    selectresolution("426x240");
-    syncautomaticinputs();
-    updateestimate();
 });
 
 fulldurationinput.addEventListener("change", ()=>{
@@ -223,22 +173,27 @@ function showvideo(){
     const controls = document.createElement("div");
     controls.className = "cropcontrols";
     const resolutionselect = document.createElement("select");
-    resolutionselect.setAttribute("aria-label", "GIF resolution");
+    const sizelabel = document.createElement("label");
+    sizelabel.append("Size ", resolutionselect);
     const aspectselect = document.createElement("select");
-    aspectselect.setAttribute("aria-label", "crop aspect ratio");
+    const croplabel = document.createElement("label");
+    croplabel.append("Crop ", aspectselect);
     for (const ratio of cropratios) {
         const option = document.createElement("option");
         option.value = ratio;
-        option.textContent = ratio === "source" ? "remove crop" : ratio;
+        option.textContent = ratio === "source" ? "None" : ratio === "free" ? "Free crop" : ratio;
         aspectselect.append(option);
     }
-    controls.append(resolutionselect, aspectselect);
+    controls.append(sizelabel, croplabel);
     const overlay = document.createElement("div");
     overlay.className = "cropoverlay";
     const cropbox = document.createElement("div");
     cropbox.className = "cropbox";
     overlay.append(cropbox);
-    stage.append(video, overlay, controls);
+    const surface = document.createElement("div");
+    surface.className = "cropsurface";
+    surface.append(video, overlay);
+    stage.append(surface, controls);
     videostage.append(stage);
     video.addEventListener("loadedmetadata", ()=>{
         setuptrim(video);
@@ -248,46 +203,35 @@ function showvideo(){
 
 function setupcrop(video, resolutionselect, aspectselect, cropbox){
     const sourceratio = video.videoWidth / video.videoHeight;
-    const initialratio = closestcropratio(sourceratio);
-    populateaspectoptions(aspectselect, initialratio);
-    updateresolutions(resolutionselect, rationumber(initialratio));
-    selectresolutionchoice(resolutionselect, initialratio);
-    resolutionselect.addEventListener("change", ()=>{
-        const preset = resolutionpreset(resolutionselect.value);
-        if (!preset) return;
-        selectedresolution = presetkey(preset);
-        aspectselect.value = preset.ratio;
-        cropstate = centeredcrop(preset.ratio, sourceratio);
+    const refresh = ()=>{
         updatecropbox(cropbox);
+        updateresolutions(resolutionselect, video);
+        updateestimate();
+    };
+    resolutionselect.addEventListener("change", ()=>{
+        selectededge = resolutionselect.value;
         updateestimate();
     });
     aspectselect.addEventListener("change", ()=>{
         const ratio = aspectselect.value;
-        if (ratio === "source") {
-            cropstate = null;
-            updateresolutions(resolutionselect, sourceratio);
-        } else {
-            cropstate = centeredcrop(ratio, sourceratio);
-            updateresolutions(resolutionselect, rationumber(ratio));
-        }
-        selectresolutionchoice(resolutionselect, ratio === "source" ? sourceratio : rationumber(ratio));
-        updatecropbox(cropbox);
-        updateestimate();
+        cropstate = ratio === "source" || ratio === "free" ? null : centeredcrop(ratio, sourceratio);
+        refresh();
     });
+
     let dragstart = null;
+    let priorcrop = null;
     video.addEventListener("pointerdown", event=>{
         const bounds = video.getBoundingClientRect();
-        if (event.clientY > bounds.bottom - 44 || event.target !== video) return;
-        const ratio = aspectselect.value === "source" ? sourceratio : rationumber(aspectselect.value);
+        if (aspectselect.value === "source" || event.button !== 0
+            || event.clientY > bounds.bottom - Math.min(44, bounds.height * .25) || event.target !== video) return;
         dragstart = cropcoordinate(event, bounds);
+        priorcrop = cropstate;
         video.setPointerCapture(event.pointerId);
-        cropstate = cropfromdrag(dragstart, dragstart, ratio);
-        updatecropbox(cropbox);
     });
     video.addEventListener("pointermove", event=>{
         if (!dragstart) return;
         const bounds = video.getBoundingClientRect();
-        const ratio = aspectselect.value === "source" ? sourceratio : rationumber(aspectselect.value);
+        const ratio = aspectselect.value === "free" ? null : rationumber(aspectselect.value) / sourceratio;
         cropstate = cropfromdrag(dragstart, cropcoordinate(event, bounds), ratio);
         updatecropbox(cropbox);
         event.preventDefault();
@@ -295,81 +239,35 @@ function setupcrop(video, resolutionselect, aspectselect, cropbox){
     const finishdrag = event=>{
         if (!dragstart) return;
         dragstart = null;
-        if (cropstate && (cropstate.width < 2 || cropstate.height < 2)) cropstate = null;
-        else if (cropstate) {
-            const ratio = cropstate.width / cropstate.height;
-            const closest = closestcropratio(ratio);
-            aspectselect.value = closest;
-            updateresolutions(resolutionselect, ratio);
-            selectresolutionchoice(resolutionselect, ratio);
+        if (event.type === "pointercancel" || !cropstate || cropstate.width < 2 || cropstate.height < 2) {
+            cropstate = priorcrop;
         }
-        updatecropbox(cropbox);
-        updateestimate();
+        refresh();
         if (video.hasPointerCapture(event.pointerId)) video.releasePointerCapture(event.pointerId);
     };
     video.addEventListener("pointerup", finishdrag);
     video.addEventListener("pointercancel", finishdrag);
-    updatecropbox(cropbox);
+    refresh();
 }
 
-function populateaspectoptions(select, initialratio){
-    const closest = closestcropratio(initialratio);
-    select.value = cropstate ? closest : "source";
-}
-
-function updateresolutions(select, ratio){
-    const matches = resolutionpresets.filter(preset=>Math.abs(preset.width / preset.height - ratio) < 0.02);
-    const options = matches.length ? matches : [...resolutionpresets].sort((first, second)=>Math.abs(first.width / first.height - ratio) - Math.abs(second.width / second.height - ratio)).slice(0, 8);
+function updateresolutions(select, video){
+    const crop = sourcecrop(video);
+    const longest = Math.max(crop?.width ?? video.videoWidth, crop?.height ?? video.videoHeight);
+    const edges = outputedges.filter(edge=>edge < longest);
     select.replaceChildren();
-    for (const preset of options) {
+    for (const edge of ["source", ...edges]) {
+        const {width, height} = currentresolution(video, edge);
         const option = document.createElement("option");
-        option.value = presetkey(preset);
-        option.textContent = `${preset.name} - ${preset.width}x${preset.height} - ${preset.ratio}`;
+        option.value = edge;
+        option.textContent = `${width}x${height}${edge === "source" ? " (full size)" : ""}`;
         select.append(option);
     }
-}
-
-function selectresolutionchoice(select, ratio){
-    const options = [...select.options];
-    const selected = options.find(option=>option.value === selectedresolution);
-    const standard = options.find(option=>option.value === "640x360") || options.find(option=>option.value === "426x240") || options[0];
-    const choice = selected || standard;
-    if (!choice) return;
-    select.value = choice.value;
-    selectedresolution = choice.value;
-}
-
-function selectresolution(key){
-    selectedresolution = key;
-    const select = videostage.querySelector(".cropcontrols select");
-    if (!select) return;
-    select.value = key;
-    select.dispatchEvent(new Event("change"));
-}
-
-function applycropratio(ratio){
-    const selects = videostage.querySelectorAll(".cropcontrols select");
-    const video = videostage.querySelector("video");
-    if (!video || selects.length < 2) return;
-    selects[1].value = ratio;
-    selects[1].dispatchEvent(new Event("change"));
-}
-
-function resolutionpreset(key){
-    return resolutionpresets.find(preset=>presetkey(preset) === key);
-}
-
-function presetkey(preset){
-    return `${preset.width}x${preset.height}`;
+    select.value = edges.includes(Number(selectededge)) ? selectededge : "source";
 }
 
 function rationumber(ratio){
     const values = String(ratio).split(":").map(Number);
     return values.length === 2 && values[0] > 0 && values[1] > 0 ? values[0] / values[1] : 16 / 9;
-}
-
-function closestcropratio(ratio){
-    return cropratios.filter(value=>value !== "source").sort((first, second)=>Math.abs(rationumber(first) - ratio) - Math.abs(rationumber(second) - ratio))[0];
 }
 
 function centeredcrop(ratio, sourceratio){
@@ -390,30 +288,14 @@ function cropcoordinate(event, bounds){
 }
 
 function cropfromdrag(start, end, ratio){
-    const horizontal = end.x >= start.x ? 1 : -1;
-    const vertical = end.y >= start.y ? 1 : -1;
-    let width = Math.min(Math.abs(end.x - start.x), Math.abs(end.y - start.y) * ratio);
-    let height = width / ratio;
-    let left = horizontal > 0 ? start.x : start.x - width;
-    let top = vertical > 0 ? start.y : start.y - height;
-    if (left < 0) {
-        width += left;
-        height = width / ratio;
-        left = 0;
-    }
-    if (top < 0) {
-        height += top;
-        width = height * ratio;
-        top = 0;
-    }
-    if (left + width > 100) {
-        width = 100 - left;
+    let width = Math.abs(end.x - start.x);
+    let height = Math.abs(end.y - start.y);
+    if (ratio) {
+        width = Math.min(width, height * ratio);
         height = width / ratio;
     }
-    if (top + height > 100) {
-        height = 100 - top;
-        width = height * ratio;
-    }
+    const left = end.x >= start.x ? start.x : start.x - width;
+    const top = end.y >= start.y ? start.y : start.y - height;
     return {left, top, width, height};
 }
 
@@ -552,7 +434,7 @@ function syncautomaticinputs(){
 function updateestimate(){
     const video = videostage.querySelector("video");
     const duration = video && Number.isFinite(video.duration) ? selectedduration(video) : numbervalue(durationinput, 3, 0.001);
-    const resolution = currentresolution();
+    const resolution = currentresolution(video);
     const settings = resolveautosettings({
         duration,
         fps: numbervalue(fpsinput, 24, 1, 50),
@@ -575,7 +457,7 @@ function readsettings(video){
         status.textContent = "the trim range has no video";
         return null;
     }
-    const resolution = currentresolution();
+    const resolution = currentresolution(video);
     const settings = resolveautosettings({
         duration,
         fps: numbervalue(fpsinput, 24, 1, 50),
@@ -595,7 +477,6 @@ function readsettings(video){
         start,
         duration,
         crop: sourcecrop(video),
-        resolution: presetkey(resolution),
         loop: loopinput.checked,
         autolimit: autolimitinput.checked,
     };
@@ -621,8 +502,13 @@ function findmaximumfps(width, height, duration){
     return Math.max(1, Math.floor(automaticmemorybudget / (Math.min(2, Math.max(0.001, duration)) * width * height * 4 * 4)));
 }
 
-function currentresolution(){
-    return resolutionpreset(selectedresolution) || resolutionpresets.find(preset=>presetkey(preset) === "640x360") || resolutionpresets[0];
+function currentresolution(video, edge = selectededge){
+    if (!video?.videoWidth) return {width: 640, height: 360};
+    const crop = sourcecrop(video);
+    const width = crop?.width ?? video.videoWidth;
+    const height = crop?.height ?? video.videoHeight;
+    const scale = edge === "source" ? 1 : Math.min(1, Number(edge) / Math.max(width, height));
+    return {width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale))};
 }
 
 function sourcecrop(video){

@@ -46,14 +46,16 @@
 }
 .adjustmentstage .previewmedia {max-width: 100%}
 .cropcontrols {
-    position: absolute; top: 0.6em;
-    right: 0.6em; z-index: 3;
-    display: flex; gap: 0.45em;
-    max-width: calc(100% - 1.2em);
+    display: flex; flex-wrap: wrap; gap: 0.45em;
+    padding: 0.45em;
 }
 .cropcontrols select {
     min-width: 0; max-width: 15em;
     color: #000000; background: #ffffff;
+}
+.cropsurface {
+    position: relative; width: fit-content;
+    max-width: 100%;
 }
 .cropoverlay {
     position: absolute; inset: 0;
@@ -61,7 +63,7 @@
 }
 .cropbox {
     position: absolute; display: none;
-    border: 2px solid #ffffff;
+    box-sizing: border-box; border: 2px solid #ffffff;
     box-shadow: 0 0 0 9999px rgba(0,0,0,0.56);
     pointer-events: none;
 }
