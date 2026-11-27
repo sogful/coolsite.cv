@@ -55,7 +55,7 @@ button:disabled {
     opacity: 0.4; cursor: default;
 }
 .readout {
-    margin-top: 0.8em; font-family: monospace;
+    margin-top: 0.8em; font-family: inherit;
     font-size: 0.8em; border: 1px solid #ccc;
     padding: 0.5em 0.7em; white-space: pre-wrap;
     word-break: break-word; max-width: 36em;

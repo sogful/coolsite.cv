@@ -2,7 +2,7 @@ body {
     padding-left: 0.25em;
 }
 .output {
-    margin-top: 1em; font-family: monospace;
+    margin-top: 1em; font-family: inherit;
     font-size: 0.85em; padding: 0.5em;
     white-space: pre-wrap; word-break: break-all;
     background: #fff; border: 1px solid #e2e2e2;

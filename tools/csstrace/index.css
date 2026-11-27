@@ -168,7 +168,7 @@ select, input[type="file"], input[type="number"], button {
 }
 .codeblock {
     margin-top: 4px; padding: 8px;
-    border: 1px solid #ccc; font-family: monospace;
+    border: 1px solid #ccc; font-family: inherit;
     font-size: 11px; max-height: 320px;
     overflow: auto; position: relative;
     background: #fff;

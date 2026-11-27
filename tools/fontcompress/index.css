@@ -13,7 +13,7 @@ textarea {
     user-select: none; white-space: nowrap;
 }
 .output {
-    margin-top: 1em; font-family: monospace;
+    margin-top: 1em; font-family: inherit;
     font-size: 0.85em; padding: 0.5em;
     border: 1px solid #ccc; white-space: pre-wrap;
     word-break: break-all;
@@ -46,7 +46,7 @@ textarea {
 }
 .glyph .cep {
     font-size: 9px; color: #999;
-    font-family: monospace; margin-top: 2px;
+    font-family: inherit; margin-top: 2px;
 }
 button.runbtn:hover {
     background: #eee;

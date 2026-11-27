@@ -76,7 +76,7 @@ sup {
 }
 .res .cp {
     font-size: 9px; color: #999;
-    font-family: monospace; margin-top: 2px;
+    font-family: inherit; margin-top: 2px;
 }
 .res .sc {
     font-size: 9px; color: #3a9d6a;

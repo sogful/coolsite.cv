@@ -18,7 +18,7 @@ a {
     border: 1px solid #999;
 }
 .tokenbox .saved {
-    color: #3a9d6a; font-family: monospace;
+    color: #3a9d6a; font-family: inherit;
 }
 fieldset {
     border: 1px solid #c5c5ca; margin: 0.8em 0;

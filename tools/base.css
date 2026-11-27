@@ -21,3 +21,5 @@ button, input, select, textarea {font: inherit}
     background: #fff; cursor: pointer
 }
 .btn:disabled {opacity: 0.5; cursor: default}
+
+:where(pre, code, kbd, samp) {font-family: inherit}

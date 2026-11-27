@@ -50,7 +50,7 @@ textarea.domainfield {
 }
 .outputrow {
     margin: 18px 0 0 0; background: white;
-    overflow: auto; font-family: monospace;
+    overflow: auto; font-family: inherit;
     font-size: 9px; line-height: 14px;
     white-space: normal;
 }
