@@ -52,13 +52,15 @@ async function decodevideo({file, settings}) {
     }
     const canvas = new OffscreenCanvas(settings.width, settings.height);
     const context = canvas.getContext("2d", {alpha: false, willReadFrequently: true});
+    context.fillStyle = "#000";
     const framebytes = settings.width * settings.height * 4;
     const framecount = Math.max(2, Math.round(settings.duration * settings.fps));
-    const batchsize = Math.min(12,Math.max(2,Math.ceil(framecount / 2)));
+    const batchsize = Math.min(12, Math.max(1, Math.floor(48 * 1024 * 1024 / framebytes)), Math.ceil(framecount / 2));
     let batch = new Uint8Array(Math.min(batchsize, framecount) * framebytes);
     let count = 0;
     let batchstart = 0;
     let previous = null;
+    let pixels = null;
     let failure = null;
     const signatures = new Set();
     const emit = ()=>{
@@ -68,14 +70,19 @@ async function decodevideo({file, settings}) {
         batch = count < framecount ? new Uint8Array(Math.min(batchsize, framecount - count) * framebytes) : null;
     };
     const capture = frame=>{
-        const crop = settings.crop || {x: 0, y: 0, width: frame.displayWidth, height: frame.displayHeight};
-        context.fillStyle = "#000000";
-        context.fillRect(0, 0, settings.width, settings.height);
-        context.drawImage(frame, crop.x, crop.y, crop.width, crop.height, 0, 0, settings.width, settings.height);
-        const pixels = context.getImageData(0, 0, settings.width, settings.height).data;
-        let signature = 2166136261;
-        for (let offset = 0; offset < pixels.length; offset += 256) signature = Math.imul(signature ^ (pixels[offset] << 16 | pixels[offset + 1] << 8 | pixels[offset + 2]), 16777619);
-        if (signatures.size < 32) signatures.add(signature);
+        if (!pixels) {
+            const crop = settings.crop || {x: 0, y: 0, width: frame.displayWidth, height: frame.displayHeight};
+            context.fillRect(0, 0, settings.width, settings.height);
+            context.drawImage(frame, crop.x, crop.y, crop.width, crop.height, 0, 0, settings.width, settings.height);
+            pixels = context.getImageData(0, 0, settings.width, settings.height).data;
+            if (signatures.size < 2) {
+                let signature = 2166136261;
+                for (let offset = 0; offset < pixels.length; offset += 256) {
+                    signature = Math.imul(signature ^ (pixels[offset] << 16 | pixels[offset + 1] << 8 | pixels[offset + 2]), 16777619);
+                }
+                signatures.add(signature);
+            }
+        }
         batch.set(pixels, (count - batchstart) * framebytes);
         count += 1;
         if (count - batchstart === batchsize || count === framecount) emit();
@@ -88,6 +95,7 @@ async function decodevideo({file, settings}) {
                     previous.close();
                 }
                 previous = frame;
+                pixels = null;
             } catch (error) {
                 frame.close();
                 failure = error;
@@ -125,7 +133,10 @@ async function decodevideo({file, settings}) {
         if (failure) throw failure;
         if (previous) {
             const end = previous.timestamp + (previous.duration || 1000000 / settings.fps);
-            while (count < framecount && (settings.start + count / settings.fps) * 1000000 < end) capture(previous);
+            const requestedend = (settings.start + settings.duration) * 1000000;
+            const tail = requestedend - end;
+            const lastsample = tail <= 250000 ? requestedend : end;
+            while (count < framecount && (settings.start + count / settings.fps) * 1000000 < lastsample) capture(previous);
         }
         if (count !== framecount) throw new Error(`the video decoder returned ${count} of ${framecount} requested frames`);
         if (!settings.sticker && framecount > settings.fps * 2 && signatures.size < 2) throw new Error("the video decoder returned only one repeated image. no gif was saved.");

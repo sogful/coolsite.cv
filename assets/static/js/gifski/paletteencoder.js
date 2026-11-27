@@ -2,7 +2,11 @@ import {GIFEncoder as gifencoder, quantize, applyPalette as applypalette} from "
 
 export function encodepalette(frames, input) {
     const framebytes = input.width * input.height * 4;
-    const encoder = gifencoder();
+    const encoder = gifencoder({auto: false});
+    encoder.writeHeader();
+    encoder.stream.writeBytes([
+        input.width & 255, input.width >> 8, input.height & 255, input.height >> 8, 112, 0, 0,
+    ]);
     let colors = input.colors || 64;
     let used = 0;
     let totalcolors = 0;
@@ -11,14 +15,14 @@ export function encodepalette(frames, input) {
         const pixels = frames.slice(index * framebytes, (index + 1) * framebytes);
         const protectedpixels = protectpixels(pixels);
         const budget = Math.floor((input.budget - used - 64) / (input.count - index));
-        const result = fitpalette(pixels, input, colors, budget, protectedpixels);
         const frame = input.start + index;
         const delay = (Math.round((frame + 1) * 100 / input.fps) - Math.round(frame * 100 / input.fps)) * 10;
-        encoder.writeFrame(result.indices, input.width, input.height, {palette: result.palette, delay, repeat: -1, dispose: 1});
+        const result = fitpalette(pixels, input, colors, budget, protectedpixels, delay);
+        encoder.stream.writeBytesView(result.frame);
         used += result.size;
         colors = result.colors;
         quality = Math.min(quality, colors);
-        totalcolors += result.palette.length;
+        totalcolors += result.palettecount;
     }
     encoder.finish();
     const gif = encoder.bytes();
@@ -28,7 +32,7 @@ export function encodepalette(frames, input) {
 
 /*//////////////////////////////////////////////////////////////////////*/
 
-function fitpalette(pixels, input, colors, budget, protectedpixels) {
+function fitpalette(pixels, input, colors, budget, protectedpixels, delay) {
     let low = 2;
     let high = 256;
     let best = null;
@@ -41,12 +45,12 @@ function fitpalette(pixels, input, colors, budget, protectedpixels) {
             const anchor = protectedpixels.mask[index];
             if (anchor) indices[index] = anchors[anchor - 1];
         }
-        const probe = gifencoder();
-        probe.writeFrame(indices, input.width, input.height, {palette, delay: 40, repeat: -1, dispose: 1});
-        probe.finish();
-        const size = probe.bytesView().length + 4;
+        const probe = gifencoder({auto: false});
+        probe.writeFrame(indices, input.width, input.height, {palette, delay, dispose: 1});
+        const frame = probe.bytesView();
+        const size = frame.length + 18;
         if (size <= budget) {
-            if (!best || candidate > best.colors) best = {palette, indices, size, colors: candidate};
+            if (!best || candidate > best.colors) best = {frame, palettecount: palette.length, size, colors: candidate};
             if (size >= budget * 0.95 || candidate === 256) return best;
             low = candidate + 1;
         } else high = candidate - 1;
@@ -59,7 +63,7 @@ function fitpalette(pixels, input, colors, budget, protectedpixels) {
     const smoothing = (input.smoothing || 1) * 2;
     if (smoothing <= 16) {
         soften(pixels, input.width, input.height, smoothing);
-        return fitpalette(pixels, {...input, smoothing}, 64, budget, protectpixels(pixels));
+        return fitpalette(pixels, {...input, smoothing}, 64, budget, protectpixels(pixels), delay);
     }
     throw new Error("the size limit is too small for this duration, resolution, and fps");
 }
