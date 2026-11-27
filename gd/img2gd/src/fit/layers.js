@@ -205,7 +205,7 @@ function contourlayerobjects(layer, tolerance, scalex, scaley) {
   return vertices <= 64 && holes.length <= 3 ? transparentstrips(outlines, [...color, 255]) : null;
 }
 
-async function fitlayeredcontours(limit, revision) {
+async function fitlayeredcontours(limit, revision, collect) {
   const originalwidth = sourceimage.naturalWidth, originalheight = sourceimage.naturalHeight;
   if (!originalwidth || !originalheight) return null;
   const large = Math.max(originalwidth, originalheight) > 200 || originalwidth * originalheight > 30000;
@@ -256,6 +256,7 @@ async function fitlayeredcontours(limit, revision) {
         object.macro = true;
         preparecandidate(object);
       }
+      if (collect && collect(result)) continue;
       return result;
     }
   }

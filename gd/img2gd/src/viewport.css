@@ -97,10 +97,10 @@
 .swipebar::after {
   inline-size: 32px; block-size: 32px;
   inset-block-start: var(--swipey, 50%); translate: -50% -50%;
-  background: url("../assets/svgs/thumb.svg") center / contain no-repeat;
+  background: url("../../assets/svgs/thumb.svg") center / contain no-repeat;
 }
 
-.swipebar.dragging::after { background-image: url("../assets/svgs/thumb.svg#pressed"); }
+.swipebar.dragging::after { background-image: url("../../assets/svgs/thumb.svg#pressed"); }
 
 .swipeslider {
   position: absolute; inset: 0;

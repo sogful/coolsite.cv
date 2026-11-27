@@ -743,6 +743,7 @@ function prettysize(bytes) {
 
 function loadimage(url, name) {
   fitrevision += 1;
+  clearvariants();
   if (fitting) {
     batchfitteractive = false;
     fitpixels = fitretries = 0;

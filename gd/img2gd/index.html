@@ -54,6 +54,7 @@
   <script src="src/rangevalues.js" defer></script>
   <script src="src/fit/budget.js" defer></script>
   <script src="src/fit/session.js" defer></script>
+  <script src="src/fit/variations.js" defer></script>
 
   <script src="index.js" defer></script>
   <script src="src/tooltips.js" defer></script>
@@ -190,6 +191,12 @@
       <section class="previewpanel panel gdpane">
         <h2 class="assistivetext previewtitle">Generated level</h2>
         <span class="assistivetext previewdescription">Choose an image first!</span>
+        <div class="variantcontrols" hidden>
+          <label class="variantchoice" hidden>variation
+            <select class="variantselect gdinput"></select>
+          </label>
+          <button class="variantmore gdbutton" type="button"><gold>generate variations</gold></button>
+        </div>
         <div class="previewport gdwell">
           <div class="viewframe" tabindex="0">
             <div class="previewimage">

@@ -26,7 +26,7 @@ function startfitpreview() {
 }
 
 function showfitprogress(revision, objects = plan) {
-  if (revision !== fitrevision || performance.now() < nextlivepreview) return;
+  if (variantbuilding || revision !== fitrevision || performance.now() < nextlivepreview) return;
   if (typeof objects === "function") objects = objects();
   if (!objects.length) return;
   nextlivepreview = performance.now() + 1000;
@@ -108,6 +108,7 @@ async function publishfit(revision) {
   fitreadyrevision = revision;
   updatestart();
   await updatepreview();
+  if (revision === fitrevision) openvariants();
 }
 
 async function abortfit() {
@@ -157,6 +158,7 @@ async function startfit() {
   if (fitting) return abortfit();
   if (startbutton.disabled) return;
   const revision = ++fitrevision;
+  clearvariants();
   fitting = true;
   fitbest = fitpartial = null;
   pixelartactive = false;
